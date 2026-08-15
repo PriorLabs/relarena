@@ -647,13 +647,14 @@ def test__context_cutoff__every_arm_names_its_horizon() -> None:
     assert cfg.context_cutoff(task, "test") > cfg.context_cutoff(task, "val")
 
 
-def test__rt_extra__disabled_pin_matches_installed_version() -> None:
+def test__rt_source_pin__matches_installed_version() -> None:
     # The direct-URL `rt` extra is commented out until relational-transformer is
     # published on PyPI, keeping RelArena's distribution metadata publishable.
-    # The commented source-install escape hatch remains the statement of which
-    # RT this model was written against. If an environment carries a different
-    # one -- an editable checkout, or a stale wheel -- the model may be running
-    # code the config assumes is there.
+    # Source users may uncomment it as documented, so read the active group when
+    # present and otherwise read its commented template. Either form remains the
+    # statement of which RT this model was written against. If an environment
+    # carries a different one -- an editable checkout, or a stale wheel -- the
+    # model may be running code the config assumes is there.
     # `db_cutoff` is the live example: it takes an integer only from 1.2.0 on,
     # and v1.1.0's wheel silently lacked it.
     import re
@@ -663,9 +664,12 @@ def test__rt_extra__disabled_pin_matches_installed_version() -> None:
     root = Path(__file__).resolve().parents[3]
     pyproject = (root / "pyproject.toml").read_text()
     spec = tomllib.loads(pyproject)
-    assert "rt" not in spec["project"].get("optional-dependencies", {})
-    pinned = re.search(r"relational_transformer-([0-9.]+)-", pyproject)
-    assert pinned, "the commented RT source-install block has no readable version"
+    rt_dependencies = spec["project"].get("optional-dependencies", {}).get("rt")
+    pin_source = "\n".join(rt_dependencies) if rt_dependencies else pyproject
+    pinned = re.search(r"relational_transformer-([0-9.]+)-", pin_source)
+    assert pinned, (
+        "the active or commented RT source-install block has no readable version"
+    )
 
     from importlib.metadata import PackageNotFoundError, version
 
