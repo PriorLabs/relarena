@@ -14,6 +14,8 @@ jobs:
   test:
     name: Ruff, tests, and build (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
@@ -28,6 +30,11 @@ jobs:
           enable-cache: true
       - name: Install test dependencies
         run: uv sync --locked --group dev --group cpu --extra leaderboard --extra plots
+      - name: Verify test interpreter
+        env:
+          EXPECTED_PYTHON: ${{ matrix.python-version }}
+        run: |
+          uv run python -c 'import os, sys; actual = f"{sys.version_info.major}.{sys.version_info.minor}"; expected = os.environ["EXPECTED_PYTHON"]; assert actual == expected, f"Expected Python {expected}, got {actual}"'
       - name: Check formatting and lint
         run: |
           uv run ruff format --check .
