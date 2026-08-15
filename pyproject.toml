@@ -1,0 +1,190 @@
+[build-system]
+requires = ["uv_build>=0.11.15"]
+build-backend = "uv_build"
+
+[project]
+name = "relarena"
+version = "0.0.1"
+authors = [{ name = "Prior Labs" }]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
+description = "A unified, fair benchmarking framework for models on relational tasks on RelBench databases."
+readme = "README.md"
+requires-python = "~=3.11.0"
+keywords = [
+    "benchmarking",
+    "machine-learning",
+    "relational-learning",
+    "relbench",
+    "tabular-data",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    # Pinned exactly: RelBench ships the dataset/task SHA256 checksums in the package
+    # itself (relbench/datasets/hashes.json, relbench/tasks/hashes.json, wired into the
+    # pooch registries in relbench/datasets/__init__.py and relbench/tasks/__init__.py),
+    # so the package version is the data version. Pinning keeps a resolver bump from
+    # swapping in a release with different data. Only bump the relbench version
+    # deliberately (see below).
+    # When upgrading: re-run `python workflows/record_checksums.py` and confirm the
+    # recorded split checksums (src/relarena/checksums/relbench_v1_checksums.json) are unchanged — a new
+    # RelBench release may reprocess the data even if the splits look unchanged.
+    # (Also re-record whenever dataset.drop_noncanonical_columns changes.)
+    "relbench==2.1.2",
+    "numpy>=1.24",
+    # Mirrors fastdfs' own pandas range (the dfs extras resolve it);
+    # anything below 2.3.3 is unsatisfiable here.
+    "pandas>=2.3.3,<3.0",
+    "scikit-learn>=1.3",
+    "configspace>=1.0",
+    # pyyaml: loading PredictiveQuerySpec from a YAML task file (userdb).
+    "pyyaml>=6.0",
+    # jsonschema: validate a userdb task/database YAML against its JSON Schema.
+    "jsonschema>=4.0",
+    # torch: the GNN wrappers (graphsage, relgnn, relgt) import it at module level and
+    # `relarena.models` imports them eagerly to register them, so importing the model
+    # registry needs torch even when no GNN extra is installed. The rest of each GNN
+    # stack (PyG, PyTorch Frame, the text embedder) stays in the rdl extra.
+    "torch",
+]
+
+[project.urls]
+Homepage = "https://github.com/PriorLabs/relarena"
+Repository = "https://github.com/PriorLabs/relarena"
+Issues = "https://github.com/PriorLabs/relarena/issues"
+
+[project.scripts]
+relarena = "relarena.cli:main"
+
+[project.optional-dependencies]
+# Per-model extras (lazy-import + optional-dependency pattern; imported inside fit()).
+lightgbm = ["lightgbm>=4.0,<4.7"]
+# rdblearn: DFS features + a tabular foundation model. Carries the local TFM
+# (tabpfn>=8 for the create_default_for_version API, lazily imported in models/_tfm.py)
+# plus the DFS featurization deps; `tabpfn-rel-local` uses this same extra.
+# setuptools<82 because featuretools -> woodwork imports pkg_resources at import
+# time, and setuptools 82 removed it (81 still ships it).
+rdblearn = ["tabpfn>=8", "fastdfs>=0.2.1", "setuptools<82"]
+# rdl: the shared Relational Deep Learning stack for the GNN baselines — PyG + PyTorch
+# Frame + a text embedder, which relbench.modeling.* needs (all lazy-imported inside
+# fit()). GPU recommended. NOTE: PyG neighbor sampling needs `pyg-lib` or `torch-sparse`
+# from the PyG wheel index — see README; not declared here because the right wheel
+# depends on the torch/CUDA build of the target machine.
+rdl = ["torch-geometric>=2.5", "pytorch-frame>=0.2.3", "sentence-transformers"]
+# The GNN baselines build on that shared stack: graphsage (RelBench's heterogeneous
+# GraphSAGE), relgnn (RelGNN composite message passing over atomic routes), and relgt
+# (the Relational Graph Transformer dropped in for the GNN). relgt adds einops for the
+# global-attention einsum and h5py for the pre-built token cache.
+graphsage = ["relarena[rdl]"]
+relgnn = ["relarena[rdl]"]
+relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
+# tabpfn-rel-local runs the local TabPFN v3 over DFS features — the same stack as
+# rdblearn, exposed under the model's own name. tabpfn-rel-api covers
+# tabpfn-rel-client (the tabpfn-v3-api TFM): DFS locally, fit/predict server-side,
+# text embedded natively by the API — no GPU and no local tabpfn needed.
+tabpfn-rel-local = ["relarena[rdblearn]"]
+tabpfn-rel-api = ["fastdfs>=0.2.1", "setuptools<82", "tabpfn-client>=0.3.2"]
+# rt is temporarily disabled so RelArena's published metadata contains no direct
+# URL dependency. Until relational-transformer is released on PyPI, source users
+# can uncomment this block, run `uv lock`, then `uv sync --extra rt`. The wheel is
+# stable-ABI (abi3-py311) and linux x86_64 only; elsewhere, install RT from source
+# with Rust available. GPU strongly recommended -- a fine-tune on CPU is not a
+# practical run.
+# rt = [
+#     "relational-transformer @ https://github.com/rishabh-ranjan/relational-transformer/releases/download/v1.8.0/relational_transformer-1.8.0-cp311-abi3-manylinux_2_28_x86_64.whl",
+# ]
+# TabArena-style leaderboard aggregation (ELO / win-rate / rank / normalized
+# loss). bencheval is TabArena's standalone leaderboard package — no
+# AutoGluon/torch dependency. See relarena/evaluation/leaderboard.py.
+leaderboard = ["bencheval"]
+# Leaderboard plots (relarena/evaluation/plots.py): normalized-loss heatmaps + the
+# critical-difference diagram. bencheval's `[plot]` extra ships the
+# matplotlib/seaborn/plotly stack and the CD plot; `autorank` runs the Demšar
+# significance test.
+plots = ["bencheval[plot]", "autorank"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pre-commit>=4.0",
+    "ruff==0.15.13",
+    "lightgbm>=4.0,<4.7",
+    "fastdfs>=0.2.1",
+    # Same woodwork/pkg_resources cap as the DFS extras above.
+    "setuptools<82",
+]
+# The "cuda" and "cpu" groups switch between the cuda and CPU-only versions of torch.
+# With no group, torch comes from "dependencies" above via pypi, which is the cuda
+# build. The "cuda" group is a dummy, required for the "conflicts" option below.
+cuda = []
+# The CPU-only build avoids downloading CUDA when not required.
+cpu = ["torch"]
+
+[tool.uv]
+exclude-newer = "3 days"
+conflicts = [
+    # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
+    # of torch simultaneously.
+    [{ group = "cuda" }, { group = "cpu" }],
+]
+
+[tool.uv.sources]
+# bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
+# The resolved commit is pinned in uv.lock for reproducibility.
+bencheval = { git = "https://github.com/autogluon/tabarena.git", subdirectory = "packages/bencheval", rev = "9f3878b882439cb885003b5f978676961b059b6d" }
+# If the "cpu" group is specified, then download torch from the matching index rather
+# than pypi.
+torch = [{ index = "pytorch-cpu", group = "cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.ruff]
+required-version = "==0.15.13"
+force-exclude = true
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "ANN",
+    "D",
+    "E",
+    "F",
+    "I",
+    "W",
+]
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN204",
+    "ANN401",
+    "S101",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+ignore-decorators = ["typing.override", "typing_extensions.override"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/workflows/**/*.py" = [
+    "E501",
+]
+"**/tests/**/*.py" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D105",
+    "D106",
+    "D107",
+    "S101",
+]

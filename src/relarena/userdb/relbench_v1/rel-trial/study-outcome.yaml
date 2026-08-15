@@ -1,0 +1,27 @@
+database: db.yaml
+entity_table: studies
+entity_col: nct_id
+time_col: timestamp
+target_col: outcome
+task_type: binary_classification
+timedelta: 365 days
+num_eval_timestamps: 1
+val_timestamp: '2020-01-01 00:00:00'
+test_timestamp: '2021-01-01 00:00:00'
+entities: all
+query: |
+  WITH trial_info AS (
+      SELECT oa.nct_id, oa.p_value, s.start_date, oa.date
+      FROM outcome_analyses oa
+      LEFT JOIN outcomes o ON oa.outcome_id = o.id
+      LEFT JOIN studies s ON s.nct_id = o.nct_id
+      WHERE (oa.p_value_modifier IS NULL OR oa.p_value_modifier != '>')
+        AND oa.p_value >= 0 AND oa.p_value <= 1 AND o.outcome_type = 'Primary'
+  )
+  SELECT t.timestamp, tr.nct_id,
+         CASE WHEN MIN(tr.p_value) <= 0.05 THEN 1 ELSE 0 END AS outcome
+  FROM timestamp_df t
+  LEFT JOIN trial_info tr ON tr.start_date <= t.timestamp
+    AND tr.date > t.timestamp AND tr.date <= t.timestamp + INTERVAL '{timedelta}'
+  WHERE tr.nct_id IS NOT NULL
+  GROUP BY t.timestamp, tr.nct_id

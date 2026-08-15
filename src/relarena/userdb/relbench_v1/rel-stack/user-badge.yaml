@@ -1,0 +1,20 @@
+database: db.yaml
+entity_table: users
+entity_col: UserId
+time_col: timestamp
+target_col: WillGetBadge
+task_type: binary_classification
+timedelta: 91 days
+num_eval_timestamps: 1
+val_timestamp: '2020-10-01 00:00:00'
+test_timestamp: '2021-01-01 00:00:00'
+entities: all
+query: |
+  SELECT t.timestamp, u.id AS UserId,
+         CASE WHEN COUNT(b.id) >= 1 THEN 1 ELSE 0 END AS WillGetBadge
+  FROM timestamp_df t
+  LEFT JOIN users u ON u.creationdate <= t.timestamp
+  LEFT JOIN badges b ON u.id = b.userid
+    AND b.date > t.timestamp AND b.date <= t.timestamp + INTERVAL '{timedelta}'
+  GROUP BY t.timestamp, u.id
+  HAVING u.id IS NOT NULL

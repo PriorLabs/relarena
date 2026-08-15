@@ -1,0 +1,20 @@
+database: db.yaml
+entity_table: drivers
+entity_col: driverId
+time_col: date
+target_col: qualifying
+task_type: binary_classification
+timedelta: 30 days
+num_eval_timestamps: 40
+val_timestamp: '2005-01-01 00:00:00'
+test_timestamp: '2010-01-01 00:00:00'
+entities: all
+query: |
+  SELECT t.timestamp AS date, qu.driverId AS driverId,
+         CASE WHEN MIN(qu.position) <= 3 THEN 1 ELSE 0 END AS qualifying
+  FROM timestamp_df t
+  LEFT JOIN qualifying qu
+    ON qu.date <= t.timestamp + INTERVAL '{timedelta}' AND qu.date > t.timestamp
+  WHERE qu.driverId IN (SELECT DISTINCT driverId FROM qualifying
+                        WHERE date > t.timestamp - INTERVAL '1 year')
+  GROUP BY t.timestamp, qu.driverId

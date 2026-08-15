@@ -1,0 +1,33 @@
+AdsInfo:
+  pkey: AdID
+  fkeys:
+    CategoryID: Category
+    LocationID: Location
+Category:
+  pkey: CategoryID
+Location:
+  pkey: LocationID
+PhoneRequestsStream:
+  time_col: PhoneRequestDate
+  fkeys:
+    AdID: AdsInfo
+    UserID: UserInfo
+SearchInfo:
+  pkey: SearchID
+  time_col: SearchDate
+  fkeys:
+    CategoryID: Category
+    LocationID: Location
+    UserID: UserInfo
+SearchStream:
+  time_col: SearchDate
+  fkeys:
+    AdID: AdsInfo
+    SearchID: SearchInfo
+UserInfo:
+  pkey: UserID
+VisitStream:
+  time_col: ViewDate
+  fkeys:
+    AdID: AdsInfo
+    UserID: UserInfo

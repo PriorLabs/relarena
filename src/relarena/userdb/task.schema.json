@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PredictiveTask",
+  "description": "A predictive task over a relational database, as loaded by PredictiveQuerySpec.from_yaml. Defines the SQL label task, the train/val/test split timestamps, what to predict, and a reference to the database YAML that holds the table schema.",
+  "type": "object",
+  "required": ["database", "entity_table", "entity_col", "time_col", "target_col", "task_type", "timedelta", "val_timestamp", "test_timestamp", "query"],
+  "additionalProperties": false,
+  "properties": {
+    "database": {
+      "type": "string",
+      "description": "Path to the database YAML (the table schema), resolved relative to this task file's directory. Absolute paths are used as-is. One database YAML can back many task files."
+    },
+    "entity_table": {
+      "type": "string",
+      "description": "The table whose primary key is the prediction entity. Must be a key in the database YAML."
+    },
+    "entity_col": {
+      "type": "string",
+      "description": "Name of the entity-id column the query returns (the entity being predicted for)."
+    },
+    "time_col": {
+      "type": "string",
+      "description": "Name of the anchor-time column the query returns; each row's prediction is made as of this time. Corresponds to timestamp_df's single 'timestamp' column."
+    },
+    "target_col": {
+      "type": "string",
+      "description": "Name of the label column the query returns."
+    },
+    "task_type": {
+      "description": "Prediction type. RelArena entity tasks are binary classification or regression only.",
+      "enum": ["binary_classification", "regression"]
+    },
+    "timedelta": {
+      "type": "string",
+      "description": "Forward label window (t, t + timedelta], as a pandas.Timedelta string, e.g. '30 days'. The literal {timedelta} in the query is replaced with this string."
+    },
+    "num_eval_timestamps": {
+      "type": "integer",
+      "description": "How many anchor timestamps make up the evaluation grid per split.",
+      "minimum": 1,
+      "default": 1
+    },
+    "val_timestamp": {
+      "type": "string",
+      "description": "Inner-split (tuning) cutoff. Any string pandas.Timestamp can parse, e.g. '2020-01-01' or '2020-01-01 00:00:00'."
+    },
+    "test_timestamp": {
+      "type": "string",
+      "description": "Outer-split (final) cutoff. Any string pandas.Timestamp can parse; must be later than val_timestamp."
+    },
+    "at_timestamp": {
+      "type": "string",
+      "description": "Anchor time to predict at. Any string pandas.Timestamp can parse. Defaults to test_timestamp. Under the RelBench protocol, a later anchor does not advance the feature database beyond test_timestamp and emits a warning."
+    },
+    "entities": {
+      "description": "What to predict for: 'all' (every entity) or an explicit list of entity ids. May not be null.",
+      "oneOf": [
+        { "const": "all" },
+        { "type": "array", "items": { "type": ["string", "integer"] } }
+      ]
+    },
+    "query": {
+      "type": "string",
+      "description": "DuckDB SQL joining timestamp_df (one column 'timestamp') against the database tables by name, returning EXACTLY three columns aliased to time_col, entity_col and target_col. Use the literal INTERVAL '{timedelta}' for the forward window."
+    }
+  }
+}

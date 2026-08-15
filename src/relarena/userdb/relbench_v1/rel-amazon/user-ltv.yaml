@@ -1,0 +1,24 @@
+database: db.yaml
+entity_table: customer
+entity_col: customer_id
+time_col: timestamp
+target_col: ltv
+task_type: regression
+timedelta: 91 days
+num_eval_timestamps: 1
+val_timestamp: '2015-10-01 00:00:00'
+test_timestamp: '2016-01-01 00:00:00'
+entities: all
+query: |
+  SELECT timestamp, customer_id, ltv
+  FROM timestamp_df, customer, (
+      SELECT COALESCE(SUM(price), 0) AS ltv
+      FROM review, product
+      WHERE review.customer_id = customer.customer_id
+        AND review.product_id = product.product_id
+        AND review_time > timestamp AND review_time <= timestamp + INTERVAL '{timedelta}'
+  )
+  WHERE EXISTS (
+      SELECT 1 FROM review WHERE review.customer_id = customer.customer_id
+        AND review_time > timestamp - INTERVAL '{timedelta}' AND review_time <= timestamp
+  )

@@ -1,0 +1,9 @@
+article:
+  pkey: article_id
+customer:
+  pkey: customer_id
+transactions:
+  time_col: t_dat
+  fkeys:
+    article_id: article
+    customer_id: customer

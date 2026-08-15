@@ -1,0 +1,24 @@
+database: db.yaml
+entity_table: customer
+entity_col: customer_id
+time_col: timestamp
+target_col: churn
+task_type: binary_classification
+timedelta: 7 days
+num_eval_timestamps: 1
+val_timestamp: '2020-09-07 00:00:00'
+test_timestamp: '2020-09-14 00:00:00'
+entities: all
+query: |
+  SELECT timestamp, customer_id,
+    CAST(NOT EXISTS (
+      SELECT 1 FROM transactions
+      WHERE transactions.customer_id = customer.customer_id
+        AND t_dat > timestamp AND t_dat <= timestamp + INTERVAL '{timedelta}'
+    ) AS INTEGER) AS churn
+  FROM timestamp_df, customer
+  WHERE EXISTS (
+      SELECT 1 FROM transactions
+      WHERE transactions.customer_id = customer.customer_id
+        AND t_dat > timestamp - INTERVAL '{timedelta}' AND t_dat <= timestamp
+  )

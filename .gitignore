@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+.DS_Store
+**/results/
+dependency-licenses.md
+dist/
+build/
+*.egg-info/

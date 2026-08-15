@@ -1,0 +1,20 @@
+database: db.yaml
+entity_table: users
+entity_col: user
+time_col: timestamp
+target_col: target
+task_type: regression
+timedelta: 7 days
+num_eval_timestamps: 1
+val_timestamp: '2012-11-21 00:00:00'
+test_timestamp: '2012-11-29 00:00:00'
+entities: all
+query: |
+  SELECT t.timestamp, event_attendees.user_id AS user,
+    SUM(CASE WHEN event_attendees.status IN ('yes','maybe') THEN 1 ELSE 0 END) AS target
+  FROM timestamp_df t
+  LEFT JOIN event_attendees
+    ON event_attendees.start_time > t.timestamp
+   AND event_attendees.start_time <= t.timestamp + INTERVAL '{timedelta}'
+  GROUP BY t.timestamp, event_attendees.user_id
+  HAVING event_attendees.user_id IS NOT NULL

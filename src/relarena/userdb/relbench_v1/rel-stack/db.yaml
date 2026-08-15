@@ -1,0 +1,38 @@
+badges:
+  pkey: Id
+  time_col: Date
+  fkeys:
+    UserId: users
+comments:
+  pkey: Id
+  time_col: CreationDate
+  fkeys:
+    PostId: posts
+    UserId: users
+postHistory:
+  pkey: Id
+  time_col: CreationDate
+  fkeys:
+    PostId: posts
+    UserId: users
+postLinks:
+  pkey: Id
+  time_col: CreationDate
+  fkeys:
+    PostId: posts
+    RelatedPostId: posts
+posts:
+  pkey: Id
+  time_col: CreationDate
+  fkeys:
+    OwnerUserId: users
+    ParentId: posts
+users:
+  pkey: Id
+  time_col: CreationDate
+votes:
+  pkey: Id
+  time_col: CreationDate
+  fkeys:
+    PostId: posts
+    UserId: users

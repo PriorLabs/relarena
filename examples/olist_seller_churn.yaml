@@ -1,0 +1,30 @@
+# Predict seller churn over the Olist Brazilian E-Commerce DB: among sellers active
+# in the past 30 days, will they have NO order in the next 30 days? (binary)
+# Mirrors relbench's user-churn pattern (seed on backward window, label on forward).
+# The database schema lives in a separate file, referenced below.
+database: olist_database.yaml
+entity_table: sellers
+entity_col: seller_id
+time_col: timestamp
+target_col: churn
+task_type: binary_classification
+timedelta: 30 days
+num_eval_timestamps: 1
+val_timestamp: '2018-05-15 00:00:00'
+test_timestamp: '2018-06-15 00:00:00'
+entities: all
+# Seed: sellers with >=1 order in the backward window (timestamp - td, timestamp].
+# Label churn=1 if they have NO order in the forward window (timestamp, timestamp + td].
+query: |
+  SELECT timestamp, seller_id,
+    CAST(NOT EXISTS (
+      SELECT 1 FROM order_items
+      WHERE order_items.seller_id = sellers.seller_id
+        AND purchase_ts > timestamp AND purchase_ts <= timestamp + INTERVAL '{timedelta}'
+    ) AS INTEGER) AS churn
+  FROM timestamp_df, sellers
+  WHERE EXISTS (
+      SELECT 1 FROM order_items
+      WHERE order_items.seller_id = sellers.seller_id
+        AND purchase_ts > timestamp - INTERVAL '{timedelta}' AND purchase_ts <= timestamp
+  )

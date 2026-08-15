@@ -1,0 +1,20 @@
+[run]
+branch = False
+parallel = True
+relative_files = True
+omit =
+    */tests/*
+    */conftest.py
+    */.venv/*
+    */relarena/models/_shared/gnn/_vendor/gnn.py
+    */relarena/models/relgnn/_vendor/*
+    */relarena/models/relgt/_vendor/*
+    */examples/*
+
+[report]
+ignore_errors = True
+exclude_also =
+    if TYPE_CHECKING:
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    ^\s*\.\.\.\s*$
