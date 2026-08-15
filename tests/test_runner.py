@@ -5,12 +5,14 @@ The download, splits, and tuner are stubbed so nothing hits RelBench.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
 from relbench.base import TaskType
+from relbench.metrics import roc_auc
 
 from relarena import runner
 from relarena.cache import CacheConfig
@@ -23,14 +25,39 @@ _MODEL = SimpleNamespace(
 _IDENTITY = RunIdentity("rel-f1", "db", "driver-dnf", "task")
 
 
-def _trial(tag: str, error: str | None = None) -> TrialResult:
+def _trial(
+    tag: str, error: str | None = None, *, val_score: float = 0.9
+) -> TrialResult:
     return TrialResult(
         config={"tag": tag},
         config_id=tag,
         config_tag=tag,
-        val_score=None if error else 0.9,
+        val_score=None if error else val_score,
         error=error,
     )
+
+
+@pytest.mark.parametrize("nonfinite_score", [math.nan, math.inf, -math.inf])
+def test__select_best__nonfinite_incumbent__selects_finite_trial(
+    nonfinite_score: float,
+) -> None:
+    trials = [
+        _trial("nonfinite", val_score=nonfinite_score),
+        _trial("finite", val_score=0.8),
+    ]
+
+    assert runner.select_best(trials, roc_auc).config_tag == "finite"
+
+
+def test__select_best__only_nonfinite_scores__raises() -> None:
+    trials = [
+        _trial("nan", val_score=math.nan),
+        _trial("positive-infinity", val_score=math.inf),
+        _trial("negative-infinity", val_score=-math.inf),
+    ]
+
+    with pytest.raises(RuntimeError, match="finite validation score"):
+        runner.select_best(trials, roc_auc)
 
 
 @pytest.fixture
