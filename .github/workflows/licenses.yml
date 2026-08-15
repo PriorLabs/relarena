@@ -2,11 +2,6 @@ name: RelArena licenses
 
 on:
   pull_request:
-    paths:
-      - pyproject.toml
-      - uv.lock
-      - workflows/audit_licenses.py
-      - .github/workflows/licenses.yml
   merge_group:
     types: [checks_requested]
 
