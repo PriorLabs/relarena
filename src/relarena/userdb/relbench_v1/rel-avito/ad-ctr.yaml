@@ -1,0 +1,20 @@
+database: db.yaml
+entity_table: AdsInfo
+entity_col: AdID
+time_col: timestamp
+target_col: num_click
+task_type: regression
+timedelta: 4 days
+num_eval_timestamps: 1
+val_timestamp: '2015-05-08 00:00:00'
+test_timestamp: '2015-05-14 00:00:00'
+entities: all
+query: |
+  SELECT search_ads.AdID, t.timestamp,
+    COALESCE(SUM(search_ads.isClick), 0) / COALESCE(COUNT(search_ads.SearchID), 1) AS num_click
+  FROM timestamp_df t
+  LEFT JOIN (AdsInfo LEFT JOIN SearchStream ON AdsInfo.AdID = SearchStream.AdID) search_ads
+    ON search_ads.SearchDate > t.timestamp
+   AND search_ads.SearchDate <= t.timestamp + INTERVAL '{timedelta}'
+  GROUP BY t.timestamp, search_ads.AdID
+  HAVING SUM(search_ads.isClick) > 0

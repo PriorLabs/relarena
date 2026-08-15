@@ -1,0 +1,20 @@
+database: db.yaml
+entity_table: posts
+entity_col: PostId
+time_col: timestamp
+target_col: popularity
+task_type: regression
+timedelta: 91 days
+num_eval_timestamps: 1
+val_timestamp: '2020-10-01 00:00:00'
+test_timestamp: '2021-01-01 00:00:00'
+entities: all
+query: |
+  SELECT t.timestamp, p.id AS PostId, COUNT(distinct v.id) AS popularity
+  FROM timestamp_df t
+  LEFT JOIN posts p ON p.creationdate <= t.timestamp
+    AND p.owneruserid != -1 AND p.owneruserid IS NOT NULL AND p.posttypeid = 1
+  LEFT JOIN votes v ON p.id = v.postid
+    AND v.creationdate > t.timestamp
+    AND v.creationdate <= t.timestamp + INTERVAL '{timedelta}' AND v.votetypeid = 2
+  GROUP BY t.timestamp, p.id

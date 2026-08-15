@@ -1,0 +1,19 @@
+database: db.yaml
+entity_table: article
+entity_col: article_id
+time_col: timestamp
+target_col: sales
+task_type: regression
+timedelta: 7 days
+num_eval_timestamps: 1
+val_timestamp: '2020-09-07 00:00:00'
+test_timestamp: '2020-09-14 00:00:00'
+entities: all
+query: |
+  SELECT timestamp, article_id, sales
+  FROM timestamp_df, article, (
+      SELECT COALESCE(SUM(price), 0) AS sales
+      FROM transactions
+      WHERE transactions.article_id = article.article_id
+        AND t_dat > timestamp AND t_dat <= timestamp + INTERVAL '{timedelta}'
+  )

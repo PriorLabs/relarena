@@ -1,0 +1,43 @@
+circuits:
+  pkey: circuitId
+constructor_results:
+  pkey: constructorResultsId
+  time_col: date
+  fkeys:
+    constructorId: constructors
+    raceId: races
+constructor_standings:
+  pkey: constructorStandingsId
+  time_col: date
+  fkeys:
+    constructorId: constructors
+    raceId: races
+constructors:
+  pkey: constructorId
+drivers:
+  pkey: driverId
+qualifying:
+  pkey: qualifyId
+  time_col: date
+  fkeys:
+    constructorId: constructors
+    driverId: drivers
+    raceId: races
+races:
+  pkey: raceId
+  time_col: date
+  fkeys:
+    circuitId: circuits
+results:
+  pkey: resultId
+  time_col: date
+  fkeys:
+    constructorId: constructors
+    driverId: drivers
+    raceId: races
+standings:
+  pkey: driverStandingsId
+  time_col: date
+  fkeys:
+    driverId: drivers
+    raceId: races

@@ -1,0 +1,25 @@
+database: db.yaml
+entity_table: studies
+entity_col: nct_id
+time_col: timestamp
+target_col: num_of_adverse_events
+task_type: regression
+timedelta: 365 days
+num_eval_timestamps: 1
+val_timestamp: '2020-01-01 00:00:00'
+test_timestamp: '2021-01-01 00:00:00'
+entities: all
+query: |
+  WITH trial_info AS (
+      SELECT r.nct_id, r.event_type, r.subjects_affected, r.date, s.start_date
+      FROM reported_event_totals r
+      LEFT JOIN studies s ON r.nct_id = s.nct_id
+      WHERE (r.event_type = 'serious' OR r.event_type = 'deaths')
+        AND r.subjects_affected IS NOT NULL
+  )
+  SELECT t.timestamp, tr.nct_id, sum(tr.subjects_affected) AS num_of_adverse_events
+  FROM timestamp_df t
+  LEFT JOIN trial_info tr ON tr.start_date <= t.timestamp
+    AND tr.date > t.timestamp AND tr.date <= t.timestamp + INTERVAL '{timedelta}'
+  WHERE tr.nct_id IS NOT NULL AND tr.subjects_affected IS NOT NULL
+  GROUP BY t.timestamp, tr.nct_id

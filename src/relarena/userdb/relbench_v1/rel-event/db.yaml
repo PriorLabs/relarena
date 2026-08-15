@@ -1,0 +1,22 @@
+event_attendees:
+  time_col: start_time
+  fkeys:
+    event: events
+    user_id: users
+event_interest:
+  time_col: timestamp
+  fkeys:
+    event: events
+    user: users
+events:
+  pkey: event_id
+  time_col: start_time
+  fkeys:
+    user_id: users
+user_friends:
+  fkeys:
+    friend: users
+    user: users
+users:
+  pkey: user_id
+  time_col: joinedAt

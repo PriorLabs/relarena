@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Database",
+  "description": "A relational database schema, as loaded by DatabaseSpec.from_yaml. Top-level keys are table names (what a task's label query references in SQL); each maps to that table's keys, time column, curated columns and data file. Referenced by a task YAML's `database` field; one database YAML can back many tasks.",
+  "type": "object",
+  "minProperties": 1,
+  "additionalProperties": {
+    "type": ["object", "null"],
+    "description": "One table. Null (bare 'name:') means all-default: no pkey, no time_col, no fkeys, file <name>.parquet.",
+    "additionalProperties": false,
+    "properties": {
+      "pkey": {
+        "type": "string",
+        "description": "Primary-key column. Omit for a table with no primary key (e.g. a pure link table)."
+      },
+      "time_col": {
+        "type": "string",
+        "description": "Event-time column, used for temporal censoring. Omit for a static table (no time dimension)."
+      },
+      "fkeys": {
+        "type": "object",
+        "description": "Foreign keys: local column name -> the table it references. The referenced table must be a key in this database and have a 'pkey'.",
+        "additionalProperties": { "type": "string" }
+      },
+      "columns": {
+        "type": "array",
+        "description": "Restrict the table to this subset of columns on ingest (the rest are dropped). Must include the pkey, time_col and any fkey columns.",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+      "path": {
+        "type": "string",
+        "description": "Data file (.parquet or .csv). Defaults to '<name>.parquet'. Relative paths and the default resolve against from_yaml's data_dir (or the database YAML's own directory)."
+      }
+    }
+  }
+}

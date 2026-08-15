@@ -1,0 +1,46 @@
+# The Olist Brazilian E-Commerce database, pointing straight at the raw Kaggle CSVs.
+# `columns` curates which fields become features (and drops post-purchase leak
+# columns, e.g. orders' order_status / delivery timestamps). order_items is the one
+# table pre-processed in code, to add a trustworthy `purchase_ts` (see
+# examples/olist_seller_churn.py). Referenced by olist_seller_churn.yaml.
+sellers:
+  pkey: seller_id
+  path: olist_sellers_dataset.csv
+  columns: [seller_id, seller_city, seller_state]
+customers:
+  pkey: customer_id
+  path: olist_customers_dataset.csv
+  columns: [customer_id, customer_state, customer_city]
+product_category:
+  pkey: product_category_name
+  path: product_category_name_translation.csv
+products:
+  pkey: product_id
+  path: olist_products_dataset.csv
+  fkeys:
+    product_category_name: product_category
+  columns: [product_id, product_category_name, product_weight_g,
+            product_length_cm, product_height_cm, product_width_cm,
+            product_photos_qty]
+orders:
+  pkey: order_id
+  time_col: order_purchase_timestamp
+  path: olist_orders_dataset.csv
+  fkeys:
+    customer_id: customers
+  columns: [order_id, customer_id, order_purchase_timestamp]
+order_items:
+  time_col: purchase_ts
+  path: order_items.csv
+  fkeys:
+    order_id: orders
+    product_id: products
+    seller_id: sellers
+  columns: [order_id, order_item_id, product_id, seller_id,
+            price, freight_value, purchase_ts]
+order_reviews:
+  time_col: review_answer_timestamp
+  path: olist_order_reviews_dataset.csv
+  fkeys:
+    order_id: orders
+  columns: [order_id, review_score, review_answer_timestamp]

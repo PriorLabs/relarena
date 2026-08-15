@@ -1,0 +1,66 @@
+conditions:
+  pkey: condition_id
+conditions_studies:
+  pkey: id
+  time_col: date
+  fkeys:
+    condition_id: conditions
+    nct_id: studies
+designs:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+drop_withdrawals:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+eligibilities:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+facilities:
+  pkey: facility_id
+facilities_studies:
+  pkey: id
+  time_col: date
+  fkeys:
+    facility_id: facilities
+    nct_id: studies
+interventions:
+  pkey: intervention_id
+interventions_studies:
+  pkey: id
+  time_col: date
+  fkeys:
+    intervention_id: interventions
+    nct_id: studies
+outcome_analyses:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+    outcome_id: outcomes
+outcomes:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+reported_event_totals:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+sponsors:
+  pkey: sponsor_id
+sponsors_studies:
+  pkey: id
+  time_col: date
+  fkeys:
+    nct_id: studies
+    sponsor_id: sponsors
+studies:
+  pkey: nct_id
+  time_col: start_date

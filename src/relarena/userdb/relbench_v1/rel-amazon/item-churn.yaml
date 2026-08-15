@@ -1,0 +1,22 @@
+database: db.yaml
+entity_table: product
+entity_col: product_id
+time_col: timestamp
+target_col: churn
+task_type: binary_classification
+timedelta: 91 days
+num_eval_timestamps: 1
+val_timestamp: '2015-10-01 00:00:00'
+test_timestamp: '2016-01-01 00:00:00'
+entities: all
+query: |
+  SELECT timestamp, product_id,
+    CAST(NOT EXISTS (
+      SELECT 1 FROM review WHERE review.product_id = product.product_id
+        AND review_time > timestamp AND review_time <= timestamp + INTERVAL '{timedelta}'
+    ) AS INTEGER) AS churn
+  FROM timestamp_df, product
+  WHERE EXISTS (
+      SELECT 1 FROM review WHERE review.product_id = product.product_id
+        AND review_time > timestamp - INTERVAL '{timedelta}' AND review_time <= timestamp
+  )

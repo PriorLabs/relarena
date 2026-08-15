@@ -1,0 +1,19 @@
+database: db.yaml
+entity_table: UserInfo
+entity_col: UserID
+time_col: timestamp
+target_col: num_click
+task_type: binary_classification
+timedelta: 4 days
+num_eval_timestamps: 1
+val_timestamp: '2015-05-08 00:00:00'
+test_timestamp: '2015-05-14 00:00:00'
+entities: all
+query: |
+  SELECT visit_ads.UserID, t.timestamp,
+    COALESCE(COUNT(DISTINCT visit_ads.AdID), 0) > 1 AS num_click
+  FROM timestamp_df t
+  LEFT JOIN (UserInfo LEFT JOIN VisitStream ON UserInfo.UserID = VisitStream.UserID) visit_ads
+    ON visit_ads.ViewDate > t.timestamp
+   AND visit_ads.ViewDate <= t.timestamp + INTERVAL '{timedelta}'
+  GROUP BY t.timestamp, visit_ads.UserID

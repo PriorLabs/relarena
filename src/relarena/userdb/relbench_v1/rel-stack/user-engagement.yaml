@@ -1,0 +1,35 @@
+database: db.yaml
+entity_table: users
+entity_col: OwnerUserId
+time_col: timestamp
+target_col: contribution
+task_type: binary_classification
+timedelta: 91 days
+num_eval_timestamps: 1
+val_timestamp: '2020-10-01 00:00:00'
+test_timestamp: '2021-01-01 00:00:00'
+entities: all
+query: |
+  WITH all_engagement AS (
+      SELECT p.id, p.owneruserid AS userid, p.creationdate FROM posts p
+      UNION
+      SELECT v.id, v.userid, v.creationdate FROM votes v
+      UNION
+      SELECT c.id, c.userid, c.creationdate FROM comments c
+  ),
+  active_users AS (
+      SELECT t.timestamp, u.id, count(distinct a.id) AS n_engagement
+      FROM timestamp_df t
+      CROSS JOIN users u
+      LEFT JOIN all_engagement a ON u.id = a.userid AND a.creationdate <= t.timestamp
+      WHERE u.id != -1
+      GROUP BY t.timestamp, u.id
+  )
+  SELECT u.timestamp, u.id AS OwnerUserId,
+         IF(count(distinct a.id) >= 1, 1, 0) AS contribution
+  FROM active_users u
+  LEFT JOIN all_engagement a ON u.id = a.userid
+    AND a.creationdate > u.timestamp
+    AND a.creationdate <= u.timestamp + INTERVAL '{timedelta}'
+  WHERE u.n_engagement >= 1
+  GROUP BY u.timestamp, u.id

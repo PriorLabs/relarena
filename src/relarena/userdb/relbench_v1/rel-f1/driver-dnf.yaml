@@ -1,0 +1,20 @@
+database: db.yaml
+entity_table: drivers
+entity_col: driverId
+time_col: date
+target_col: did_not_finish
+task_type: binary_classification
+timedelta: 30 days
+num_eval_timestamps: 40
+val_timestamp: '2005-01-01 00:00:00'
+test_timestamp: '2010-01-01 00:00:00'
+entities: all
+query: |
+  SELECT t.timestamp AS date, re.driverId AS driverId,
+         MAX(CASE WHEN re.statusId != 1 THEN 1 ELSE 0 END) AS did_not_finish
+  FROM timestamp_df t
+  LEFT JOIN results re
+    ON re.date <= t.timestamp + INTERVAL '{timedelta}' AND re.date > t.timestamp
+  WHERE re.driverId IN (SELECT DISTINCT driverId FROM results
+                        WHERE date > t.timestamp - INTERVAL '1 year')
+  GROUP BY t.timestamp, re.driverId

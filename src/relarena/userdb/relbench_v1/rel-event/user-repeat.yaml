@@ -1,0 +1,33 @@
+database: db.yaml
+entity_table: users
+entity_col: user
+time_col: timestamp
+target_col: target
+task_type: binary_classification
+timedelta: 7 days
+num_eval_timestamps: 1
+val_timestamp: '2012-11-21 00:00:00'
+test_timestamp: '2012-11-29 00:00:00'
+entities: all
+query: |
+  WITH tb AS (
+    SELECT t.timestamp AS timestamp, event_attendees.user_id AS user,
+      MAX(CASE WHEN event_attendees.status IN ('yes','maybe') THEN 1 ELSE 0 END) AS target,
+      MAX(MAX(CASE WHEN event_attendees.status IN ('yes','maybe') THEN 1 ELSE 0 END))
+        OVER (PARTITION BY event_attendees.user_id ORDER BY t.timestamp
+              ROWS BETWEEN 2 PRECEDING AND 1 PRECEDING) AS prev_target
+    FROM timestamp_df t
+    LEFT JOIN event_attendees
+      ON event_attendees.start_time > t.timestamp
+     AND event_attendees.start_time <= t.timestamp + INTERVAL '{timedelta}'
+    GROUP BY t.timestamp, event_attendees.user_id
+  )
+  SELECT timestamp, user, target FROM tb
+  WHERE user IS NOT NULL AND (
+    prev_target = 1
+    OR ((SELECT COUNT(*) FROM timestamp_df) = 1 AND EXISTS (
+          SELECT 1 FROM event_attendees e2
+          WHERE e2.user_id = tb.user AND e2.status IN ('yes','maybe')
+            AND e2.start_time > tb.timestamp - INTERVAL '{timedelta}' - INTERVAL '{timedelta}'
+            AND e2.start_time <= tb.timestamp))
+  )
