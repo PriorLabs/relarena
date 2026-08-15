@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena"
-version = "0.0.1"
+version = "0.0.1a1"
 authors = [{ name = "Prior Labs" }]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
