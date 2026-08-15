@@ -10,7 +10,7 @@ license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
 description = "A unified, fair benchmarking framework for models on relational tasks on RelBench databases."
 readme = "README.md"
-requires-python = "~=3.11.0"
+requires-python = ">=3.11,<3.13"
 keywords = [
     "benchmarking",
     "machine-learning",
@@ -23,6 +23,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
