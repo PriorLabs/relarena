@@ -154,9 +154,10 @@ OMP_NUM_THREADS=1 uv run pytest  # the prefix is required on macOS; harmless els
 ```
 
 The `rt` extra currently installs a platform-specific wheel directly from a
-GitHub release. That is supported for source and GitHub releases, but PyPI rejects
-distribution metadata containing direct-URL dependencies; the initial package is
-therefore released through GitHub rather than PyPI.
+GitHub release. Public package indexes reject distribution metadata containing
+direct-URL dependencies. Before publishing RelArena to PyPI, publish
+`relational-transformer` there as a normal versioned dependency or remove the
+direct reference from RelArena's published metadata.
 
 ## Use RelArena on your own database (RPI)
 
