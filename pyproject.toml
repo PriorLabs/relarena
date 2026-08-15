@@ -4,13 +4,13 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena"
-version = "0.0.1"
+version = "0.0.1a2"
 authors = [{ name = "Prior Labs" }]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
 description = "A unified, fair benchmarking framework for models on relational tasks on RelBench databases."
 readme = "README.md"
-requires-python = "~=3.11.0"
+requires-python = ">=3.11,<3.13"
 keywords = [
     "benchmarking",
     "machine-learning",
@@ -23,6 +23,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
@@ -90,15 +91,10 @@ relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # text embedded natively by the API — no GPU and no local tabpfn needed.
 tabpfn-rel-local = ["relarena[rdblearn]"]
 tabpfn-rel-api = ["fastdfs>=0.2.1", "setuptools<82", "tabpfn-client>=0.3.2"]
-# rt is temporarily disabled so RelArena's published metadata contains no direct
-# URL dependency. Until relational-transformer is released on PyPI, source users
-# can uncomment this block, run `uv lock`, then `uv sync --extra rt`. The wheel is
-# stable-ABI (abi3-py311) and linux x86_64 only; elsewhere, install RT from source
-# with Rust available. GPU strongly recommended -- a fine-tune on CPU is not a
-# practical run.
-# rt = [
-#     "relational-transformer @ https://github.com/rishabh-ranjan/relational-transformer/releases/download/v1.8.0/relational_transformer-1.8.0-cp311-abi3-manylinux_2_28_x86_64.whl",
-# ]
+# RelArena supports RT execution on Linux x86_64, for which relational-transformer
+# publishes a stable-ABI (abi3-py311) wheel. GPU strongly recommended -- a
+# fine-tune on CPU is not a practical run.
+rt = ["relational-transformer==1.8.0"]
 # TabArena-style leaderboard aggregation (ELO / win-rate / rank / normalized
 # loss). bencheval is TabArena's standalone leaderboard package — no
 # AutoGluon/torch dependency. See relarena/evaluation/leaderboard.py.
@@ -128,6 +124,9 @@ cpu = ["torch"]
 
 [tool.uv]
 exclude-newer = "3 days"
+# v1.8.0 was published after the global cutoff while this release was being
+# prepared. The exact dependency pin above keeps this exemption reproducible.
+exclude-newer-package = { relational-transformer = false }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.

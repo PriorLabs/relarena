@@ -647,14 +647,11 @@ def test__context_cutoff__every_arm_names_its_horizon() -> None:
     assert cfg.context_cutoff(task, "test") > cfg.context_cutoff(task, "val")
 
 
-def test__rt_source_pin__matches_installed_version() -> None:
-    # The direct-URL `rt` extra is commented out until relational-transformer is
-    # published on PyPI, keeping RelArena's distribution metadata publishable.
-    # Source users may uncomment it as documented, so read the active group when
-    # present and otherwise read its commented template. Either form remains the
-    # statement of which RT this model was written against. If an environment
-    # carries a different one -- an editable checkout, or a stale wheel -- the
-    # model may be running code the config assumes is there.
+def test__rt_dependency_pin__matches_installed_version() -> None:
+    # The `rt` extra is the statement of which relational-transformer release
+    # this model was written against. If an environment carries a different one
+    # -- an editable checkout, or a stale wheel -- the model may be running code
+    # the config assumes is there.
     # `db_cutoff` is the live example: it takes an integer only from 1.2.0 on,
     # and v1.1.0's wheel silently lacked it.
     import re
@@ -665,11 +662,9 @@ def test__rt_source_pin__matches_installed_version() -> None:
     pyproject = (root / "pyproject.toml").read_text()
     spec = tomllib.loads(pyproject)
     rt_dependencies = spec["project"].get("optional-dependencies", {}).get("rt")
-    pin_source = "\n".join(rt_dependencies) if rt_dependencies else pyproject
-    pinned = re.search(r"relational_transformer-([0-9.]+)-", pin_source)
-    assert pinned, (
-        "the active or commented RT source-install block has no readable version"
-    )
+    assert rt_dependencies, "the RT integration must expose an `rt` package extra"
+    pinned = re.search(r"relational-transformer==([0-9.]+)", "\n".join(rt_dependencies))
+    assert pinned, "the `rt` extra must pin a relational-transformer version"
 
     from importlib.metadata import PackageNotFoundError, version
 
@@ -679,8 +674,8 @@ def test__rt_source_pin__matches_installed_version() -> None:
         pytest.skip("relational-transformer is not installed")
     assert installed == pinned.group(1), (
         f"installed relational-transformer {installed} but the RT integration pins "
-        f"{pinned.group(1)}. Install from the pinned wheel: a source checkout "
-        "or an older release can differ in ways the config depends on."
+        f"{pinned.group(1)}. Install `relarena[rt]`; a source checkout or an older "
+        "release can differ in ways the config depends on."
     )
 
 
