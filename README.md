@@ -153,11 +153,11 @@ uv sync            # the dev group (pytest, ruff, ...) installs by default
 OMP_NUM_THREADS=1 uv run pytest  # the prefix is required on macOS; harmless elsewhere
 ```
 
-The `rt` integration is temporarily not exposed as a package extra because its
-platform-specific dependency is not yet on PyPI. To use it from a source
-checkout, uncomment the documented `rt` block in `pyproject.toml`, then run
-`uv lock` and `uv sync --extra rt`. Once `relational-transformer` is published
-on PyPI, the extra can use a normal version constraint without this local step.
+Install the RT-PluRel integration with `uv sync --extra rt` from a source
+checkout or `pip install "relarena[rt]"` from a release. The pinned
+`relational-transformer` package provides a stable-ABI wheel for Linux x86-64,
+the platform currently supported by RelArena's RT integration. A GPU is strongly
+recommended for practical fine-tuning runtimes.
 
 ## Use RelArena on your own database (RPI)
 
