@@ -116,7 +116,7 @@ ACCEPTED: dict[str, str] = {
     "orjson": (
         "MPL-2.0 AND (Apache-2.0 OR MIT) — file-level weak copyleft; used "
         "unmodified, so no source obligation reaches relarena's own code. Pulled "
-        "only by the rt extra"
+        "only when the temporary source-install rt block is enabled"
     ),
     "tqdm": (
         "MPL-2.0 AND MIT — file-level weak copyleft; used unmodified, so no source "
@@ -162,9 +162,9 @@ MANUAL_LICENSES: dict[str, str] = {
     # The 0.2.19 wheel ships plain Apache-2.0 (no paragraph 10) in
     # dist-info/licenses/LICENSE while declaring no license in its metadata.
     "tabpfn-common-utils": "Apache-2.0",
+    # When the commented source-install rt block is enabled,
     # rishabh-ranjan/relational-transformer ships MIT in LICENSE at the pinned
-    # v1.8.0 tag (the wheel URL in pyproject.toml is the pin); the prebuilt
-    # release wheel declares no license in its metadata.
+    # v1.8.0 tag; the prebuilt release wheel declares no license in its metadata.
     "relational-transformer": "MIT",
 }
 

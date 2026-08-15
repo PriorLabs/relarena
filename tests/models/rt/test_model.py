@@ -647,11 +647,13 @@ def test__context_cutoff__every_arm_names_its_horizon() -> None:
     assert cfg.context_cutoff(task, "test") > cfg.context_cutoff(task, "val")
 
 
-def test__rt_extra__pins_the_version_that_is_installed() -> None:
-    # The `rt` extra installs a prebuilt wheel from a GitHub release, so the
-    # URL is the only statement of which rt this model was written against.
-    # If an environment carries a different one -- an editable checkout, or a
-    # stale wheel -- the model may be running code the config assumes is there.
+def test__rt_extra__disabled_pin_matches_installed_version() -> None:
+    # The direct-URL `rt` extra is commented out until relational-transformer is
+    # published on PyPI, keeping RelArena's distribution metadata publishable.
+    # The commented source-install escape hatch remains the statement of which
+    # RT this model was written against. If an environment carries a different
+    # one -- an editable checkout, or a stale wheel -- the model may be running
+    # code the config assumes is there.
     # `db_cutoff` is the live example: it takes an integer only from 1.2.0 on,
     # and v1.1.0's wheel silently lacked it.
     import re
@@ -659,16 +661,11 @@ def test__rt_extra__pins_the_version_that_is_installed() -> None:
     import tomllib
 
     root = Path(__file__).resolve().parents[3]
-    spec = tomllib.loads((root / "pyproject.toml").read_text())
-    urls = [
-        d
-        for group in spec["project"].get("optional-dependencies", {}).values()
-        for d in group
-        if "relational-transformer" in d
-    ]
-    assert urls, "the rt extra no longer pins relational-transformer"
-    pinned = re.search(r"relational_transformer-([0-9.]+)-", urls[0])
-    assert pinned, f"cannot read a version out of {urls[0]!r}"
+    pyproject = (root / "pyproject.toml").read_text()
+    spec = tomllib.loads(pyproject)
+    assert "rt" not in spec["project"].get("optional-dependencies", {})
+    pinned = re.search(r"relational_transformer-([0-9.]+)-", pyproject)
+    assert pinned, "the commented RT source-install block has no readable version"
 
     from importlib.metadata import PackageNotFoundError, version
 
@@ -677,7 +674,7 @@ def test__rt_extra__pins_the_version_that_is_installed() -> None:
     except PackageNotFoundError:  # the `rt` extra is not installed here
         pytest.skip("relational-transformer is not installed")
     assert installed == pinned.group(1), (
-        f"installed relational-transformer {installed} but the rt extra pins "
+        f"installed relational-transformer {installed} but the RT integration pins "
         f"{pinned.group(1)}. Install from the pinned wheel: a source checkout "
         "or an older release can differ in ways the config depends on."
     )
@@ -820,7 +817,7 @@ def test__step_and_context_searches__share_neither_rows_nor_context_draws() -> N
     # A different base is a disjoint family, not an offset into the same one:
     # member_context_seed mixes the base through splitmix64.
     member_context_seed = pytest.importorskip(
-        "rt.eval", reason="needs the rt extra"
+        "rt.eval", reason="needs relational-transformer installed"
     ).member_context_seed
 
     step = {member_context_seed(cfg.step_context_seed(), m) for m in range(8)}
@@ -851,7 +848,7 @@ def test__best_checkpoint__nothing_published__reports_the_warm_start(
     # With eval_live=False there is no live checkpoint to fall back to, and no
     # SWA checkpoint exists at step 0. Both missing means validation never beat
     # step 0, so the honest report is the warm start unmodified -- not a crash.
-    pytest.importorskip("safetensors")  # ships with the rt extra
+    pytest.importorskip("safetensors")  # ships with relational-transformer
     from relarena.models.rt.model import _best_checkpoint
 
     path, step = _best_checkpoint(tmp_path, TaskType.REGRESSION)

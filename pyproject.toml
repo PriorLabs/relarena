@@ -90,18 +90,15 @@ relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # text embedded natively by the API — no GPU and no local tabpfn needed.
 tabpfn-rel-local = ["relarena[rdblearn]"]
 tabpfn-rel-api = ["fastdfs>=0.2.1", "setuptools<82", "tabpfn-client>=0.3.2"]
-# rt: the Relational Transformer, fine-tuned per task from a published RT-P
-# checkpoint. A prebuilt wheel from the project's GitHub releases, not PyPI (it
-# is not published there): stable-ABI (abi3-py311), so the one wheel covers
-# every CPython from 3.11 up, and it carries the compiled rustler extension, so
-# installing needs no Rust toolchain and no rebuild. linux x86_64 only --
-# elsewhere, install from source (`pip install
-# git+https://github.com/rishabh-ranjan/relational-transformer`) with Rust
-# present. torch and sentence-transformers come with it. GPU strongly
-# recommended -- a fine-tune on CPU is not a practical run.
-rt = [
-    "relational-transformer @ https://github.com/rishabh-ranjan/relational-transformer/releases/download/v1.8.0/relational_transformer-1.8.0-cp311-abi3-manylinux_2_28_x86_64.whl",
-]
+# rt is temporarily disabled so RelArena's published metadata contains no direct
+# URL dependency. Until relational-transformer is released on PyPI, source users
+# can uncomment this block, run `uv lock`, then `uv sync --extra rt`. The wheel is
+# stable-ABI (abi3-py311) and linux x86_64 only; elsewhere, install RT from source
+# with Rust available. GPU strongly recommended -- a fine-tune on CPU is not a
+# practical run.
+# rt = [
+#     "relational-transformer @ https://github.com/rishabh-ranjan/relational-transformer/releases/download/v1.8.0/relational_transformer-1.8.0-cp311-abi3-manylinux_2_28_x86_64.whl",
+# ]
 # TabArena-style leaderboard aggregation (ELO / win-rate / rank / normalized
 # loss). bencheval is TabArena's standalone leaderboard package — no
 # AutoGluon/torch dependency. See relarena/evaluation/leaderboard.py.
