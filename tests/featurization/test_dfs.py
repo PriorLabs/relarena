@@ -279,6 +279,52 @@ def _label_table(
     )
 
 
+#: Renames `_toy_db` onto a disjoint namespace, so the two schemas produce DFS
+#: feature names that cannot overlap.
+_RENAME = {
+    "users": "shops",
+    "reviews": "sales",
+    "uid": "sid",
+    "age": "size",
+    "rating": "amount",
+}
+
+
+def _other_db() -> Database:
+    """`_toy_db`'s structure under disjoint table and column names."""
+    return Database(
+        {
+            _RENAME[name]: Table(
+                df=t.df.rename(columns=_RENAME),
+                fkey_col_to_pkey_table={
+                    _RENAME[c]: _RENAME[p] for c, p in t.fkey_col_to_pkey_table.items()
+                },
+                pkey_col=_RENAME[t.pkey_col] if t.pkey_col else None,
+                time_col=t.time_col,
+            )
+            for name, t in _toy_db().table_dict.items()
+        }
+    )
+
+
+def _other_task() -> SimpleNamespace:
+    """An entity task over `shops` (matches `_other_db`)."""
+    return SimpleNamespace(
+        entity_table="shops", entity_col="sid", target_col="y", time_col="ts"
+    )
+
+
+def _other_label_table(uids: list[int]) -> Table:
+    """`_label_table` renamed onto `_other_db`."""
+    t = _label_table(uids)
+    return Table(
+        df=t.df.rename(columns=_RENAME),
+        fkey_col_to_pkey_table={"sid": "shops"},
+        pkey_col=None,
+        time_col="ts",
+    )
+
+
 def test__dfs_cache_key__tracks_inputs_not_downstream_model_choices() -> None:
     db, task = _toy_db(), _toy_task()
     anchors = _label_table([1, 2], y=[0.0, 1.0])
@@ -594,6 +640,48 @@ def test__build_dfs_features__cache_persists_across_processes(
     )
     assert calls["n"] == 1  # served from disk, DFS not re-run
     pd.testing.assert_frame_equal(second, first)
+
+
+def test__build_dfs_features__warm_cache_second_task__slices_to_its_own_depth(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The documented sweep shape: warm the shared cache, then run many tasks in one
+    # process (the CLI loops over every task in-process). Everything below is the
+    # real path -- real DFS engine, real parquet cache, real depth slice; only the
+    # process-level _CACHE is swapped, to stand in for a fresh worker.
+    pytest.importorskip("fastdfs")
+    a = (
+        _toy_task(),
+        _toy_db(),
+        _label_table([1, 2, 3]),
+        RunIdentity("a", "fa", "ta", "x"),
+    )
+    b = (
+        _other_task(),
+        _other_db(),
+        _other_label_table([1, 2, 3]),
+        RunIdentity("b", "fb", "tb", "x"),
+    )
+
+    def build(spec: tuple, cache: CacheConfig) -> pd.DataFrame:
+        task, db, tbl, ident = spec
+        features, _ = dfs_mod.build_dfs_features(
+            task, db, tbl, depth=1, max_depth=2, cache=cache, run_identity=ident
+        )
+        return features
+
+    for spec in (a, b):  # warm the shared cache, as the feature warmer does
+        build(spec, CacheConfig(tmp_path, "fill"))
+    read = CacheConfig(tmp_path, "raise")  # every artifact must now be a disk hit
+
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    solo = build(b, read)  # task B alone
+
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    build(a, read)  # task A first, leaving its depth map in the process cache
+    after = build(b, read)
+
+    pd.testing.assert_frame_equal(after, solo)
 
 
 def test__build_dfs_features__cache_key_discriminates_depth_and_history(
