@@ -86,10 +86,10 @@ def test_depth_cache_memoizes_matrix_and_depth_map(
         dm_calls["n"] += 1
         return {"drivers.COUNT(x)": 2}
 
-    cache.depth_map(None, 2, config, depths)
-    cache.depth_map(None, 2, config, depths)
+    cache.depth_map(db, None, 2, config, depths)
+    cache.depth_map(db, None, 2, config, depths)
     assert dm_calls["n"] == 1
-    cache.depth_map(hist, 2, config, depths)
+    cache.depth_map(db, hist, 2, config, depths)
     assert dm_calls["n"] == 2
 
 
@@ -133,10 +133,10 @@ def test__depth_cache__different_policy__does_not_hide_a_fill(tmp_path: Path) ->
     fill_config = CacheConfig(tmp_path, "fill")
     computed = cache.full_matrix(db, source, None, 2, compute_config, matrix)
     assert computed["f"].tolist() == [1]
-    assert cache.depth_map(None, 2, compute_config, depths) == {"f": 1}
+    assert cache.depth_map(db, None, 2, compute_config, depths) == {"f": 1}
     filled = cache.full_matrix(db, source, None, 2, fill_config, matrix)
     assert filled["f"].tolist() == [2]
-    assert cache.depth_map(None, 2, fill_config, depths) == {"f": 2}
+    assert cache.depth_map(db, None, 2, fill_config, depths) == {"f": 2}
 
 
 def test__depth_cache__different_db_without_rdb_build__does_not_reuse_matrix() -> None:
@@ -171,23 +171,46 @@ def test__depth_cache__different_db_without_rdb_build__does_not_reuse_matrix() -
 def test_depth_cache_resets_on_new_db(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(dfs_mod, "_build_rdb", lambda db: f"rdb::{id(db)}")
     cache = _DepthCache()
-    cache.raw_rdb_for(object())
+    db = object()
+    cache.raw_rdb_for(db)
     config = CacheConfig(None, "compute")
     cache.full_matrix(
-        object(),
+        db,
         pd.DataFrame({"a": [1]}),
         None,
         2,
         config,
         lambda: pd.DataFrame({"f": [1]}),
     )
-    cache.depth_map(None, 2, config, lambda: {"f": 2})
+    cache.depth_map(db, None, 2, config, lambda: {"f": 2})
     assert cache._matrices and cache._depth_maps
 
     cache.raw_rdb_for(object())  # different db -> reset
     assert cache._matrices == {}
     assert cache._depth_maps == {}
     assert cache._rdbs == {}
+
+
+def test_depth_cache_scopes_memos_per_db_without_building_an_rdb() -> None:
+    """A warm disk cache builds no RDB, so scoping can't hang off `raw_rdb_for`.
+
+    Depth maps are keyed by feature *name*: another db's map matches nothing, so
+    the slice in `build_dfs_features` would keep every column. Stale matrices
+    would also accumulate for the process lifetime.
+    """
+    cache = _DepthCache()
+    config = CacheConfig(None, "compute")
+    db_a, db_b = object(), object()
+    source = pd.DataFrame({"a": [1]})
+
+    cache.full_matrix(db_a, source, None, 2, config, lambda: pd.DataFrame({"f": [1]}))
+    users = cache.depth_map(db_a, None, 2, config, lambda: {"users.COUNT(reviews)": 2})
+    cache.full_matrix(db_b, source, None, 2, config, lambda: pd.DataFrame({"f": [2]}))
+    shops = cache.depth_map(db_b, None, 2, config, lambda: {"shops.COUNT(sales)": 2})
+
+    assert users == {"users.COUNT(reviews)": 2}
+    assert shops == {"shops.COUNT(sales)": 2}
+    assert len(cache._matrices) == 1  # db_a's evicted, not accumulated
 
 
 # -- temporal diff (pure-pandas; no fastdfs needed) ---------------------------
