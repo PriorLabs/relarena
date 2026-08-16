@@ -401,8 +401,10 @@ class _DepthCache:
         #: history-frame key -> (history frame ref, transformed RDB variant)
         self._rdbs: dict[int | None, tuple[pd.DataFrame | None, "RDB"]] = {}
         self._depth_maps: dict[tuple[int | None, int, CacheConfig], dict[str, int]] = {}
+        #: (id(split frame), history key, max_depth, cache) -> matrix. Scoped to
+        #: the current db by `_scope`, so the db is not part of the key.
         self._matrices: dict[
-            tuple[Database, int, int | None, int, CacheConfig], pd.DataFrame
+            tuple[int, int | None, int, CacheConfig], pd.DataFrame
         ] = {}
         self.matrix_computations = 0  # instrumentation: # of max_depth DFS runs
 
