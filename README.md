@@ -328,10 +328,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and, for agent-facing notes, [AGENTS.md](
 
 </details>
 
-### 🧱 Baseline dependencies
+<details>
+<summary><b>🧱 Baseline dependencies</b> — one extra per baseline, plus two special cases</summary>
 
 Each baseline carries its own extra, and every heavy dependency is lazy-imported inside `fit`, so
-registering a method works without its extra installed. Two of them need more than an extra.
+registering a method works without its extra installed.
 
 | Extra | Baselines | Notes |
 |---|---|---|
@@ -343,30 +344,24 @@ registering a method works without its extra installed. Two of them need more th
 | `rt` | RT-PluRel | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
 
-<details>
-<summary><b>🖧 GNN baselines</b> — the PyG sampling wheels are not in the extras</summary>
+**GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
+`relgt` build on RelBench's GNN stack (PyG + PyTorch Frame + a text embedder), pulled by their
+extras. PyG **temporal (disjoint) neighbor sampling additionally needs `pyg-lib`** (plus
+`torch-scatter` or `torch-sparse`; `torch-sparse` alone errors), which is deliberately *not*
+declared: the right wheel depends on the target machine's torch/CUDA build (Linux and GPU only).
+Install the matching wheels from the PyG index on the GPU machine, see
+[docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies). End-to-end runs want
+a GPU.
 
-`graphsage`, `relgnn`, and `relgt` build on RelBench's GNN stack (PyG + PyTorch Frame + a text
-embedder), pulled by their extras. PyG **temporal (disjoint) neighbor sampling additionally
-needs `pyg-lib`** (plus `torch-scatter` or `torch-sparse`; `torch-sparse` alone errors), which
-is deliberately *not* declared: the right wheel depends on the target machine's torch/CUDA
-build (Linux and GPU only). Install the matching wheels from the PyG index on the GPU machine,
-see [docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies). End-to-end
-runs want a GPU.
-
-</details>
-
-<details>
-<summary><b>🧠 RT-PluRel</b> — Linux x86-64 wheel, GPU strongly recommended</summary>
+**RT-PluRel: Linux x86-64 wheel, GPU strongly recommended.** The pinned
+`relational-transformer` package provides a stable-ABI wheel for Linux x86-64, the platform
+currently supported by RelArena's RT integration, and a GPU is strongly recommended for practical
+fine-tuning runtimes.
 
 ```bash
 uv sync --extra rt                 # from a source checkout
 pip install "relarena[rt]"         # from a release
 ```
-
-The pinned `relational-transformer` package provides a stable-ABI wheel for Linux x86-64, the
-platform currently supported by RelArena's RT integration. A GPU is strongly recommended for
-practical fine-tuning runtimes.
 
 </details>
 
