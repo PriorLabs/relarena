@@ -86,10 +86,10 @@ def test_depth_cache_memoizes_matrix_and_depth_map(
         dm_calls["n"] += 1
         return {"drivers.COUNT(x)": 2}
 
-    cache.depth_map(None, 2, config, depths)
-    cache.depth_map(None, 2, config, depths)
+    cache.depth_map(db, None, 2, config, depths)
+    cache.depth_map(db, None, 2, config, depths)
     assert dm_calls["n"] == 1
-    cache.depth_map(hist, 2, config, depths)
+    cache.depth_map(db, hist, 2, config, depths)
     assert dm_calls["n"] == 2
 
 
@@ -133,10 +133,10 @@ def test__depth_cache__different_policy__does_not_hide_a_fill(tmp_path: Path) ->
     fill_config = CacheConfig(tmp_path, "fill")
     computed = cache.full_matrix(db, source, None, 2, compute_config, matrix)
     assert computed["f"].tolist() == [1]
-    assert cache.depth_map(None, 2, compute_config, depths) == {"f": 1}
+    assert cache.depth_map(db, None, 2, compute_config, depths) == {"f": 1}
     filled = cache.full_matrix(db, source, None, 2, fill_config, matrix)
     assert filled["f"].tolist() == [2]
-    assert cache.depth_map(None, 2, fill_config, depths) == {"f": 2}
+    assert cache.depth_map(db, None, 2, fill_config, depths) == {"f": 2}
 
 
 def test__depth_cache__different_db_without_rdb_build__does_not_reuse_matrix() -> None:
@@ -171,23 +171,46 @@ def test__depth_cache__different_db_without_rdb_build__does_not_reuse_matrix() -
 def test_depth_cache_resets_on_new_db(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(dfs_mod, "_build_rdb", lambda db: f"rdb::{id(db)}")
     cache = _DepthCache()
-    cache.raw_rdb_for(object())
+    db = object()
+    cache.raw_rdb_for(db)
     config = CacheConfig(None, "compute")
     cache.full_matrix(
-        object(),
+        db,
         pd.DataFrame({"a": [1]}),
         None,
         2,
         config,
         lambda: pd.DataFrame({"f": [1]}),
     )
-    cache.depth_map(None, 2, config, lambda: {"f": 2})
+    cache.depth_map(db, None, 2, config, lambda: {"f": 2})
     assert cache._matrices and cache._depth_maps
 
     cache.raw_rdb_for(object())  # different db -> reset
     assert cache._matrices == {}
     assert cache._depth_maps == {}
     assert cache._rdbs == {}
+
+
+def test_depth_cache_scopes_memos_per_db_without_building_an_rdb() -> None:
+    """A warm disk cache builds no RDB, so scoping can't hang off `raw_rdb_for`.
+
+    Depth maps are keyed by feature *name*: another db's map matches nothing, so
+    the slice in `build_dfs_features` would keep every column. Stale matrices
+    would also accumulate for the process lifetime.
+    """
+    cache = _DepthCache()
+    config = CacheConfig(None, "compute")
+    db_a, db_b = object(), object()
+    source = pd.DataFrame({"a": [1]})
+
+    cache.full_matrix(db_a, source, None, 2, config, lambda: pd.DataFrame({"f": [1]}))
+    users = cache.depth_map(db_a, None, 2, config, lambda: {"users.COUNT(reviews)": 2})
+    cache.full_matrix(db_b, source, None, 2, config, lambda: pd.DataFrame({"f": [2]}))
+    shops = cache.depth_map(db_b, None, 2, config, lambda: {"shops.COUNT(sales)": 2})
+
+    assert users == {"users.COUNT(reviews)": 2}
+    assert shops == {"shops.COUNT(sales)": 2}
+    assert len(cache._matrices) == 1  # db_a's evicted, not accumulated
 
 
 # -- temporal diff (pure-pandas; no fastdfs needed) ---------------------------
@@ -251,6 +274,52 @@ def _label_table(
             }
         ),
         fkey_col_to_pkey_table={"uid": "users"},
+        pkey_col=None,
+        time_col="ts",
+    )
+
+
+#: Renames `_toy_db` onto a disjoint namespace, so the two schemas produce DFS
+#: feature names that cannot overlap.
+_RENAME = {
+    "users": "shops",
+    "reviews": "sales",
+    "uid": "sid",
+    "age": "size",
+    "rating": "amount",
+}
+
+
+def _other_db() -> Database:
+    """`_toy_db`'s structure under disjoint table and column names."""
+    return Database(
+        {
+            _RENAME[name]: Table(
+                df=t.df.rename(columns=_RENAME),
+                fkey_col_to_pkey_table={
+                    _RENAME[c]: _RENAME[p] for c, p in t.fkey_col_to_pkey_table.items()
+                },
+                pkey_col=_RENAME[t.pkey_col] if t.pkey_col else None,
+                time_col=t.time_col,
+            )
+            for name, t in _toy_db().table_dict.items()
+        }
+    )
+
+
+def _other_task() -> SimpleNamespace:
+    """An entity task over `shops` (matches `_other_db`)."""
+    return SimpleNamespace(
+        entity_table="shops", entity_col="sid", target_col="y", time_col="ts"
+    )
+
+
+def _other_label_table(uids: list[int]) -> Table:
+    """`_label_table` renamed onto `_other_db`."""
+    t = _label_table(uids)
+    return Table(
+        df=t.df.rename(columns=_RENAME),
+        fkey_col_to_pkey_table={"sid": "shops"},
         pkey_col=None,
         time_col="ts",
     )
@@ -571,6 +640,48 @@ def test__build_dfs_features__cache_persists_across_processes(
     )
     assert calls["n"] == 1  # served from disk, DFS not re-run
     pd.testing.assert_frame_equal(second, first)
+
+
+def test__build_dfs_features__warm_cache_second_task__slices_to_its_own_depth(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The documented sweep shape: warm the shared cache, then run many tasks in one
+    # process (the CLI loops over every task in-process). Everything below is the
+    # real path -- real DFS engine, real parquet cache, real depth slice; only the
+    # process-level _CACHE is swapped, to stand in for a fresh worker.
+    pytest.importorskip("fastdfs")
+    a = (
+        _toy_task(),
+        _toy_db(),
+        _label_table([1, 2, 3]),
+        RunIdentity("a", "fa", "ta", "x"),
+    )
+    b = (
+        _other_task(),
+        _other_db(),
+        _other_label_table([1, 2, 3]),
+        RunIdentity("b", "fb", "tb", "x"),
+    )
+
+    def build(spec: tuple, cache: CacheConfig) -> pd.DataFrame:
+        task, db, tbl, ident = spec
+        features, _ = dfs_mod.build_dfs_features(
+            task, db, tbl, depth=1, max_depth=2, cache=cache, run_identity=ident
+        )
+        return features
+
+    for spec in (a, b):  # warm the shared cache, as the feature warmer does
+        build(spec, CacheConfig(tmp_path, "fill"))
+    read = CacheConfig(tmp_path, "raise")  # every artifact must now be a disk hit
+
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    solo = build(b, read)  # task B alone
+
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    build(a, read)  # task A first, leaving its depth map in the process cache
+    after = build(b, read)
+
+    pd.testing.assert_frame_equal(after, solo)
 
 
 def test__build_dfs_features__cache_key_discriminates_depth_and_history(

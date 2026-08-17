@@ -3,6 +3,10 @@
 from relarena.models._shared.gnn.graph_cache import DBGraphCache
 
 
+class _DB:
+    """Stand-in for a relbench `Database` (same-size objects reuse addresses)."""
+
+
 def test__get__same_db__builds_once_and_reuses() -> None:
     """Repeated get() for one db builds once and returns the same memoized object."""
     cache = DBGraphCache()
@@ -50,3 +54,16 @@ def test__get__same_db_different_variant__rebuilds() -> None:
     cache.get(db, build, variant="compute")
     cache.get(db, build, variant="fill")
     assert calls == [1, 1]
+
+
+def test__get__db_released_then_new_db__never_serves_the_stale_graph() -> None:
+    """A released db's address, reused by the next one, must not be a false hit.
+
+    Mirrors `run_experiment`: the inner split's db goes unreferenced when `tune`
+    returns, then the outer split allocates a new one onto the freed address. A
+    hit there would score the final test fit on the val-censored graph.
+    """
+    cache = DBGraphCache()
+    for i in range(100):
+        cache.get(_DB(), lambda: ("inner", {}))  # unreferenced once get() returns
+        assert cache.get(_DB(), lambda: (f"outer-{i}", {}))[0] == f"outer-{i}"
