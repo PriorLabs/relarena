@@ -24,6 +24,9 @@ OMP_NUM_THREADS=1 uv run pytest
 uv build
 ```
 
+Releases to PyPI are cut by pushing a `v<version>` tag; the procedure and the
+one-time publisher setup are in [docs/releasing.md](docs/releasing.md).
+
 For model integrations, follow [docs/adding-a-model.md](docs/adding-a-model.md).
 Keep optional dependencies lazy, document provenance for adapted or vendored
 code, and include focused tests. By contributing, you agree that your changes

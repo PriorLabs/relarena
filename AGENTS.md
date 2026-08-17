@@ -83,3 +83,5 @@ live in `baseline_results/SOURCES.md`.
   nested temporal-validation protocol and why the inner/outer splits exist.
 - [docs/predictive-task.md](docs/predictive-task.md) — defining a predictive
   task over your own relational database.
+- [docs/releasing.md](docs/releasing.md) — cutting a PyPI release (tag-driven,
+  trusted publishing) and what the release workflow verifies.
