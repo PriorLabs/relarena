@@ -1,263 +1,89 @@
-# RelArena-α
 
-A unified, fair benchmarking framework for running models on relational tasks on
-[RelBench](https://github.com/snap-stanford/relbench) databases — inspired by how
-[TabArena](https://tabarena.ai) standardizes tabular benchmarking.
+<div align="center">
 
-This repository also open-sources TabPFN-Rel and an initial version of the
-Relational Predictive Interface (RPI). A detailed release report covering
-RelArena-α, TabPFN-Rel, and the RPI is in preparation.
+<div id="user-content-toc">
+  <ul align="center" style="list-style: none;">
+    <summary>
+      <img src="https://avatars.githubusercontent.com/u/144344393" width="175" alt="Prior Labs Logo"/>
+    </summary>
+  </ul>
+</div>
 
-> **Current status:** alpha release. RelArena is a living benchmark: its task coverage,
-> baselines, API, and tuning regime will evolve with community feedback. The
-> current release focuses on RelBench v1 entity-level forecasting tasks.
+## RelArena-α: Open and Reproducible Benchmarking for Relational Learning 💫
 
-## Why
+---
 
-Reproducibility varies across relational-learning methods: some releases omit
-training scripts or tuning details, and reported results often use different
-evaluation and tuning regimes. RelArena provides one executable
-*train → tune → evaluate* path with common data loading, split construction,
-model selection, and result recording. Models provide their training code and a
-declarative hyperparameter search space; callers choose the tuning budget.
+| 📂 [Examples](examples) | 📊 [Baseline Results](baseline_results) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 Model report: *in preparation* |
+|:---:|:---:|:---:|:---:|:---:|
 
-## Core idea
+---
+</div>
 
-```
-┌─ runner ───── fit config(s) on train → pick best on val → final fit → test
-├─ tuner ────── random search or a fixed grid under a caller-supplied budget;
-│               records configurations, metrics, predictions, and phase timings
-├─ model ────── RelArenaModel: fit / predict  (the contract)
-├─ space ────── SearchSpace: what to tune over, bound to the model in the registry
-└─ RelBench ─── Database, EntityTask, task.evaluate, metrics  (dependency)
-```
+**RelArena-α** is a unified framework for running and comparing baselines on
+[RelBench v1](https://github.com/snap-stanford/relbench), standardizing data loading, evaluation
+protocols, tuning regimes, and support for systems with custom tuning, inspired by established
+tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also open-sources
+**TabPFN-Rel**, our relational harness for TabPFN-3, and an initial version of the
+**Relational Predictive Interface (RPI)**. What the framework contributes:
 
-**Evaluation protocol.** Each candidate configuration is fit on `train` and
-scored on `val`. The best validation configuration then receives a final fit and
-produces the test prediction. Depending on the model's published protocol, that
-final fit either refits on `train + val` or trains on `train` while retaining
-`val` for checkpoint selection. Parameter-free models simply run their sole
-configuration. Test labels are withheld from the model and supplied only to
-RelBench's evaluator.
+- **Reproducibility.** Every reported method re-run through one unified model API, with
+  implementations aligned, bugs fixed, and missing training scripts reconstructed.
+- **Tuning regimes.** Model submissions declare only a search space and are tuned by the
+  framework; system submissions bring their own regime.
+- **One data state.** Every method sees the same database state during training, tuning, and
+  evaluation.
+- **Strong baselines.** GNNs (GraphSAGE, RelGT, RelGNN), relational foundation models
+  (RT-PluRel), aggregation-based tabular methods (RDBLearn, TabPFN-Rel), and learning-free
+  constant predictors.
+- **Shared evaluation.** TabArena's `bencheval` for bootstrapped Elo, ranks,
+  critical-difference diagrams, win rates, and normalized scores.
+- **RPI.** Any RelArena-α method applied to your own database in two lines of code, with the
+  database and task specified in YAML.
 
-RelArena uses **nested temporal validation**: tuning receives a database censored
-at `val_timestamp`, while final evaluation receives one censored at
-`test_timestamp`. This prevents access to post-boundary data and test labels.
-Within that allowed database state, each method decides whether and how to enforce
-the finer timestamp of every historical example. See
-[docs/temporal-validation.md](docs/temporal-validation.md) for the complete
-guarantee and trade-off.
+> [!NOTE]
+> **Current status: α-release**, targeted at researchers and early-adopting practitioners. This
+> release focuses on RelBench v1's entity-level forecasting tasks, and its task coverage,
+> baselines, API, and tuning regime will evolve with community feedback. Research code, not
+> production-ready. A detailed model report covering RelArena-α, TabPFN-Rel, and the RPI is in
+> preparation.
 
-Three design decisions carried over from TabArena/TabRepo:
+## ⚡ Quickstart
 
-1. **The search space is decoupled from the model and declarative.** Models
-   implement just `fit` / `predict`; *what* to tune lives in a separate
-   `SearchSpace` (a `ConfigSpace.ConfigurationSpace` for random search, or an
-   explicit ordered `grid` for discrete spaces) bound to the model in the registry
-   — mirroring AutoGluon / TabArena rather than declaring the space on the class.
-2. **Budget is centralized rather than hidden in the model.** A model declares
-   only its `SearchSpace`; the caller supplies `n_trials`. The alpha release uses
-   documented, method-specific budgets because equalizing compute across methods
-   remains an open problem. See [docs/tuning-regime.md](docs/tuning-regime.md).
-3. **Runs retain useful metadata.** Each trial records its configuration, metrics,
-   optional predictions, and separate tuning/final-fit timings for later analysis.
-
-## Layout
-
-```
-src/relarena/
-  model.py        # RelArenaModel — the contract every model implements
-  search_space.py # SearchSpace — declarative HPO space (ConfigSpace or grid)
-  registry.py     # string-keyed model registry, binds model -> search space
-  tasks.py        # entity task-type scope + guard
-  metrics.py      # metric direction map + primary-metric selection
-  tuner.py        # random search / fixed grids; per-trial timing and predictions
-  runner.py       # local orchestration for one (model, dataset, task)
-  results.py      # TrialResult schema + DataFrame export
-  models/         # constant, lightgbm, rdblearn, graphsage, relgnn, relgt, tabpfn-rel, rt wrappers
-  featurization/  # relational DB -> flat feature table (entity-only, for now)
-  checksums/      # content fingerprints of the RelBench data + the recorded baseline
-  evaluation/     # leaderboard, plots, externally-reported reference baselines
-  userdb/         # Relational Predictive Interface (RPI)
-tests/            # smoke + unit tests (no data download)
-```
-
-## Models
-
-This is the canonical inventory of registered methods. The release snapshot and
-paper contain the rows marked **paper**; the additional `relgnn` registration
-is retained as an experimental final-fit variant.
-
-### Models and systems
-
-Every method registers as one of two kinds (`RelArenaModel.kind`), and the two
-are **not the same kind of result**. Both face the same tasks, splits, metrics,
-and runtime budget, so the comparison is fair on final performance: if a system
-scores higher, it really did do better on the benchmark. What a system gives up
-is the controlled setup. A **model** is one method under the harness's fixed
-tuning pipeline, so its score isolates the method. A **system** is free to step
-outside those constraints — it selects its own hyperparameters, training
-schedule, or components inside `fit` — so its score tells you what the whole
-package achieves without telling you which part earned it: how much comes from
-the underlying architecture rather than the selection machinery or other
-transferable tricks is not identifiable from the benchmark alone. Leaderboards
-should either exclude systems (`compute_leaderboard(..., kinds={"model"})`) or
-rank both populations together with systems clearly marked; publishing both
-boards side by side is the recommended presentation.
-
-System support is currently **highly experimental**: systems run through the ordinary
-model API with documented workarounds (all tuning inside a single fit of the
-default config, state carried between the fit and refit phases via module-level
-globals), and a system submission needs extra validation by and discussion with the maintainers. A
-future release will replace these workarounds with an explicit fitting API for
-systems — see
-[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the current
-rules.
-
-| Registered identifier | Paper-facing name | Family | Kind | Status | Final fit | Extra |
-| --- | --- | --- | --- | --- | --- | --- |
-| `constant-global` | Constant (global) | global constant | model | paper | train + val | core |
-| `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | paper | train + val | core |
-| `lightgbm` | LightGBM | entity-only tabular | model | paper | train + val | `lightgbm` |
-| `rdblearn` | RDBLearn | DFS + tabular foundation model | model | paper | train; val retained | `rdblearn` |
-| `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN v3 | model | paper | train + val | `tabpfn-rel-local` |
-| `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN v3 with text | model | paper | train + val | `tabpfn-rel-api` |
-| `graphsage` | GraphSAGE | relational GNN | model | paper | train + val | `graphsage` |
-| `relgnn-es` | RelGNN | relational GNN | model | paper | best-validation checkpoint | `relgnn` |
-| `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
-| `relgt` | RelGT | relational transformer | model | paper | best-validation checkpoint | `relgt` |
-| `rt-plurel` | RT-PluRel | pretrained relational transformer, fine-tuned per task | **system** | paper | train + val | `rt` |
-
-The paper reports `relgnn-es` simply as **RelGNN**, because that published-style
-best-validation-checkpoint regime performed better in our runs. The regular
-`relgnn` identifier remains available for experiments but is excluded from the
-default release leaderboard.
-
-RT-PluRel is the sole registered **system** (see
-[Models and systems](#models-and-systems)); its protocol and every configured
-value are documented in [`models/rt/model.py`](src/relarena/models/rt/model.py).
-Note that its recorded `val_score` is a placeholder — see
-[`baseline_results/README.md`](baseline_results/README.md).
-
-Everything else per method lives at its source: install caveats in
-[docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies)
-(the GNN baselines need platform-specific PyG sampling wheels beyond their
-extras), excluded backends and cache warmers in each model's docstring, and
-the complete implementation choices in the
-[adding-a-model appendix](docs/adding-a-model.md#appendix--what-every-existing-model-chose).
-
-## Install & test
+> [!TIP]
+> Preview the whole task grid without downloading anything, then tune LightGBM on one task and
+> write every evaluated config to a CSV.
 
 ```bash
-uv sync            # the dev group (pytest, ruff, ...) installs by default
-OMP_NUM_THREADS=1 uv run pytest  # the prefix is required on macOS; harmless elsewhere
+pip install "relarena[lightgbm]"          # Python 3.11 or 3.12
+
+relarena --list                           # the 21 RelBench v1 entity tasks; no download
+relarena --model lightgbm --datasets rel-f1 --tasks driver-dnf --output results.csv
 ```
 
-Install the RT-PluRel integration with `uv sync --extra rt` from a source
-checkout or `pip install "relarena[rt]"` from a release. The pinned
-`relational-transformer` package provides a stable-ABI wheel for Linux x86-64,
-the platform currently supported by RelArena's RT integration. A GPU is strongly
-recommended for practical fine-tuning runtimes.
+Actually running a task retrieves its RelBench database (several GB for the full v1 set), so use
+`--list` first. On macOS, prefix every command with `OMP_NUM_THREADS=1`: torch and lightgbm
+bundle separate `libomp` runtimes, and lightgbm segfaults if torch loads first
+([LightGBM#6595](https://github.com/microsoft/LightGBM/issues/6595)). Linux is unaffected.
 
-## Use RelArena on your own database (RPI)
+For a reproducible checkout, the CPU-only torch build, or the leaderboard and plotting extras
+(which need the source checkout), see [Installation](#-installation) below.
 
-The **Relational Predictive Interface (RPI)** applies registered RelArena models
-to an entity-level forecasting task over your own relational database. Describe
-CSV or Parquet tables in a YAML database specification, define the forward-looking
-label and split boundaries in a YAML task specification, then use
-`PredictiveQuery` as the Python façade:
+## 🕹️ Use Cases
 
-```python
-from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
+<details>
+<summary><b>🏟️ Benchmark a method across RelBench v1</b> — CLI sweep or in-process loop</summary>
 
-spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-predictions = PredictiveQuery(spec).fit("tabpfn-rel-client").predict()
-```
-
-See [docs/predictive-task.md](docs/predictive-task.md) for the task definition,
-SQL rules, split semantics, and worked examples.
-
-## Preprocessing caches (optional)
-
-Expensive CPU-bound preprocessing may run before a benchmark and be reused across
-trials. This can substantially reduce repeated-run time, especially for DFS feature
-matrices, materialized graphs, and tokenized databases.
-
-Caching is not required. RelArena provides an **optional, experimental** helper API
-in [`relarena.cache`](src/relarena/cache.py) for local paths, miss policies, private
-scratch computation, and atomic publication. A method may ignore this API and
-implement caching independently. The helper does not bring cache warming into a
-timed RelArena experiment; preprocessing scripts still run separately, so their
-runtime is not currently included in the recorded experiment timings.
-
-Regardless of the mechanism, cache-generation code must be public, reproducible,
-and leakage-safe. Some practical pointers:
-
-- Load data through `RelBenchDatasetTask.inner_split()` and `outer_split()` so the
-  validation and test phase boundaries remain intact.
-- Let the preprocessing implementation own its keys, versions, serialization, and
-  validation; include only inputs that actually determine the artifact.
-- Treat pre-built stores as a convenience: always ship a runnable warmer that can
-  reconstruct them.
-
-The full implementation guidance and reference code live in
-[docs/adding-a-model.md](docs/adding-a-model.md#4-pre-processing-cache).
-
-Configure the store explicitly at the run entrypoint:
-
-```python
-run_experiment(..., cache_dir="~/relarena-cache")
-```
-
-Entrypoints also resolve these environment variables once:
-
-- `RELARENA_CACHE_DIR` — the store directory.
-- `RELARENA_DISABLE_CACHE` — set to any value to disable persistent caches.
-
-`RELARENA_DISABLE_FEATURE_CACHE` remains as a deprecated alias for one release.
-The helper API's store is an ordinary local directory; remote snapshot transport
-belongs to deployment infrastructure rather than RelArena itself.
-
-**Precompute (CPU).** Because `fit` / `predict` read (a miss raises), build the store
-up front with a fill run. The DFS engine (`fastdfs`) runs on CPU and is memory-hungry
-on wide-fan-out schemas, so run it on a large CPU node (many cores, ample RAM);
-everything after it runs on the GPU (or the hosted TabPFN API), so precomputing keeps
-that CPU-heavy step off those nodes. The workflow warms every RelBench v1 task:
-
-```bash
-RELARENA_CACHE_DIR=~/relarena-cache \
-    uv run --extra rdblearn python workflows/warm_feature_cache.py
-```
-
-It invokes `relarena.featurization.warm_cache` for both protocol splits and warms
-both legitimate outer histories: train-only for RDBLearn and train+val for models
-that refit on all labeled data. The `tabpfn-rel` and `rdblearn`
-models share full-anchor, leak-safe-history matrices whenever their actual inputs
-match; model-specific row selection and downstream training do not affect the key.
-On a warm cache the evaluation reads Parquet only — no RDB build and no DFS.
-RelGNN, RelGT, and RT-PluRel expose independent runnable warmers at
-`relarena.models.relgnn.warm_cache`, `relarena.models.relgt.warm_cache`, and
-`relarena.models.rt.warm_cache`.
-
-**Runnable demo.** `examples/tabpfn_rel_caching.py` fits one RelBench task with and
-without a precomputed cache, reports both timings, and checks the outputs are
-identical. Its header includes a CPU-only mode (`RELARENA_EXAMPLE_SKIP_TFM=1`)
-that exercises the DFS and cache path without a GPU.
-
-## Batch evaluation
-
-The CLI runs one model across many tasks in-process and writes every evaluated
-config to a CSV:
+The CLI runs one model across many tasks in-process and writes every evaluated config to a
+CSV:
 
 ```bash
 relarena --model lightgbm --datasets rel-f1 --output results.csv
 ```
 
-Each `(model, dataset, task, seed)` experiment is independent, so sweeps
-parallelize trivially. The building blocks are all public — `run_experiment`
-executes one experiment, `summary_to_dataframe` flattens it into the shared
-results schema, and concatenated frames feed the leaderboard (needs the
-`leaderboard` extra):
+Each `(model, dataset, task, seed)` experiment is independent, so sweeps parallelize
+trivially. The building blocks are all public: `run_experiment` executes one experiment,
+`summary_to_dataframe` flattens it into the shared results schema, and concatenated frames
+feed the leaderboard (needs the `leaderboard` extra):
 
 ```python
 import pandas as pd
@@ -279,53 +105,519 @@ for spec in list_entity_tasks(["rel-f1"]):
 board = compute_leaderboard(pd.concat(frames, ignore_index=True))
 ```
 
-If you have a large-scale cluster, integrate that loop into your distributed
-backend of choice (a SLURM array, Ray, ...): dispatch each experiment as one
-job, cache each job's result frame keyed by `(model, dataset, task, seed,
-n_trials)`, and concatenate the cached frames for the leaderboard. Warm the
-shared caches first (`workflows/warm_feature_cache.py` and the per-model
-`warm_cache` modules) so workers never pay the featurization cost.
+On a large-scale cluster, integrate that loop into your distributed backend of choice (a
+SLURM array, Ray, ...): dispatch each experiment as one job, cache each job's result frame
+keyed by `(model, dataset, task, seed, n_trials)`, and concatenate the cached frames for the
+leaderboard. Warm the shared caches first (see the caching use case) so workers never pay the
+preprocessing cost.
 
-## Baseline results
+</details>
 
-[`baseline_results/`](baseline_results/) holds the release snapshot of the sweep
-over the RelBench-v1 entity tasks: `results.csv` (every evaluated config; feed
-it to `compute_leaderboard`) and `reference_results.csv` — per-task scores for
-methods **not reproduced in this pipeline**, transcribed from published model
-reports and flagged with a `_MR` (**model report**) suffix. `_MR` numbers are
-mostly self-reported and are often higher than the results reproduced through
-RelArena; we discuss possible reasons in the forthcoming release report
-of this README. With few exceptions, these results are
-not directly comparable to RelArena runs and should only be used as reference
-points. To include them in a leaderboard or plot, pass `reference=`
-(`relarena.evaluation.load_reference_results`). See
-[`baseline_results/README.md`](baseline_results/README.md) for per-method
-provenance and caveats.
+<details>
+<summary><b>🧩 Add your own model</b> — the <code>fit</code> / <code>predict</code> contract plus a search space</summary>
 
-## Adding a model
+We want the set of included baselines to be as representative as possible, so adding a method is
+meant to be cheap. A model is a folder under `src/relarena/models/` implementing the
+`RelArenaModel` contract (`fit` and `predict`) with a `SearchSpace` registered via
+`@register_model(search_space=...)`; the registry discovers the folder automatically.
+`models/lightgbm/` is the smallest complete example to copy.
 
-A model is a folder under `src/relarena/models/` implementing the
-`RelArenaModel` contract (`fit` / `predict`) with a `SearchSpace` registered via
-`@register_model(search_space=...)`; the registry discovers the folder
-automatically. `models/lightgbm/` is the smallest complete example to copy.
+The full guide is [docs/adding-a-model.md](docs/adding-a-model.md): the layout, the datatypes
+`fit` and `predict` receive, the tuning regime and its choices, where shared code goes,
+optional dependencies, vendoring requirements, tests, and a checklist. Whether your method
+enters as a **model submission** or a **system submission** is the one decision to make up
+front; see [adding-a-model.md](docs/adding-a-model.md#model-or-system) and the *Models and
+systems* toggle in [Details](#-details).
 
-The full guide is [docs/adding-a-model.md](docs/adding-a-model.md): the layout,
-the datatypes `fit` and `predict` receive, the tuning regime and its choices,
-where shared code goes, optional dependencies, vendoring requirements, tests,
-and a checklist.
+</details>
 
-## License
+<details>
+<summary><b>🗄️ Run RelArena on your own database</b> — the Relational Predictive Interface (RPI)</summary>
 
-Apache-2.0 ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Two things the license on
-this code does not settle, both worth reading before you rely on relarena:
+The **RPI** generalizes the process that generated RelBench v1's entity-level forecasting tasks,
+but replaces custom task-generation code with a declarative interface: the database and the
+prediction task are specified entirely in YAML configuration files, without writing Python,
+turning a collection of CSV or Parquet files into a RelArena-α task. `PredictiveQuery` is the
+Python façade:
 
-- **`tabpfn` is not Apache-2.0.** It ships the Prior Labs License, an Apache-2.0
-  derivative whose added paragraph 10 requires anyone distributing a product built
-  on it to display "Built with PriorLabs-TabPFN". It is confined to the `rdblearn`
-  and `tabpfn-rel-*` extras, so a plain install does not pull it.
-- **Datasets are not ours to license.** relarena serves no data itself; `relbench`
-  downloads every database at runtime, and they remain subject to their own
-  upstream terms.
+```python
+from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
 
-See [`docs/licensing.md`](docs/licensing.md) for what the license does and does not
-cover, and [`NOTICE`](NOTICE) for third-party attribution.
+spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
+predictions = PredictiveQuery(spec).fit("tabpfn-rel-client").predict()
+```
+
+Any registered RelArena-α method runs this way, hyperparameter tuning included. See
+[docs/predictive-task.md](docs/predictive-task.md) for the task definition, SQL rules, split
+semantics, and worked examples;
+[`src/relarena/userdb/relbench_v1/`](src/relarena/userdb/relbench_v1) for example specifications
+covering all 21 entity-level RelBench v1 tasks; and
+[`examples/olist_seller_churn.py`](examples/olist_seller_churn.py) for the full path on a real
+7-table Kaggle database. That example predicts seller churn, where held-out ROC AUC is 0.50 for
+the global constant, 0.58 for entity-only LightGBM, 0.69 for the per-entity constant, and 0.79
+for TabPFN-Rel.
+
+Designing an interface for specifying relational prediction problems remains an open research
+question, so this version is deliberately expressive, aimed at researchers and early-adopting
+practitioners, and includes only limited safeguards against task mis-specification. Its
+expressivity is intentionally constrained to entity-level forecasting tasks for compatibility
+with RelArena-α, so not every predictive task over a relational database can be represented yet.
+
+</details>
+
+<details>
+<summary><b>⚡ Precompute preprocessing caches</b> — optional, and worth it for DFS-heavy methods</summary>
+
+Most competitive relational methods need hours of CPU-bound preprocessing per dataset before
+training or inference: deep feature synthesis for flattening-based methods like RDBLearn and
+TabPFN-Rel, graph materialization or tokenization for GNN-based methods like RelGNN and RelGT.
+Running that inside a timed experiment is possible but impractical, because CPU-bound
+preprocessing and GPU-bound training have different hardware requirements. RelArena-α therefore
+permits methods to compute preprocessing artifacts once and cache them on disk before a run.
+
+Caching is not required. RelArena provides an **optional, experimental** helper API in
+[`relarena.cache`](src/relarena/cache.py) for local paths, miss policies, private scratch
+computation, and atomic publication. A method may ignore this API and implement caching
+independently. The helper does not bring cache warming into a timed RelArena experiment;
+preprocessing scripts still run separately, so their runtime is not currently included in the
+recorded experiment timings.
+
+Regardless of the mechanism, cache-generation code must be public, so that others can
+reconstruct the caches and reviewers can inspect them for errors such as label leakage. Some
+practical pointers:
+
+- Load data through `RelBenchDatasetTask.inner_split()` and `outer_split()` so the validation
+  and test phase boundaries remain intact.
+- Let the preprocessing implementation own its keys, versions, serialization, and validation;
+  include only inputs that actually determine the artifact.
+- Treat pre-built stores as a convenience: always ship a runnable warmer that can reconstruct
+  them.
+
+The full implementation guidance and reference code live in
+[docs/adding-a-model.md](docs/adding-a-model.md#4-pre-processing-cache).
+
+**Configure the store** explicitly at the run entrypoint:
+
+```python
+run_experiment(..., cache_dir="~/relarena-cache")
+```
+
+Entrypoints also resolve these environment variables once:
+
+- `RELARENA_CACHE_DIR`: the store directory.
+- `RELARENA_DISABLE_CACHE`: set to any value to disable persistent caches.
+
+`RELARENA_DISABLE_FEATURE_CACHE` remains as a deprecated alias for one release. The helper
+API's store is an ordinary local directory; remote snapshot transport belongs to deployment
+infrastructure rather than RelArena itself.
+
+**Precompute (CPU).** Because `fit` and `predict` read (a miss raises), build the store up
+front with a fill run. The DFS engine (`fastdfs`) runs on CPU and is memory-hungry on
+wide-fan-out schemas, so run it on a large CPU node (many cores, ample RAM); everything after
+it runs on the GPU (or the hosted TabPFN API), so precomputing keeps that CPU-heavy step off
+those nodes. The workflow warms every RelBench v1 task:
+
+```bash
+RELARENA_CACHE_DIR=~/relarena-cache \
+    uv run --extra rdblearn python workflows/warm_feature_cache.py
+```
+
+It invokes `relarena.featurization.warm_cache` for both protocol splits and warms both
+legitimate outer histories: train-only for RDBLearn and train+val for models that refit on
+all labeled data. The `tabpfn-rel` and `rdblearn` models share full-anchor, leak-safe-history
+matrices whenever their actual inputs match; model-specific row selection and downstream
+training do not affect the key. On a warm cache the evaluation reads Parquet only, with no RDB
+build and no DFS. RelGNN, RelGT, and RT-PluRel expose independent runnable warmers at
+`relarena.models.relgnn.warm_cache`, `relarena.models.relgt.warm_cache`, and
+`relarena.models.rt.warm_cache`.
+
+**Runnable demo.** [`examples/tabpfn_rel_caching.py`](examples/tabpfn_rel_caching.py) fits one
+RelBench task with and without a precomputed cache, reports both timings, and checks the
+outputs are identical. On `rel-f1/driver-dnf` it turns roughly 409s into roughly 12s. Its
+header includes a CPU-only mode (`RELARENA_EXAMPLE_SKIP_TFM=1`) that exercises the DFS and
+cache path without a GPU.
+
+</details>
+
+<details>
+<summary><b>📊 Aggregate results yourself</b> — leaderboards, plots, and reference baselines</summary>
+
+[`baseline_results/`](baseline_results/) holds the release snapshot of the sweep over the 21
+entity-level RelBench v1 tasks:
+
+| File | Contents |
+|---|---|
+| `results.csv` | Every evaluated config of the release sweep (7 databases, 21 tasks, seed 0). Feed it to `compute_leaderboard`; filter on `selected` for the tuned board. |
+| `experiment_results.csv` | Same schema, for exploratory runs deliberately **excluded** from the default leaderboard (currently the experimental full-data-refit `relgnn` variant). |
+| `reference_results.csv` | Per-task scores for methods **not reproduced in this pipeline**, transcribed from published model reports and flagged with a `_MR` (**model report**) suffix. |
+
+`_MR` numbers are mostly self-reported and are often higher than the results reproduced through
+RelArena; possible reasons are discussed in the forthcoming model report. With
+few exceptions, these results are not comparable to RelArena-α runs and should only be used as
+reference points. To rank or plot them anyway, load them with
+`relarena.evaluation.load_reference_results` and pass the frame as `reference=`. See
+[`baseline_results/README.md`](baseline_results/README.md) for per-method provenance and
+[`baseline_results/SOURCES.md`](baseline_results/SOURCES.md) for every source token.
+
+Aggregation runs on TabArena's `bencheval`, the evaluation library behind the TabArena
+leaderboard. Given a RelArena results table, `relarena.evaluation.compute_leaderboard` computes
+average ranks, bootstrapped Elo ratings with confidence intervals, pairwise win rates, and
+normalized or baseline-relative scores (needs the `leaderboard` extra). Normalized-loss heatmaps
+and the critical-difference diagram come from `relarena.evaluation.write_leaderboard_plots` with
+the `plots` extra.
+
+</details>
+
+## 🪄 Installation
+
+> [!IMPORTANT]
+> Requires Python **3.11 or 3.12**. Installing from source additionally needs
+> [uv](https://docs.astral.sh/uv/getting-started/installation/). RelArena pins `relbench`
+> exactly, because the RelBench package version *is* the data version.
+
+<details>
+<summary><b>📦 From PyPI</b> — use RelArena as a library or CLI</summary>
+
+```bash
+pip install relarena                    # core: runner, tuner, registry, baselines, RPI
+pip install "relarena[lightgbm]"        # plus one baseline's extra
+```
+
+No `--pre` flag is needed while the α-release is the only published version. The core install
+carries torch, and the PyPI wheel is the CUDA build, so expect a multi-GB download; install from
+source with `--group cpu` for the CPU-only build. The `leaderboard` and `plots` extras do **not**
+resolve under pip, because `bencheval` is pulled from git rather than PyPI; use the source
+checkout for those.
+
+</details>
+
+<details>
+<summary><b>🌱 From source</b> — clone, sync, test</summary>
+
+```bash
+git clone https://github.com/PriorLabs/relarena.git
+cd relarena
+uv sync                          # the dev group (pytest, ruff, ...) installs by default
+OMP_NUM_THREADS=1 uv run pytest  # the prefix is required on macOS; harmless elsewhere
+```
+
+Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
+`--extra leaderboard --extra plots` for the reporting stack (`bencheval` resolves from git here,
+pinned by `uv.lock`).
+
+</details>
+
+<details>
+<summary><b>🛠️ Developer setup</b> — everything, plus pre-commit</summary>
+
+```bash
+uv sync --group dev --group cpu --extra leaderboard --extra plots
+uv run pre-commit install
+```
+
+Before opening a pull request:
+
+```bash
+uv run ruff format --check .
+uv run ruff check .
+OMP_NUM_THREADS=1 uv run pytest
+uv build
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and, for agent-facing notes, [AGENTS.md](AGENTS.md).
+
+</details>
+
+<details>
+<summary><b>🧱 Baseline dependencies</b> — one extra per baseline, plus two special cases</summary>
+
+Each baseline carries its own extra, and every heavy dependency is lazy-imported inside `fit`, so
+registering a method works without its extra installed.
+
+| Extra | Baselines | Notes |
+|---|---|---|
+| `lightgbm` | LightGBM | CPU only |
+| `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
+| `tabpfn-rel-local` | TabPFN-Rel (OSS) | same stack as `rdblearn`, text-free |
+| `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
+| `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
+| `rt` | RT-PluRel | Linux x86-64 wheel, see below |
+| `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
+
+**GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
+`relgt` build on RelBench's GNN stack (PyG + PyTorch Frame + a text embedder), pulled by their
+extras. PyG **temporal (disjoint) neighbor sampling additionally needs `pyg-lib`** (plus
+`torch-scatter` or `torch-sparse`; `torch-sparse` alone errors), which is deliberately *not*
+declared: the right wheel depends on the target machine's torch/CUDA build (Linux and GPU only).
+Install the matching wheels from the PyG index on the GPU machine, see
+[docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies). End-to-end runs want
+a GPU.
+
+**RT-PluRel: Linux x86-64 wheel, GPU strongly recommended.** The pinned
+`relational-transformer` package provides a stable-ABI wheel for Linux x86-64, the platform
+currently supported by RelArena's RT integration, and a GPU is strongly recommended for practical
+fine-tuning runtimes.
+
+```bash
+uv sync --extra rt                 # from a source checkout
+pip install "relarena[rt]"         # from a release
+```
+
+</details>
+
+## 📚 Details
+
+<details>
+<summary><b>🧭 How a run works</b> — splits, tuning procedure, and runtime policy</summary>
+
+```
+┌─ runner ───── fit config(s) on train -> pick best on val -> final fit -> test
+├─ tuner ────── random search or a fixed grid under a caller-supplied budget;
+│               records configurations, metrics, predictions, and phase timings
+├─ model ────── RelArenaModel: fit / predict  (the contract)
+├─ space ────── SearchSpace: what to tune over, bound to the model in the registry
+└─ RelBench ─── Database, EntityTask, task.evaluate, metrics  (dependency)
+```
+
+**Tuning procedure.** Each method registers a search space in a standardized format together
+with a default configuration. The search space is either sampled randomly, using the run seed,
+or specified as a small fixed grid whose configurations are evaluated in a predefined order.
+RelArena-α then performs tuning automatically: for each configuration it fits the method on the
+inner split's training data and evaluates it on the corresponding validation data using the
+task's primary metric. The configuration with the best validation score is selected and refit on
+the outer split for final evaluation. The default configuration is refit under the same protocol,
+so each method reports both an untuned and a tuned result. Methods additionally specify whether
+the final fit combines the training and validation data or retains the validation split for
+early stopping, following the protocol used in the corresponding publication. Search spaces may
+not be tailored to individual datasets, except through coarse tiers based on dataset size.
+
+**Nested temporal validation.** The database used during tuning (the inner split) is frozen at
+the validation cut-off, mirroring how the final evaluation (the outer split) freezes it at the
+test cut-off. This prevents access to post-boundary data and test labels, and it removes the
+drift between tuning and evaluation regimes that made self-reported results incomparable. Within
+the allowed database state, each method decides whether and how to enforce the finer timestamp of
+every historical example; see [docs/temporal-validation.md](docs/temporal-validation.md) for the
+complete guarantee and trade-off. The forthcoming model report discusses why those timestamp
+boundaries are not yet standardized across methods.
+
+**Runtime policy.** The current policy allows a maximum total runtime of 24 hours per task,
+including preprocessing, measured on the largest tasks; moderately larger search spaces are
+permitted on smaller tasks when their cost stays reasonable. All released baseline models except
+RelGT run for less than 12 hours per task. Because equalizing tuning compute across methods
+remains unsolved, the α-release uses documented, method-specific trial budgets chosen to
+approximately balance compute. See [docs/tuning-regime.md](docs/tuning-regime.md), and the
+forthcoming model report for the full budget rationale.
+
+**What a run records.** Each trial keeps its configuration, metrics, optional predictions, and
+separate tuning and final-fit timings, which is what makes tunability analyses and per-phase
+runtime comparisons possible after the fact.
+
+</details>
+
+<details>
+<summary><b>🤖 Models and systems</b> — the two submission types and the registered inventory</summary>
+
+Following TabArena, method submissions are categorized as models or systems
+(`RelArenaModel.kind`).
+
+- A **model submission** follows the standardized tuning regime, which allows claims about
+  isolated methodological effects. It only needs to declare a search space; RelArena-α controls
+  configuration sampling, run scheduling, and selection of the final candidate. Search spaces may
+  not be dataset-specific beyond coarse differentiations based on dataset size, and we provide
+  them for all implemented methods, mirroring the authors' choices where possible.
+- A **system submission** may use a custom tuning regime, such as Bayesian optimization or
+  conditional search steps. Comparing systems with each other shows which end-to-end pipeline
+  performs best under the same input, output, and time constraints. Between systems and models,
+  final predictive performance is comparable, but efficiency and methodological improvements are
+  not, because they may result from differences in the tuning regime.
+
+This split accommodates novel research through system submissions while keeping reliable
+research conclusions available from model submissions. Leaderboards should either exclude
+systems (`compute_leaderboard(..., kinds={"model"})`) or rank both populations together with
+systems clearly marked; publishing both boards side by side is the recommended presentation.
+
+System support is currently **highly experimental**: systems run through the ordinary model API
+with documented workarounds (all tuning inside a single fit of the default config, state carried
+between the fit and refit phases via module-level globals), and a system submission needs extra
+validation by and discussion with the maintainers. A future release will replace these
+workarounds with an explicit fitting API for systems; see
+[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the current rules.
+
+This is the canonical inventory of registered methods. The release snapshot and the forthcoming
+model report contain the rows marked **report**; the additional `relgnn` registration is retained
+as an experimental final-fit variant.
+
+| Registered identifier | Report-facing name | Family | Kind | Status | Final fit | Extra |
+| --- | --- | --- | --- | --- | --- | --- |
+| `constant-global` | Constant (global) | global constant | model | report | train + val | core |
+| `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
+| `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
+| `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
+| `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
+| `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
+| `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
+| `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
+| `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
+| `relgt` | RelGT | relational transformer | model | report | best-validation checkpoint | `relgt` |
+| `rt-plurel` | RT-PluRel | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
+
+The report presents `relgnn-es` simply as **RelGNN**, because that published-style
+best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
+remains available for experiments but is excluded from the default release leaderboard.
+
+RT-PluRel is the sole registered **system**. It uses the relational transformer pretrained on
+PluRel-generated synthetic data and fine-tuned on the given task with a custom, sequential
+tuning regime; its protocol and every configured value are documented in
+[`models/rt/model.py`](src/relarena/models/rt/model.py). Because both of its selections happen
+inside `fit`, nothing ever scores the validation split, so its recorded `val_score` is a
+placeholder (see [`baseline_results/README.md`](baseline_results/README.md)).
+
+Everything else per method lives at its source: install caveats in
+[docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies) (the GNN baselines
+need platform-specific PyG sampling wheels beyond their extras), excluded backends and cache
+warmers in each model's docstring, and the complete implementation choices in the
+[adding-a-model appendix](docs/adding-a-model.md#appendix--what-every-existing-model-chose).
+
+</details>
+
+<details>
+<summary><b>📈 Release results</b> — Elo over the 21 RelArena-α tasks</summary>
+
+Elo ratings of the release snapshot at a single seed, computed with `bencheval` by fitting
+pairwise task outcomes under the Bradley-Terry model.
+Ratings are anchored to the global constant predictor at 1000 points, where a 400-point gap
+implies a win probability of about 91%. Ratings are relative, so the same method scores slightly
+differently in each board.
+
+| Method | Kind | Model board | Model + system board |
+|---|---|---:|---:|
+| RT-PluRel | system | | 1861 |
+| TabPFN-Rel (API) | model | 1821 | 1826 |
+| TabPFN-Rel (OSS) | model | 1706 | 1727 |
+| GraphSAGE | model | 1658 | 1655 |
+| RelGT | model | 1575 | 1584 |
+| RDBLearn | model | 1548 | 1554 |
+| RelGNN | model | 1506 | 1519 |
+| Constant (per-entity) | model | 1256 | 1256 |
+| Constant (global) | model | 1000 | 1000 |
+
+TabPFN-Rel ranks first among models sharing the standardized tuning regime; the system
+submission RT-PluRel achieves the highest end-to-end predictive performance. Three further
+observations, discussed in full in the forthcoming model report:
+
+- Tabular models are highly competitive. Contrary to prevailing beliefs in the relational
+  learning community, the TabPFN-Rel variants and RDBLearn hold up against relational deep
+  learning baselines, adding to the evidence that flattening a database into a table is a strong
+  strategy.
+- Constant predictors are not trivially beaten. `constant-per-entity` uses no features and no
+  model, yet beats RelGNN and RelGT on 4 tasks each; only TabPFN-Rel and RT-PluRel exceed it on
+  all 21.
+- All methods are expensive to run. The single-seed leaderboard took hundreds of hours of
+  wall-clock time, and on the more expensive databases some methods are prohibitively slow for
+  real-world use.
+
+The trivial entity-only LightGBM baseline enters the rank and Elo computation but is omitted from
+the table above. Per-task scores for everything live in
+[`baseline_results/results.csv`](baseline_results/results.csv).
+
+</details>
+
+<details>
+<summary><b>🧪 TabPFN-Rel</b> — the relational harness for TabPFN-3</summary>
+
+TabPFN-Rel converts each relational prediction task into a flat table by exhaustively
+aggregating along all join paths implied by the schema's primary-to-foreign-key relationships up
+to a maximum depth *d* (deep feature synthesis, with *d* tuned per task over {2, 3, 4}). TabPFN-3
+then predicts query labels in-context from labelled context rows. It inherits that core recipe
+from RDBLearn and improves on it in four ways:
+
+1. Improved tuning regime. The database used during tuning (the inner split) is frozen at the
+   validation cut-off, mirroring the outer split's test cut-off, which resolves the data drift
+   that previously occurred during tuning. Because RelArena-α automates tuning, every baseline
+   now benefits from this.
+2. Improved TFM backbone. TabPFN-3 replaces the previous set of backbones, and the number of
+   rows fed into the model grows by an order of magnitude. Runtime stays comparable, thanks to
+   the removed backbone-selection tuning axis and a more scalable architecture.
+3. Support for text features. Text columns from the entity table are re-attached after
+   featurization, which the hosted TabPFN-3 handles natively. Text is only available through the
+   API, so the text-free `tabpfn-rel-local` variant covers everyone who cannot use it.
+4. Better context selection. A context-selection regime trading off recency against diversity
+   across estimators replaces RDBLearn's random subsampling, at no additional runtime cost.
+   Validation examples are also reused as additional context for test predictions, since recent
+   examples are particularly informative on temporal forecasting tasks.
+
+</details>
+
+<details>
+<summary><b>🗂️ Repository structure</b> — where everything lives</summary>
+
+```
+relarena/
+├── src/relarena/          # the package
+│   ├── model.py           # RelArenaModel, the contract every model implements
+│   ├── search_space.py    # SearchSpace, declarative HPO space (ConfigSpace or grid)
+│   ├── registry.py        # string-keyed model registry, binds model to search space
+│   ├── tasks.py           # entity task-type scope + guard
+│   ├── metrics.py         # metric direction map + primary-metric selection
+│   ├── tuner.py           # random search / fixed grids; per-trial timing and predictions
+│   ├── runner.py          # local orchestration for one (model, dataset, task)
+│   ├── results.py         # TrialResult schema + DataFrame export
+│   ├── cache.py           # optional preprocessing-cache helper API
+│   ├── models/            # constant, lightgbm, rdblearn, graphsage, relgnn, relgt,
+│   │                      #   tabpfn-rel, rt wrappers
+│   ├── featurization/     # relational DB to flat feature table (entity-only, for now)
+│   ├── checksums/         # content fingerprints of the RelBench data + recorded baseline
+│   ├── evaluation/        # leaderboard, plots, externally-reported reference baselines
+│   └── userdb/            # RPI, incl. specs for all 21 entity-level RelBench v1 tasks
+├── baseline_results/      # the release snapshot (results + reference numbers + provenance)
+├── docs/                  # adding-a-model, tuning-regime, temporal-validation, predictive-task
+├── examples/              # runnable demos (RPI on your own data, feature caching)
+├── workflows/             # cache warming, checksum recording, distribution/licence audits
+└── tests/                 # smoke + unit tests (no data download)
+```
+
+</details>
+
+<details>
+<summary><b>⚖️ License</b> — Apache-2.0, plus two things it does not settle</summary>
+
+Apache-2.0 ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Two things the license on this code does
+not settle, both worth reading before you rely on relarena:
+
+- `tabpfn` is not Apache-2.0. It ships the Prior Labs License, an Apache-2.0 derivative whose
+  added paragraph 10 requires anyone distributing a product built on it to display "Built with
+  PriorLabs-TabPFN". It is confined to the `rdblearn` and `tabpfn-rel-*` extras, so a plain
+  install does not pull it.
+- Datasets are not ours to license. RelArena-α redistributes no data, retrieving all databases
+  at runtime through `relbench` under their respective upstream terms.
+
+See [`docs/licensing.md`](docs/licensing.md) for what the license does and does not cover, and
+[`NOTICE`](NOTICE) for third-party attribution.
+
+</details>
+
+## 📄 Citation
+
+The model report covering RelArena-α, TabPFN-Rel, and the RPI is **in preparation**; this section
+will carry its link and final entry once it is out. Until then, cite it as:
+
+> **Advancing Open and Reproducible Relational Learning: RelArena-α, TabPFN-Rel and RPI**
+> Adrian Hayler, Klemens Flöge, Alan Arazi, Rishabh Ranjan, Jure Leskovec, Lennart Purucker,
+> Frank Hutter, Noah Hollmann, and the Prior Labs Team. Prior Labs, 2026.
+
+```bibtex
+@techreport{relarena2026,
+  title       = {Advancing Open and Reproducible Relational Learning: {RelArena}-$\alpha$,
+                 {TabPFN}-Rel and {RPI}},
+  author      = {Hayler, Adrian and Fl{\"o}ge, Klemens and Arazi, Alan and Ranjan, Rishabh and
+                 Leskovec, Jure and Purucker, Lennart and Hutter, Frank and Hollmann, Noah and
+                 {the Prior Labs Team}},
+  institution = {Prior Labs},
+  year        = {2026},
+  url         = {https://github.com/PriorLabs/relarena}
+}
+```
+
+RelArena-α redistributes no data, retrieving every database at runtime through
+[RelBench](https://github.com/snap-stanford/relbench), so please also cite RelBench when you
+report results on these tasks.
