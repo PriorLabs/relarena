@@ -8,7 +8,7 @@
 
 ---
 
-| 📂 [Examples](examples) | 📊 [Baseline Results](baseline_results) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 Model report: *in preparation* |
+| 📂 [Examples](examples) | 📊 [Baseline Results](baseline_results) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 [Model Report](https://arxiv.org/abs/2608.16319) |
 |:---:|:---:|:---:|:---:|:---:|
 
 ---
@@ -39,8 +39,8 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
 > **Current status: α-release**, targeted at researchers and early-adopting practitioners. This
 > release focuses on RelBench v1's entity-level forecasting tasks, and its task coverage,
 > baselines, API, and tuning regime will evolve with community feedback. Research code, not
-> production-ready. A detailed model report covering RelArena-α, TabPFN-Rel, and the RPI is in
-> preparation.
+> production-ready. The model report covering RelArena-α, TabPFN-Rel, and the RPI is available
+> at [arXiv:2608.16319](https://arxiv.org/abs/2608.16319).
 
 ## ⚡ Quickstart
 
@@ -593,23 +593,27 @@ See [`docs/licensing.md`](docs/licensing.md) for what the license does and does 
 
 ## 📄 Citation
 
-The model report covering RelArena-α, TabPFN-Rel, and the RPI is **in preparation**; this section
-will carry its link and final entry once it is out. Until then, cite it as:
+The model report covering RelArena-α, TabPFN-Rel, and the RPI is on arXiv as
+[arXiv:2608.16319](https://arxiv.org/abs/2608.16319). If you use RelArena-α, TabPFN-Rel, or the
+RPI, please cite:
 
 > **Advancing Open and Reproducible Relational Learning: RelArena-α, TabPFN-Rel and RPI**
 > Adrian Hayler, Klemens Flöge, Alan Arazi, Rishabh Ranjan, Jure Leskovec, Lennart Purucker,
-> Frank Hutter, Noah Hollmann, and the Prior Labs Team. Prior Labs, 2026.
+> Frank Hutter, Noah Hollmann, and the Prior Labs Team. arXiv:2608.16319, 2026.
 
 ```bibtex
-@techreport{relarena2026,
-  title       = {Advancing Open and Reproducible Relational Learning: {RelArena}-$\alpha$,
-                 {TabPFN}-Rel and {RPI}},
-  author      = {Hayler, Adrian and Fl{\"o}ge, Klemens and Arazi, Alan and Ranjan, Rishabh and
-                 Leskovec, Jure and Purucker, Lennart and Hutter, Frank and Hollmann, Noah and
-                 {the Prior Labs Team}},
-  institution = {Prior Labs},
-  year        = {2026},
-  url         = {https://github.com/PriorLabs/relarena}
+@article{relarena2026,
+  title         = {Advancing Open and Reproducible Relational Learning: {RelArena}-$\alpha$,
+                   {TabPFN}-Rel and {RPI}},
+  author        = {Hayler, Adrian and Fl{\"o}ge, Klemens and Arazi, Alan and Ranjan, Rishabh and
+                   Leskovec, Jure and Purucker, Lennart and Hutter, Frank and Hollmann, Noah and
+                   {the Prior Labs Team}},
+  journal       = {arXiv preprint arXiv:2608.16319},
+  year          = {2026},
+  eprint        = {2608.16319},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2608.16319}
 }
 ```
 

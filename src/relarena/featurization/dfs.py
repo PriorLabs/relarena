@@ -379,9 +379,10 @@ class _DepthCache:
       * the full `max_depth` feature matrix per (split dataframe, variant).
 
     Scoped to a single db by *identity* (`is`, holding the db reference so an
-    object-id reuse after GC can't cause a false hit); resets when a new db
-    appears. History variants hold a reference to their history frame for the
-    same reason; split frames are kept alive by the harness.
+    object-id reuse after GC can't cause a false hit); every entry point calls
+    `_scope`, which drops all memos when a new db appears. History variants hold a
+    reference to their history frame for the same reason; split frames are kept
+    alive by the harness.
 
     Implementation notes:
       * `compute` / `build` callables are *thunks*: the cache invokes them
@@ -400,8 +401,10 @@ class _DepthCache:
         #: history-frame key -> (history frame ref, transformed RDB variant)
         self._rdbs: dict[int | None, tuple[pd.DataFrame | None, "RDB"]] = {}
         self._depth_maps: dict[tuple[int | None, int, CacheConfig], dict[str, int]] = {}
+        #: (id(split frame), history key, max_depth, cache) -> matrix. Scoped to
+        #: the current db by `_scope`, so the db is not part of the key.
         self._matrices: dict[
-            tuple[Database, int, int | None, int, CacheConfig], pd.DataFrame
+            tuple[int, int | None, int, CacheConfig], pd.DataFrame
         ] = {}
         self.matrix_computations = 0  # instrumentation: # of max_depth DFS runs
 
@@ -409,14 +412,31 @@ class _DepthCache:
     def _history_key(history: pd.DataFrame | None) -> int | None:
         return None if history is None else id(history)
 
+    def _scope(self, db: Database) -> None:
+        """Drop every memo when a new db comes into scope.
+
+        Every public entry point scopes first. Eviction must not hang off
+        `raw_rdb_for` alone: with a warm on-disk cache neither the matrix nor the
+        depth map ever builds an RDB (`build_dfs_features` constructs it lazily),
+        so that path is never reached — leaving the previous db's memos to
+        accumulate *and* to be served to the next db.
+
+        Scoping is by identity (`is`), holding the db reference so an address
+        reused after GC can't cause a false hit.
+        """
+        if self._db is db:
+            return
+        self._db = db
+        self._raw_rdb = None
+        self._rdbs = {}
+        self._depth_maps = {}
+        self._matrices = {}
+
     def raw_rdb_for(self, db: Database) -> "RDB":
         """The untransformed RDB for `db` (resets the cache on a new db)."""
-        if self._db is not db:
-            self._db = db
+        self._scope(db)
+        if self._raw_rdb is None:
             self._raw_rdb = _build_rdb(db)
-            self._rdbs = {}
-            self._depth_maps = {}
-            self._matrices = {}
         return self._raw_rdb
 
     def rdb_variant(
@@ -446,12 +466,14 @@ class _DepthCache:
         cache: CacheConfig,
         compute: Callable[[], pd.DataFrame],
     ) -> pd.DataFrame:
-        # Database identity distinguishes protocol states even when disk hits avoid
-        # constructing an RDB and both states share the same task-table objects.
-        # The remaining identities preserve fast reuse across config instances,
-        # while max_depth and the explicit config prevent a scratch computation
-        # from hiding a later fill or a shallow matrix satisfying a deeper request.
-        key = (db, id(source_df), self._history_key(history), max_depth, cache)
+        """The `max_depth` matrix for `(db, source_df, history)`; builds on a miss."""
+        # `_scope` bounds this to the current db, so the key covers only what varies
+        # within one: the split frame and history identities preserve fast reuse
+        # across config instances, while max_depth and the explicit config prevent a
+        # scratch computation from hiding a later fill, or a shallow matrix from
+        # satisfying a deeper request.
+        self._scope(db)
+        key = (id(source_df), self._history_key(history), max_depth, cache)
         if key not in self._matrices:
             self.matrix_computations += 1
             self._matrices[key] = compute()
@@ -459,11 +481,19 @@ class _DepthCache:
 
     def depth_map(
         self,
+        db: Database,
         history: pd.DataFrame | None,
         max_depth: int,
         cache: CacheConfig,
         compute: Callable[[], dict[str, int]],
     ) -> dict[str, int]:
+        """The `{feature: depth}` map for `(db, history)`; `compute` on a miss.
+
+        `db` scopes the memo: the map is keyed by feature *name*, so another
+        database's map matches nothing and the depth filter in
+        `build_dfs_features` would then keep every column.
+        """
+        self._scope(db)
         key = (self._history_key(history), max_depth, cache)
         if key not in self._depth_maps:
             self._depth_maps[key] = compute()
@@ -613,7 +643,7 @@ def build_dfs_features(
         matrix = _CACHE.full_matrix(
             db, source_df, history_key_df, max_depth, cache, _matrix
         )
-        depth_map = _CACHE.depth_map(history_key_df, max_depth, cache, _depth_map)
+        depth_map = _CACHE.depth_map(db, history_key_df, max_depth, cache, _depth_map)
 
     if depth >= max_depth:
         sliced = matrix
