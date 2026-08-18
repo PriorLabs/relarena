@@ -4,7 +4,7 @@
   <img alt="Prior Labs" src="https://raw.githubusercontent.com/PriorLabs/.github/refs/heads/main/logos/prior-logo-on-white.png#gh-light-mode-only" width="50%"/>
 </p>
 
-## RelArena-α: Open and Reproducible Benchmarking for Relational Learning 💫
+## RelArena-α: Open and Reproducible Benchmarking for Relational Learning
 
 ---
 
@@ -602,18 +602,14 @@ RPI, please cite:
 > Frank Hutter, Noah Hollmann, and the Prior Labs Team. arXiv:2608.16319, 2026.
 
 ```bibtex
-@article{relarena2026,
-  title         = {Advancing Open and Reproducible Relational Learning: {RelArena}-$\alpha$,
-                   {TabPFN}-Rel and {RPI}},
-  author        = {Hayler, Adrian and Fl{\"o}ge, Klemens and Arazi, Alan and Ranjan, Rishabh and
-                   Leskovec, Jure and Purucker, Lennart and Hutter, Frank and Hollmann, Noah and
-                   {the Prior Labs Team}},
-  journal       = {arXiv preprint arXiv:2608.16319},
-  year          = {2026},
-  eprint        = {2608.16319},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.LG},
-  url           = {https://arxiv.org/abs/2608.16319}
+@misc{hayler2026advancingopenreproduciblerelational,
+      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI}, 
+      author={Adrian Hayler and Klemens Flöge and Alan Arazi and Rishabh Ranjan and Jure Leskovec and Felix Birkel and Brendan Roof and Anurag Garg and Kristina Collins and Lydia Sidhoum and Jonas Kübler and Siyuan Guo and Oscar Key and Jan Hendrik Metzen and Rylee Grace and David Salinas and Arthur Cahu and Simon Bing and Benjamin Jäger and Tuana Çelik and Mihir Manium and Vitor Monteiro and Jake Robertson and Jerry Chen and Eliott Kalfon and Tomás Pereda and Lilly Wehrhahn and Dominik Safaric and Tobias Schroeder and Georg Grab and Diana Kriuchkova and Clara Cornu and Philipp Singer and Nick Erickson and Vahid Balazadeh and Marie Salmon and Simone Alessi and Kürşat Kaya and Philipp Jund and Léo Grinsztajn and Yann LeCun and Bernhard Schölkopf and Madelon Hulsebos and Lennart Purucker and Sauraj Gambhir and Frank Hutter and Noah Hollmann},
+      year={2026},
+      eprint={2608.16319},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2608.16319}, 
 }
 ```
 
