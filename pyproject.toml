@@ -59,6 +59,7 @@ dependencies = [
 Homepage = "https://github.com/PriorLabs/relarena"
 Repository = "https://github.com/PriorLabs/relarena"
 Issues = "https://github.com/PriorLabs/relarena/issues"
+Paper = "https://arxiv.org/abs/2608.16319"
 
 [project.scripts]
 relarena = "relarena.cli:main"
