@@ -47,6 +47,10 @@ from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
+
+# The engine names matrix columns `d{depth}__{feature}`; the depth map must use the
+# same names or every lookup misses.
+from fastdfs.dfs import dfs_feature_column_name
 from relbench.base import Database, EntityTask, Table
 
 from relarena.cache import CacheConfig, cache_key
@@ -55,19 +59,8 @@ from relarena.featurization._columns import type_columns
 from relarena.featurization.cache import cached_frame
 from relarena.identity import RunIdentity
 
-try:
-    # fastdfs >= 1.1 names matrix columns `d{depth}__{feature}`; the depth map must
-    # use the same names or every lookup misses.
-    from fastdfs.dfs import dfs_feature_column_name as _feature_column_name
-except ImportError:
-
-    def _feature_column_name(feature: "FeatureBase") -> str:
-        return feature.get_name()
-
-
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from fastdfs import RDB
-    from featuretools import FeatureBase
 
 #: Deepest shared DFS matrix built by the warmer and sliced by model depth grids.
 #: This is part of artifact identity, so models and warmers must not define it
@@ -614,7 +607,7 @@ def build_dfs_features(
             # never the cached RDB: the mutation only *adds* a column, so a
             # `copy(deep=False)` (shared column data, no duplication) suffices.
             return {
-                _feature_column_name(f): f.get_depth()
+                dfs_feature_column_name(f): f.get_depth()
                 for f in get_dfs_engine(cfg.engine, cfg).prepare_features(
                     _shallow_frame_copy(_rdb()),
                     _dfs_input(),

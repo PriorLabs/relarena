@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-08-12T16:57:11.856998Z"
+exclude-newer = "2026-08-17T14:51:09.374820413Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -549,7 +549,7 @@ wheels = [
 
 [[package]]
 name = "fastdfs"
-version = "0.2.1"
+version = "1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -570,9 +570,9 @@ dependencies = [
     { name = "sqlglot" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/71/e2/73d5a6797353d7558737bea695b392ae07d19c1884e55b804a4e3b57d620/fastdfs-0.2.1.tar.gz", hash = "sha256:c5eb768d8644376ae07975340b8e6f009f1c3c7a456a7fc1d5f6b994fd034889", size = 88450, upload-time = "2026-05-18T07:28:19.301Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/81/4bd3bb20b75f80a9dd5c34608c1596e6d48547a0dc24064c3a9c65989817/fastdfs-1.1.tar.gz", hash = "sha256:c3142b055cf5d37188f6dedc345ad0b25b06757e0db3bdfddda82b0adb5f9c3c", size = 96787, upload-time = "2026-07-13T08:39:20.154Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/0b/c79f80928a1d58a4a62065e0bc88036cc8d095556ccaf959ff40ed1721f4/fastdfs-0.2.1-py3-none-any.whl", hash = "sha256:e651a3b5db092a11deab0c9f01fe5797425caacb5e312833106e508994b2b0e3", size = 77734, upload-time = "2026-05-18T07:28:18.065Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/a9/a292b4d7e5331cc0a019a1d0179ac7033fec7d7de504bf52f249a0a5f1d6/fastdfs-1.1-py3-none-any.whl", hash = "sha256:4ea3b4813431c40f99fa7dec820da604a0a9366e2a0f90a4a119f2c66084fd59", size = 82903, upload-time = "2026-07-13T08:39:18.919Z" },
 ]
 
 [[package]]
@@ -2173,8 +2173,8 @@ requires-dist = [
     { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
     { name = "configspace", specifier = ">=1.0" },
     { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
-    { name = "fastdfs", marker = "extra == 'rdblearn'", specifier = ">=0.2.1" },
-    { name = "fastdfs", marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.2.1" },
+    { name = "fastdfs", marker = "extra == 'rdblearn'", specifier = ">=1.1" },
+    { name = "fastdfs", marker = "extra == 'tabpfn-rel-api'", specifier = ">=1.1" },
     { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
     { name = "jsonschema", specifier = ">=4.0" },
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
@@ -2203,7 +2203,7 @@ provides-extras = ["lightgbm", "rdblearn", "rdl", "graphsage", "relgnn", "relgt"
 cpu = [{ name = "torch", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "relarena", group = "cpu" } }]
 cuda = []
 dev = [
-    { name = "fastdfs", specifier = ">=0.2.1" },
+    { name = "fastdfs", specifier = ">=1.1" },
     { name = "lightgbm", specifier = ">=4.0,<4.7" },
     { name = "pre-commit", specifier = ">=4.0" },
     { name = "pytest", specifier = ">=9.1.1" },
