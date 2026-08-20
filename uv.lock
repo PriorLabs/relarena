@@ -2085,7 +2085,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.0.1a2"
+version = "0.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "configspace" },
