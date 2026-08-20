@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import numpy as np
 import pandas as pd
 import pytest
+from fastdfs.dfs import dfs_feature_column_name
 from relbench.base import Database, Table
 
 import relarena.featurization.dfs as dfs_mod
@@ -739,3 +740,12 @@ def test__build_dfs_features__leaves_no_engine_db_behind(
     )
 
     assert list(tmp_path.iterdir()) == []
+
+
+def test__depth_map__keys_match_the_engine_column_naming() -> None:
+    """The depth map must key on the name the engine gives the matrix column."""
+    feature = SimpleNamespace(
+        get_name=lambda: "drivers.COUNT(results)", get_depth=lambda: 2
+    )
+
+    assert dfs_feature_column_name(feature) == "d2__drivers.COUNT(results)"

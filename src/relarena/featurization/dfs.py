@@ -47,6 +47,10 @@ from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
+
+# The engine names matrix columns `d{depth}__{feature}`; the depth map must use the
+# same names or every lookup misses.
+from fastdfs.dfs import dfs_feature_column_name
 from relbench.base import Database, EntityTask, Table
 
 from relarena.cache import CacheConfig, cache_key
@@ -69,7 +73,7 @@ TARGET_HISTORY_TABLE_NAME = "_RDBL_target_history"
 #: Bumped when DFS-building or the RDB-transform pipeline changes in a way that
 #: should invalidate persisted feature matrices — the disk cache key pins the data
 #: content and build params, not the code that turns one into the other.
-_DFS_CACHE_VERSION = 2
+_DFS_CACHE_VERSION = 3
 
 
 def _source_identity_segments(
@@ -603,7 +607,7 @@ def build_dfs_features(
             # never the cached RDB: the mutation only *adds* a column, so a
             # `copy(deep=False)` (shared column data, no duplication) suffices.
             return {
-                f.get_name(): f.get_depth()
+                dfs_feature_column_name(f): f.get_depth()
                 for f in get_dfs_engine(cfg.engine, cfg).prepare_features(
                     _shallow_frame_copy(_rdb()),
                     _dfs_input(),
@@ -648,6 +652,12 @@ def build_dfs_features(
     if depth >= max_depth:
         sliced = matrix
     else:
+        if not any(c in depth_map for c in matrix.columns):
+            raise RuntimeError(
+                "No DFS matrix column is in the depth map, so the slice would keep "
+                "every column at every depth. The DFS engine and the depth map "
+                "disagree on column naming."
+            )
         keep = [c for c in matrix.columns if depth_map.get(c, -1) <= depth]
         sliced = matrix.loc[:, keep]
 

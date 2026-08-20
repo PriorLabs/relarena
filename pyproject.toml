@@ -72,7 +72,7 @@ lightgbm = ["lightgbm>=4.0,<4.7"]
 # plus the DFS featurization deps; `tabpfn-rel-local` uses this same extra.
 # setuptools<82 because featuretools -> woodwork imports pkg_resources at import
 # time, and setuptools 82 removed it (81 still ships it).
-rdblearn = ["tabpfn>=8", "fastdfs>=0.2.1", "setuptools<82"]
+rdblearn = ["tabpfn>=8", "fastdfs>=1.1", "setuptools<82"]
 # rdl: the shared Relational Deep Learning stack for the GNN baselines — PyG + PyTorch
 # Frame + a text embedder, which relbench.modeling.* needs (all lazy-imported inside
 # fit()). GPU recommended. NOTE: PyG neighbor sampling needs `pyg-lib` or `torch-sparse`
@@ -91,7 +91,7 @@ relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # tabpfn-rel-client (the tabpfn-v3-api TFM): DFS locally, fit/predict server-side,
 # text embedded natively by the API — no GPU and no local tabpfn needed.
 tabpfn-rel-local = ["relarena[rdblearn]"]
-tabpfn-rel-api = ["fastdfs>=0.2.1", "setuptools<82", "tabpfn-client>=0.3.2"]
+tabpfn-rel-api = ["fastdfs>=1.1", "setuptools<82", "tabpfn-client>=0.3.2"]
 # RelArena supports RT execution on Linux x86_64, for which relational-transformer
 # publishes a stable-ABI (abi3-py311) wheel. GPU strongly recommended -- a
 # fine-tune on CPU is not a practical run.
@@ -112,7 +112,7 @@ dev = [
     "pre-commit>=4.0",
     "ruff==0.15.13",
     "lightgbm>=4.0,<4.7",
-    "fastdfs>=0.2.1",
+    "fastdfs>=1.1",
     # Same woodwork/pkg_resources cap as the DFS extras above.
     "setuptools<82",
 ]
