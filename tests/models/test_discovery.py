@@ -67,13 +67,10 @@ def _registered_names(*args: str) -> list[str]:
 def test__register_builtin_models__without_the_dfs_extra__same_models() -> None:
     """Registration is dep-free: an absent extra must not drop a model.
 
-    The dev group installs `fastdfs`, so a `fastdfs` import that escapes to module
-    scope in `relarena.featurization` is invisible to the rest of the suite. It
-    surfaces only on an install without the DFS extra, where the scan reads the
-    ImportError as an absent optional dep and every model importing that package
-    -- `lightgbm` included, which only wants entity features -- goes quietly
-    missing. Compare the whole registry rather than named models so any such
-    import is caught, wherever it lands.
+    The dev group installs `fastdfs`, so a module-scope import of it is invisible
+    to the rest of the suite — it surfaces only on an install without the DFS
+    extra, where the scan reads the ImportError as an absent optional dep and the
+    model goes quietly missing.
     """
     assert _registered_names("--without-dfs-extra") == _registered_names()
 

@@ -534,11 +534,9 @@ def build_dfs_features(
     `build_entity_features`; the caller freezes a consistent categorical encoding
     across splits.
     """
-    # Local, like every other `fastdfs` import in this module: the DFS deps are an
-    # extra, so a module-scope import makes `relarena.featurization` unimportable
-    # without it — which silently drops every model that imports this package from
-    # the registry, since the discovery scan treats a missing third-party module as
-    # an absent optional extra.
+    # The DFS deps are an extra, so these imports stay function-local: at module
+    # scope they make `relarena.featurization` unimportable without the extra,
+    # which silently drops every model that imports it from the registry.
     from fastdfs import DFSConfig, compute_dfs_features
     from fastdfs.dfs import dfs_feature_column_name, get_dfs_engine
     from fastdfs.utils.type_utils import safe_convert_to_string
@@ -607,6 +605,7 @@ def build_dfs_features(
             # `compute_dfs_features`) rejects it. Run it on a shallow-frame copy,
             # never the cached RDB: the mutation only *adds* a column, so a
             # `copy(deep=False)` (shared column data, no duplication) suffices.
+
             # The engine names matrix columns `d{depth}__{feature}`; the depth map
             # must use the same names or every lookup misses.
             return {
