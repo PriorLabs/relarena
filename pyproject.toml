@@ -92,6 +92,13 @@ relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # text embedded natively by the API — no GPU and no local tabpfn needed.
 tabpfn-rel-local = ["relarena[rdblearn]"]
 tabpfn-rel-api = ["fastdfs>=1.1", "setuptools<82", "tabpfn-client>=0.3.2"]
+# Nori-Rel runs the frozen public Nori 30M regressor over shared DFS features.
+nori-rel = [
+    "fastdfs>=1.1",
+    "setuptools<81",
+    "synthefy==7.0.4",
+    "synthefy-nori==0.19.0",
+]
 # RelArena supports RT execution on Linux x86_64, for which relational-transformer
 # publishes a stable-ABI (abi3-py311) wheel. GPU strongly recommended -- a
 # fine-tune on CPU is not a practical run.
@@ -125,9 +132,8 @@ cpu = ["torch"]
 
 [tool.uv]
 exclude-newer = "3 days"
-# v1.8.0 was published after the global cutoff while this release was being
-# prepared. The exact dependency pin above keeps this exemption reproducible.
-exclude-newer-package = { relational-transformer = false }
+# Exact model releases may be newer than the rolling global cutoff.
+exclude-newer-package = { relational-transformer = false, synthefy = false, synthefy-nori = false }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
