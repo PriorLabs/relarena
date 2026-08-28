@@ -75,6 +75,20 @@ CSV:
 relarena --model lightgbm --datasets rel-f1 --output results.csv
 ```
 
+On a large-memory machine, run independent tasks in separate worker processes:
+
+```bash
+relarena --model kurversc --parallel-tasks 10 --n-trials 1 \
+    --model-config '{"full_training_frames": 1, "sample_rows": 10000, "feature_family_max_columns": 4}' \
+    --output kurversc_all_tasks.csv
+```
+
+`--parallel-tasks` parallelizes complete dataset/task experiments only. Frame
+construction, configuration trials, inner selection, and outer refitting remain
+sequential within each task. Each worker exits after its task to release native
+DuckDB/CatBoost state and relational frames; completed-task statuses print as they arrive,
+while CSV rows retain the original task order. The default is `1`.
+
 Each `(model, dataset, task, seed)` experiment is independent, so sweeps parallelize
 trivially. The building blocks are all public: `run_experiment` executes one experiment,
 `summary_to_dataframe` flattens it into the shared results schema, and concatenated frames
@@ -324,6 +338,31 @@ Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
 `--extra leaderboard --extra plots` for the reporting stack (`bencheval` resolves from git here,
 pinned by `uv.lock`).
 
+To run KurveRSC from sibling source checkouts (`relarena/` and `kurve-rsc/` under the same
+directory), sync its extra and invoke the ordinary RelArena CLI. KurveRSC is a system, so its
+GraphReduce search happens inside its single RelArena trial; `--n-trials 1` is sufficient:
+
+```bash
+uv sync --group cpu --extra kurversc
+OMP_NUM_THREADS=1 uv run relarena --model kurversc --datasets rel-stack \
+    --tasks user-badge --n-trials 1 \
+    --model-config '{"full_training_frames": 1, "sample_rows": 10000, "feature_family_max_columns": 4}' \
+    --output kurversc_user_badge.csv
+```
+
+Omit `--datasets` and `--tasks` to run all 21 RelBench v1 entity classification and regression
+tasks. Each phase receives RelArena's officially censored database; KurveRSC searches connected
+samples, freezes the selected GraphReduce operations, refits from the full phase tables, and
+replays that plan for validation or test prediction. Search always uses the latest eligible
+training frame. Its default 42-candidate search incrementally enables all seven GraphReduce
+feature families while testing depth and automatic annotation. `sample_rows` controls the connected row budget used only for configuration
+search (`100000` by default); reducing it to `10000` speeds up search without reducing the rows
+used by the final refit. `full_training_frames` is recorded in the RelArena trial configuration: `1`
+(the safe default) uses the latest eligible full-training cutoff, while a larger value selects
+that many evenly spaced cutoffs and requires correspondingly more compute and spill space.
+`feature_family_max_columns` limits how many source columns each automatic feature family expands
+per node (`4` by default); set it to `null` to restore the uncapped search.
+
 </details>
 
 <details>
@@ -356,6 +395,7 @@ registering a method works without its extra installed.
 | Extra | Baselines | Notes |
 |---|---|---|
 | `lightgbm` | LightGBM | CPU only |
+| `kurversc` | KurveRSC | GraphReduce configuration search + CatBoost; CPU only |
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | same stack as `rdblearn`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
@@ -472,6 +512,7 @@ as an experimental final-fit variant.
 | `constant-global` | Constant (global) | global constant | model | report | train + val | core |
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
+| `kurversc` | KurveRSC | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
@@ -485,7 +526,7 @@ The report presents `relgnn-es` simply as **RelGNN**, because that published-sty
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
 remains available for experiments but is excluded from the default release leaderboard.
 
-RT-PluRel is the sole registered **system**. It uses the relational transformer pretrained on
+RT-PluRel and KurveRSC are registered **systems**. RT-PluRel uses the relational transformer pretrained on
 PluRel-generated synthetic data and fine-tuned on the given task with a custom, sequential
 tuning regime; its protocol and every configured value are documented in
 [`models/rt/model.py`](src/relarena/models/rt/model.py). Because both of its selections happen

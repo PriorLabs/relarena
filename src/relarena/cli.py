@@ -1,4 +1,4 @@
-"""Command-line entry point: run a registered model across relational tasks on RelBench.
+"""Command-line entry point: run a registered method across RelBench tasks.
 
 Examples:
 --------
@@ -19,10 +19,11 @@ from __future__ import annotations
 
 import argparse
 import sys
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import pandas as pd
 
-import relarena.models  # noqa: F401  (registers built-in models)
+import relarena.models  # noqa: F401  (registers built-in methods)
 from relarena.registry import registry
 from relarena.results import summary_to_dataframe
 from relarena.runner import SystemExperimentSummary, run_experiment
@@ -34,7 +35,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--model",
         default=None,
-        help="registered model name (required, unless --list); e.g. 'constant-global'",
+        help="registered method name (required, unless --list); e.g. 'constant-global'",
     )
     p.add_argument(
         "--datasets",
@@ -50,7 +51,18 @@ def _build_parser() -> argparse.ArgumentParser:
         "--n-trials",
         type=int,
         default=10,
-        help="HPO trials (ignored by untunable models)",
+        help="HPO trials (ignored by untunable models and systems)",
+    )
+    p.add_argument(
+        "--parallel-tasks",
+        type=int,
+        default=1,
+        metavar="N",
+        help=(
+            "run up to N independent dataset/task experiments concurrently "
+            "(default: 1); trials and frame construction within each task remain "
+            "sequential"
+        ),
     )
     p.add_argument("--no-test", action="store_true", help="skip test-set evaluation")
     p.add_argument(
@@ -64,9 +76,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the CLI: discover tasks, run the model on each, print/write results."""
+    """Run the CLI: discover tasks, run the method, and print/write results."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.parallel_tasks < 1:
+        parser.error("--parallel-tasks must be at least 1")
     if args.model is None and not args.list:
         parser.error(
             "--model is required (e.g. --model constant-global). "
@@ -88,27 +102,20 @@ def main(argv: list[str] | None = None) -> int:
         print("Nothing to run.", file=sys.stderr)
         return 1
 
-    model_cls = registry.get(args.model)
-    frames: list[pd.DataFrame] = []
-    for s in specs:
-        print(
-            f"\n=== {args.model} on {s.dataset}/{s.task} ({s.task_type.name}) ===",
-            flush=True,
-        )
-        try:
-            summary = run_experiment(
-                model_cls,
-                s.dataset,
-                s.task,
-                seed=args.seed,
-                n_trials=args.n_trials,
-                cache_dir=args.cache_dir,
-                evaluate_test=not args.no_test,
-            )
-        except Exception as exc:  # one bad dataset shouldn't abort the sweep
-            print(f"    ERROR: {exc!r}", file=sys.stderr)
-            continue
-        frames.append(summary_to_dataframe(summary))
+    method_cls = registry.get(args.model)
+    run_kwargs = {
+        "seed": args.seed,
+        "n_trials": args.n_trials,
+        "cache_dir": args.cache_dir,
+        "evaluate_test": not args.no_test,
+        # The CLI serializes metrics, not prediction arrays. Keeping them out of
+        # worker results avoids copying large arrays between task processes.
+        "cache_predictions": False,
+    }
+    frames_by_index: dict[int, pd.DataFrame] = {}
+
+    def record(index: int, summary: object) -> None:
+        frames_by_index[index] = summary_to_dataframe(summary)
         if isinstance(summary, SystemExperimentSummary):
             score = summary.result.test_score
             score_str = f"{score:.4f}" if score is not None else "n/a"
@@ -125,14 +132,74 @@ def main(argv: list[str] | None = None) -> int:
                     f"    {summary.metric_name}: val={best.val_score:.4f} "
                     f"test={test_str}"
                 )
+        if summary.peak_rss_gib is not None:
+            print(f"    peak_rss_gib: {summary.peak_rss_gib:.2f}")
 
-    if not frames:
+    if args.parallel_tasks == 1:
+        for index, spec in enumerate(specs):
+            print(
+                f"\n=== {args.model} on {spec.dataset}/{spec.task} "
+                f"({spec.task_type.name}) ===",
+                flush=True,
+            )
+            try:
+                summary = run_experiment(
+                    method_cls,
+                    spec.dataset,
+                    spec.task,
+                    **run_kwargs,
+                )
+            except Exception as exc:  # one bad dataset shouldn't abort the sweep
+                print(f"    ERROR: {exc!r}", file=sys.stderr)
+                continue
+            record(index, summary)
+    else:
+        workers = min(args.parallel_tasks, len(specs))
+        print(
+            f"\nRunning {len(specs)} tasks with parallel_tasks={workers}. "
+            "Each task retains sequential frame construction and trials.",
+            flush=True,
+        )
+        with ProcessPoolExecutor(
+            max_workers=workers,
+            # Release native-library state and large relational frames after
+            # every task instead of retaining them in a long-lived worker.
+            max_tasks_per_child=1,
+        ) as executor:
+            futures = {
+                executor.submit(
+                    run_experiment,
+                    method_cls,
+                    spec.dataset,
+                    spec.task,
+                    **run_kwargs,
+                ): (index, spec)
+                for index, spec in enumerate(specs)
+            }
+            completed = 0
+            for future in as_completed(futures):
+                index, spec = futures[future]
+                completed += 1
+                print(
+                    f"\n=== [{completed}/{len(specs)} completed] {args.model} on "
+                    f"{spec.dataset}/{spec.task} ({spec.task_type.name}) ===",
+                    flush=True,
+                )
+                try:
+                    summary = future.result()
+                except Exception as exc:  # one bad task should not abort the sweep
+                    print(f"    ERROR: {exc!r}", file=sys.stderr)
+                    continue
+                record(index, summary)
+
+    if not frames_by_index:
         print("No successful runs.", file=sys.stderr)
         return 1
 
+    frames = [frames_by_index[index] for index in sorted(frames_by_index)]
     results = pd.concat(frames, ignore_index=True)
     selected = results[results["selected"]].reset_index(drop=True)
-    print("\n==== RESULTS (val-selected config per task) ====")
+    print("\n==== RESULTS (selected row per task) ====")
     print(selected.to_string(index=False))
     if args.output:
         results.to_csv(args.output, index=False)

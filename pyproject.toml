@@ -67,6 +67,9 @@ relarena = "relarena.cli:main"
 [project.optional-dependencies]
 # Per-model extras (lazy-import + optional-dependency pattern; imported inside fit()).
 lightgbm = ["lightgbm>=4.0,<4.7"]
+# KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a
+# system entry because selection happens inside its fit implementation.
+kurversc = ["kurversc>=0.1,<1"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
 # (tabpfn>=8 for the create_default_for_version API, lazily imported in models/_tfm.py)
 # plus the DFS featurization deps; `tabpfn-rel-local` uses this same extra.
@@ -125,9 +128,10 @@ cpu = ["torch"]
 
 [tool.uv]
 exclude-newer = "3 days"
-# v1.8.0 was published after the global cutoff while this release was being
-# prepared. The exact dependency pin above keeps this exemption reproducible.
-exclude-newer-package = { relational-transformer = false }
+# These packages were published after the global cutoff while their exact
+# dependency pins were being integrated. Exact pins keep the exemptions
+# reproducible without weakening the cutoff for unrelated dependencies.
+exclude-newer-package = { relational-transformer = false, graphreduce = false }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
@@ -135,6 +139,7 @@ conflicts = [
 ]
 
 [tool.uv.sources]
+kurversc = { path = "../kurve-rsc", editable = true }
 # bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
 # The resolved commit is pinned in uv.lock for reproducibility.
 bencheval = { git = "https://github.com/autogluon/tabarena.git", subdirectory = "packages/bencheval", rev = "9f3878b882439cb885003b5f978676961b059b6d" }
