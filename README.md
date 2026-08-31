@@ -242,7 +242,7 @@ entity-level RelBench v1 tasks:
 
 | File | Contents |
 |---|---|
-| `results.csv` | Every evaluated config of the release sweep (7 databases, 21 tasks, seed 0). Feed it to `compute_leaderboard`; filter on `selected` for the tuned board. |
+| `results.csv` | Every evaluated config of the release sweep (7 databases, 21 tasks, seed 0). Feed it to `compute_leaderboard`; pass `subset=` to filter which tasks the board covers. |
 | `experiment_results.csv` | Same schema, for exploratory runs deliberately **excluded** from the default leaderboard (currently the experimental full-data-refit `relgnn` variant). |
 | `reference_results.csv` | Per-task scores for methods **not reproduced in this pipeline**, transcribed from published model reports and flagged with a `_MR` (**model report**) suffix. |
 
@@ -260,6 +260,29 @@ average ranks, bootstrapped Elo ratings with confidence intervals, pairwise win 
 normalized or baseline-relative scores (needs the `leaderboard` extra). Normalized-loss heatmaps
 and the critical-difference diagram come from `relarena.evaluation.write_leaderboard_plots` with
 the `plots` extra.
+
+A board covers the tasks present in the frame you hand it, and any method without a result on
+every one of them is dropped, with a warning naming it. `subset=` allows for creating custom
+leaderboards computed on a restricted set of tasks. The filtering is run before the completeness
+check mentioned above. `SUBSETS` ships two examples, allowing easy comparison on only
+classification or regression tasks:
+
+```python
+from relarena.evaluation import compute_leaderboard
+
+overall = compute_leaderboard(results)  # every task in the frame
+classification = compute_leaderboard(results, subset="classification")
+regression = compute_leaderboard(results, subset="regression")
+```
+
+In addition to providing a registry of example subsets, it is also easy to define custom
+filters using `lambda` functions:
+
+```python
+board = compute_leaderboard(results, subset=lambda d: d["dataset"] == "rel-f1")
+```
+
+The `subset` argument of `write_leaderboard_plots` works analogously.
 
 </details>
 
