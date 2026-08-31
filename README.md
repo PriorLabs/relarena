@@ -340,6 +340,10 @@ registering a method works without its extra installed.
 | `rt` | RT-PluRel | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
 
+The [Nori-Rel walkthrough](examples/nori_rel.ipynb) covers installation,
+choosing a regression task, warming its DFS feature cache, running the frozen
+30M checkpoint, and saving the result.
+
 **GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
 `relgt` build on RelBench's GNN stack (PyG + PyTorch Frame + a text embedder), pulled by their
 extras. PyG **temporal (disjoint) neighbor sampling additionally needs `pyg-lib`** (plus
