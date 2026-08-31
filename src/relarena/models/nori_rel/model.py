@@ -89,14 +89,15 @@ def _random_window(problem: Any, rng: np.random.Generator) -> np.ndarray:
     """Choose a seeded context window and keep query decoding cache-safe."""
     pool_size = min(problem.window, _MAX_CONTEXT_ROWS)
     pool = rng.permutation(problem.n_train)[:pool_size]
+    max_query_chunk = _MAX_FORWARD_ROWS - pool_size
     if problem.window > _MAX_CONTEXT_ROWS:
-        problem.query_chunk = _MAX_FORWARD_ROWS - pool_size
+        problem.query_chunk = max_query_chunk
         return problem.predict(pool)
 
     query = np.arange(problem.n_test)
     if problem.n_test <= problem.window:
         query = np.resize(query, problem.window + _CACHE_TRIGGER_MARGIN_ROWS)
-    problem.query_chunk = len(query)
+    problem.query_chunk = min(len(query), max_query_chunk)
     return problem.predict(pool, query_idx=query)[: problem.n_test]
 
 

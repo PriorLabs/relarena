@@ -180,6 +180,32 @@ def test__random_window__forces_cache_safe_query_path() -> None:
     np.testing.assert_array_equal(prediction, [0, 1])
 
 
+@pytest.mark.parametrize("n_test", [2, 50_000])
+def test__random_window__caps_each_forward_pass(n_test: int) -> None:
+    class Problem:
+        n_train = 40_001
+        window = 40_000
+        query_chunk = 25_000
+
+        def __init__(self) -> None:
+            self.n_test = n_test
+
+        def predict(self, pool: np.ndarray, query_idx: np.ndarray) -> np.ndarray:
+            self.pool = pool
+            self.query = query_idx
+            self.forward_rows = [
+                len(pool) + len(query_idx[start : start + self.query_chunk])
+                for start in range(0, len(query_idx), self.query_chunk)
+            ]
+            return query_idx
+
+    problem = Problem()
+    model_module._random_window(problem, np.random.default_rng(0))
+
+    assert len(problem.pool) + problem.query_chunk == model_module._MAX_FORWARD_ROWS
+    assert max(problem.forward_rows) == model_module._MAX_FORWARD_ROWS
+
+
 def test__config__rejects_nonreported_depth() -> None:
     model = NoriRelModel({"max_depth": 3})
     task = SimpleNamespace(target_col="target", time_col=None)
