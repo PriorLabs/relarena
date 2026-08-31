@@ -8,6 +8,7 @@ the real module, so nothing else importing during the test is affected.
 
 from __future__ import annotations
 
+import json
 import logging
 import pkgutil
 import subprocess
@@ -27,6 +28,51 @@ def test__import_models__does_not_import_preprocessing_warmers() -> None:
         "assert 'relarena.models.relgt.warm_cache' not in sys.modules"
     )
     subprocess.run([sys.executable, "-c", code], check=True)
+
+
+_REGISTRY_NAMES = """
+import json
+import sys
+
+if "--without-dfs-extra" in sys.argv:
+
+    class _Hidden:
+        '''Make `fastdfs` unimportable, as on an install without the DFS extra.'''
+
+        def find_spec(self, name, path=None, target=None):
+            if name == "fastdfs" or name.startswith("fastdfs."):
+                raise ModuleNotFoundError(f"No module named {name!r}", name=name)
+            return None
+
+    sys.meta_path.insert(0, _Hidden())
+
+import relarena.models  # noqa: F401  - importing runs the registration scan
+from relarena import registry
+
+print(json.dumps(sorted(registry.names())))
+"""
+
+
+def _registered_names(*args: str) -> list[str]:
+    """Names in the registry of a fresh interpreter, run with `args`."""
+    result = subprocess.run(
+        [sys.executable, "-c", _REGISTRY_NAMES, *args],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return json.loads(result.stdout.splitlines()[-1])
+
+
+def test__register_builtin_models__without_the_dfs_extra__same_models() -> None:
+    """Registration is dep-free: an absent extra must not drop a model.
+
+    The dev group installs `fastdfs`, so a module-scope import of it is invisible
+    to the rest of the suite — it surfaces only on an install without the DFS
+    extra, where the scan reads the ImportError as an absent optional dep and the
+    model goes quietly missing.
+    """
+    assert _registered_names("--without-dfs-extra") == _registered_names()
 
 
 def _record_imports(monkeypatch: pytest.MonkeyPatch, fail: dict[str, str]) -> list[str]:

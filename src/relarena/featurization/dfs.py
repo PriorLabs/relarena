@@ -47,10 +47,6 @@ from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
-
-# The engine names matrix columns `d{depth}__{feature}`; the depth map must use the
-# same names or every lookup misses.
-from fastdfs.dfs import dfs_feature_column_name
 from relbench.base import Database, EntityTask, Table
 
 from relarena.cache import CacheConfig, cache_key
@@ -538,8 +534,11 @@ def build_dfs_features(
     `build_entity_features`; the caller freezes a consistent categorical encoding
     across splits.
     """
+    # The DFS deps are an extra, so these imports stay function-local: at module
+    # scope they make `relarena.featurization` unimportable without the extra,
+    # which silently drops every model that imports it from the registry.
     from fastdfs import DFSConfig, compute_dfs_features
-    from fastdfs.dfs import get_dfs_engine
+    from fastdfs.dfs import dfs_feature_column_name, get_dfs_engine
     from fastdfs.utils.type_utils import safe_convert_to_string
 
     cache = cache or CacheConfig(directory=None, on_miss="compute")
@@ -606,6 +605,9 @@ def build_dfs_features(
             # `compute_dfs_features`) rejects it. Run it on a shallow-frame copy,
             # never the cached RDB: the mutation only *adds* a column, so a
             # `copy(deep=False)` (shared column data, no duplication) suffices.
+
+            # The engine names matrix columns `d{depth}__{feature}`; the depth map
+            # must use the same names or every lookup misses.
             return {
                 dfs_feature_column_name(f): f.get_depth()
                 for f in get_dfs_engine(cfg.engine, cfg).prepare_features(
