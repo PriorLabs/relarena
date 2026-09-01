@@ -17,6 +17,12 @@ _BASELINE_DIR = Path(__file__).resolve().parents[2] / "baseline_results"
 _REFERENCE_CSV = _BASELINE_DIR / "reference_results.csv"
 
 
+#: The task type each primary metric belongs to (`roc_auc` is the binary
+#: primary, `mae` the regression one), so `_result` rows carry a `task_type`
+#: the subset filters can read.
+_TASK_TYPE_OF = {"roc_auc": "BINARY_CLASSIFICATION", "mae": "REGRESSION"}
+
+
 def _result(
     model: str,
     dataset: str,
@@ -30,6 +36,7 @@ def _result(
         "model": model,
         "dataset": dataset,
         "task": task,
+        "task_type": _TASK_TYPE_OF[metric],
         "metric": metric,
         "selected": selected,
         "test_score": test_score,
@@ -143,9 +150,10 @@ def test__compute_leaderboard__single_method__ranks_without_elo() -> None:
     assert board.loc["lightgbm", "rank"] == pytest.approx(1.0)
 
 
-def test__compute_leaderboard__incomplete_task__is_dropped() -> None:
+def test__compute_leaderboard__incomplete_method__is_dropped() -> None:
     pytest.importorskip("bencheval.evaluator")
-    # rel-hm/user-churn is missing lightgbm -> dropped, leaving one dense task.
+    # lightgbm is missing rel-hm/user-churn -> lightgbm goes, both tasks stay,
+    # so one method's partial sweep never shrinks the board for the others.
     results = pd.DataFrame(
         [
             _result("constant-global", "rel-f1", "driver-dnf", "roc_auc", 0.5),
@@ -155,10 +163,56 @@ def test__compute_leaderboard__incomplete_task__is_dropped() -> None:
     )
 
     board = compute_leaderboard(results)
-    assert set(board.index) == {
+    assert set(board.index) == {"constant-global"}
+
+
+def _mixed_results() -> pd.DataFrame:
+    """Two task types x two methods, plus one method that only does regression."""
+    rows = []
+    for model, score in (("constant-global", 0.5), ("lightgbm", 0.9)):
+        rows.append(_result(model, "rel-f1", "driver-dnf", "roc_auc", score))
+        rows.append(_result(model, "rel-hm", "user-churn", "mae", 1.0 - score))
+    rows.append(_result("regression-only", "rel-hm", "user-churn", "mae", 0.05))
+    return pd.DataFrame(rows)
+
+
+def test__compute_leaderboard__subset__ranks_only_that_task_type() -> None:
+    pytest.importorskip("bencheval.evaluator")
+    results = _mixed_results()
+
+    classification = compute_leaderboard(results, subset="classification")
+
+    # the regression-only method never entered, and neither did its task
+    assert set(classification.index) == {"constant-global", "lightgbm"}
+    assert classification.loc["lightgbm", "rank"] == pytest.approx(1.0)
+
+
+def test__compute_leaderboard__narrow_method__ranks_only_on_its_subset() -> None:
+    pytest.importorskip("bencheval.evaluator")
+    # A method covering one task type only: absent from the full board (it
+    # cannot cover it), ranked on the subset it does cover, and the full board
+    # is the same with or without it.
+    results = _mixed_results()
+    without = results[results["model"] != "regression-only"]
+
+    full = compute_leaderboard(results)
+    regression = compute_leaderboard(results, subset="regression")
+
+    assert "regression-only" not in set(full.index)
+    assert set(full.index) == set(compute_leaderboard(without).index)
+    assert set(regression.index) == {
         "constant-global",
         "lightgbm",
-    }  # both methods still ranked
+        "regression-only",
+    }
+    # it wins that board: mae 0.05 beats both
+    assert regression.loc["regression-only", "rank"] == pytest.approx(1.0)
+
+
+def test__compute_leaderboard__unknown_subset__raises() -> None:
+    pytest.importorskip("bencheval.evaluator")
+    with pytest.raises(ValueError, match="Unknown task subset 'tiny'"):
+        compute_leaderboard(_mixed_results(), subset="tiny")
 
 
 def test__compute_leaderboard__checked_in_baselines__produce_a_board() -> None:
