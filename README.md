@@ -79,7 +79,7 @@ On a large-memory machine, run independent tasks in separate worker processes:
 
 ```bash
 relarena --model kurversc --parallel-tasks 10 --n-trials 1 \
-    --model-config '{"full_training_frames": 1, "sample_rows": 10000, "feature_family_max_columns": 4}' \
+    --model-config '{"full_training_frames": 3, "sample_rows": 10000, "feature_family_max_columns": 4}' \
     --output kurversc_all_tasks.csv
 ```
 
@@ -338,9 +338,8 @@ Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
 `--extra leaderboard --extra plots` for the reporting stack (`bencheval` resolves from git here,
 pinned by `uv.lock`).
 
-To run KurveRSC from sibling source checkouts (`relarena/` and `kurve-rsc/` under the same
-directory), sync its extra and invoke the ordinary RelArena CLI. KurveRSC is a system, so its
-GraphReduce search happens inside its single RelArena trial; `--n-trials 1` is sufficient:
+To run KurveRSC, sync its extra and invoke the ordinary RelArena CLI. KurveRSC is a system, so
+its GraphReduce search happens inside its single RelArena trial; `--n-trials 1` is sufficient:
 
 ```bash
 uv sync --group cpu --extra kurversc
@@ -352,14 +351,17 @@ OMP_NUM_THREADS=1 uv run relarena --model kurversc --datasets rel-stack \
 
 Omit `--datasets` and `--tasks` to run all 21 RelBench v1 entity classification and regression
 tasks. Each phase receives RelArena's officially censored database; KurveRSC searches connected
-samples, freezes the selected GraphReduce operations, refits from the full phase tables, and
-replays that plan for validation or test prediction. Search always uses the latest eligible
-training frame. Its default 42-candidate search incrementally enables all seven GraphReduce
-feature families while testing depth and automatic annotation. `sample_rows` controls the connected row budget used only for configuration
-search (`100000` by default); reducing it to `10000` speeds up search without reducing the rows
-used by the final refit. `full_training_frames` is recorded in the RelArena trial configuration: `1`
-(the safe default) uses the latest eligible full-training cutoff, while a larger value selects
-that many evenly spaced cutoffs and requires correspondingly more compute and spill space.
+point-in-time frames, freezes the selected GraphReduce operations, refits from the full phase
+tables, and replays that plan for validation or test prediction. Its bounded multi-fidelity
+search explores GraphReduce feature-family combinations, depth, and automatic annotation while
+pruning candidates that exceed the width guard or cannot produce features for the task schema.
+`screening_rows` controls the low-fidelity screen (`10000` by default), and `sample_rows`
+controls the diverse confirmation-candidate budget (`50000` by default). The top candidates are
+reranked on complete relational frames. `search_training_frames=1` uses the latest eligible
+cutoff during graph search; larger values jointly fit search candidates across evenly spaced
+cutoffs and require enough RAM to retain those search frames. `full_training_frames=1` (the safe
+default) uses the latest eligible production cutoff, while a larger value selects that many
+evenly spaced cutoffs and requires correspondingly more compute and spill space.
 `feature_family_max_columns` limits how many source columns each automatic feature family expands
 per node (`4` by default); set it to `null` to restore the uncapped search.
 
@@ -669,13 +671,13 @@ RPI, please cite:
 
 ```bibtex
 @misc{hayler2026advancingopenreproduciblerelational,
-      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI}, 
+      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI},
       author={Adrian Hayler and Klemens Flöge and Alan Arazi and Rishabh Ranjan and Jure Leskovec and Felix Birkel and Brendan Roof and Anurag Garg and Kristina Collins and Lydia Sidhoum and Jonas Kübler and Siyuan Guo and Oscar Key and Jan Hendrik Metzen and Rylee Grace and David Salinas and Arthur Cahu and Simon Bing and Benjamin Jäger and Tuana Çelik and Mihir Manium and Vitor Monteiro and Jake Robertson and Jerry Chen and Eliott Kalfon and Tomás Pereda and Lilly Wehrhahn and Dominik Safaric and Tobias Schroeder and Georg Grab and Diana Kriuchkova and Clara Cornu and Philipp Singer and Nick Erickson and Vahid Balazadeh and Marie Salmon and Simone Alessi and Kürşat Kaya and Philipp Jund and Léo Grinsztajn and Yann LeCun and Bernhard Schölkopf and Madelon Hulsebos and Lennart Purucker and Sauraj Gambhir and Frank Hutter and Noah Hollmann},
       year={2026},
       eprint={2608.16319},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2608.16319}, 
+      url={https://arxiv.org/abs/2608.16319},
 }
 ```
 

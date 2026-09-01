@@ -10,12 +10,15 @@ from __future__ import annotations
 
 import logging
 import math
+import threading
 import time
 from dataclasses import dataclass
+from functools import wraps
 from pathlib import Path
 from typing import Callable, Type
 
 import numpy as np
+import psutil
 from relbench.base import TaskType
 
 from relarena.cache import resolve_cache_config
@@ -30,6 +33,62 @@ from relarena.tasks import ENTITY_TASK_TYPES
 from relarena.tuner import refit_and_evaluate, tune
 
 logger = logging.getLogger(__name__)
+
+
+class _PeakRSSMonitor:
+    """Sample this process's peak RSS for one experiment only.
+
+    ``resource.ru_maxrss`` is a process-lifetime high-water mark, so it cannot
+    distinguish tasks run sequentially by the CLI. A fresh monitor per
+    ``run_experiment`` samples current RSS and resets between tasks.
+    """
+
+    def __init__(
+        self,
+        *,
+        process: psutil.Process | None = None,
+        interval_seconds: float = 0.1,
+    ) -> None:
+        self._process = process or psutil.Process()
+        self._interval_seconds = interval_seconds
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._peak_bytes: int | None = None
+
+    def _sample(self) -> None:
+        try:
+            current = self._process.memory_info().rss
+        except (psutil.Error, OSError):
+            return
+        self._peak_bytes = (
+            current if self._peak_bytes is None else max(self._peak_bytes, current)
+        )
+
+    def _poll(self) -> None:
+        while not self._stop.wait(self._interval_seconds):
+            self._sample()
+
+    def __enter__(self) -> _PeakRSSMonitor:
+        self._sample()
+        self._thread = threading.Thread(
+            target=self._poll,
+            name="relarena-peak-rss",
+            daemon=True,
+        )
+        self._thread.start()
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join()
+        self._sample()
+
+    @property
+    def peak_rss_gib(self) -> float | None:
+        if self._peak_bytes is None:
+            return None
+        return self._peak_bytes / 1024**3
 
 
 def select_best(trials: list[TrialResult], metric: Callable[..., float]) -> TrialResult:
@@ -65,6 +124,7 @@ class ExperimentSummary:
     tuned: TrialResult | None  # best config by validation score
     trials: list[TrialResult]  # all trials and their analysis metadata
     kind: str = "model"
+    peak_rss_gib: float | None = None  # sampled peak RSS for this task only
 
 
 @dataclass
@@ -78,6 +138,7 @@ class SystemExperimentSummary:
     metric_name: str
     seed: int
     result: SystemResult
+    peak_rss_gib: float | None = None  # sampled peak RSS for this task only
 
 
 def run_system_experiment(
@@ -300,6 +361,25 @@ def run_model_experiment(
     )
 
 
+ExperimentResult = ExperimentSummary | SystemExperimentSummary
+
+
+def _measure_peak_rss(
+    func: Callable[..., ExperimentResult],
+) -> Callable[..., ExperimentResult]:
+    """Attach a fresh per-call RSS measurement to an experiment summary."""
+
+    @wraps(func)
+    def measured(*args: object, **kwargs: object) -> ExperimentResult:
+        with _PeakRSSMonitor() as monitor:
+            summary = func(*args, **kwargs)
+        summary.peak_rss_gib = monitor.peak_rss_gib
+        return summary
+
+    return measured
+
+
+@_measure_peak_rss
 def run_experiment(
     method_cls: Type[RelArenaModel] | Type[RelArenaSystem],
     dataset_name: str,

@@ -37,8 +37,21 @@ def test__kurversc__registration_and_system_contract() -> None:
     assert registry.get("kurversc") is KurveRSCSystem
     assert KURVERSC_SPACE.default_overrides == {
         "full_training_frames": 1,
-        "sample_rows": 100_000,
+        "search_training_frames": 1,
+        "sample_rows": 50_000,
+        "screening_rows": 10_000,
+        "confirmation_top_k": 8,
+        "rerank_top_k": 3,
+        "rerank_cutoff_frames": 3,
         "feature_family_max_columns": 4,
+        "adaptive_depth_promotion": True,
+        "capability_pruning": True,
+        "search_max_features": 8_000,
+        "infer_ts_periods": False,
+        "auto_text_features": False,
+        "auto_annotate_max_text_columns": None,
+        "duckdb_memory_limit": "64GB",
+        "duckdb_max_temp_directory_size": "128GB",
     }
     assert KurveRSCSystem.kind == "system"
     assert KurveRSCSystem.refit_on_full_data is True
@@ -69,7 +82,12 @@ def test__fit_predict__delegates_only_through_public_kurversc_api(
 
     def fake_fit(**kwargs: Any) -> SimpleNamespace:
         calls["fit"] = kwargs
-        return SimpleNamespace(best_config=config)
+        return SimpleNamespace(
+            best_config=config,
+            recommended_config=config,
+            execution_plan={"records": []},
+            model_params={"iterations": 956, "depth": 7},
+        )
 
     def fake_predict(*args: Any, **kwargs: Any) -> pd.DataFrame:
         calls["predict"] = (args, kwargs)
@@ -89,8 +107,12 @@ def test__fit_predict__delegates_only_through_public_kurversc_api(
     model = KurveRSCSystem(
         {
             "full_training_frames": 1,
+            "search_training_frames": 3,
             "sample_rows": 10_000,
             "feature_family_max_columns": 3,
+            "rerank_top_k": 3,
+            "rerank_cutoff_frames": 3,
+            "rerank_stability_penalty": 0.25,
         },
         run_identity=identity,
     )
@@ -102,10 +124,25 @@ def test__fit_predict__delegates_only_through_public_kurversc_api(
 
     assert np.allclose(prediction, [0.1, 0.2, 0.3, 0.4])
     assert calls["problem"][1]["sample_rows"] == 10_000
+    assert calls["problem"][1]["max_train_timestamps"] == 3
+    assert calls["problem"][1]["search_training_frames"] == 3
     assert calls["fit"]["sample_rows"] == 10_000
+    assert calls["fit"]["search_training_frames"] == 3
+    assert calls["fit"]["screening_rows"] == 10_000
+    assert calls["fit"]["confirmation_top_k"] == 8
     assert calls["fit"]["feature_family_max_columns"] == 3
+    assert calls["fit"]["rerank_top_k"] == 3
+    assert calls["fit"]["rerank_cutoff_frames"] == 3
+    assert calls["fit"]["rerank_stability_penalty"] == 0.25
+    assert calls["fit"]["adaptive_depth_promotion"] is True
+    assert calls["fit"]["capability_pruning"] is True
+    assert calls["fit"]["search_max_features"] == 8_000
+    assert calls["fit"]["duckdb_memory_limit"] == "64GB"
+    assert calls["fit"]["duckdb_max_temp_directory_size"] == "128GB"
     assert calls["fit"]["random_state"] == 7
     assert calls["predict"][1]["use_validation_model"] is True
+    assert calls["predict"][1]["duckdb_memory_limit"] == "64GB"
+    assert calls["predict"][1]["duckdb_max_temp_directory_size"] == "128GB"
 
 
 def test__fit__rejects_too_small_search_sample() -> None:
@@ -136,7 +173,9 @@ def test__fit__rejects_nonpositive_feature_family_cap() -> None:
         )
 
 
-def test__outer_refit__reuses_inner_graph_config(monkeypatch: MonkeyPatch) -> None:
+def test__outer_refit__reuses_inner_graph_config(
+    monkeypatch: MonkeyPatch,
+) -> None:
     fit_calls: list[dict[str, Any]] = []
     config = kurversc.GraphConfig(depth=2)
     problem = SimpleNamespace(
@@ -154,7 +193,11 @@ def test__outer_refit__reuses_inner_graph_config(monkeypatch: MonkeyPatch) -> No
 
     def fake_fit(**kwargs: Any) -> SimpleNamespace:
         fit_calls.append(kwargs)
-        return SimpleNamespace(best_config=config)
+        return SimpleNamespace(
+            best_config=config,
+            recommended_config=config,
+            execution_plan={"records": [{"method_name": "auto_features"}]},
+        )
 
     monkeypatch.setattr(kurversc, "fit", fake_fit)
     task = SimpleNamespace(
@@ -181,6 +224,10 @@ def test__outer_refit__reuses_inner_graph_config(monkeypatch: MonkeyPatch) -> No
     )
     outer.fit(task, SimpleNamespace(), combined, None, seed=11)
 
-    assert "graph_configs" not in fit_calls[0]
-    assert fit_calls[1]["graph_configs"] == (config,)
+    assert "preselected_config" not in fit_calls[0]
+    assert fit_calls[1]["preselected_config"] == config
+    assert fit_calls[1]["preselected_execution_plan"] == {
+        "records": [{"method_name": "auto_features"}]
+    }
+    assert "graph_configs" not in fit_calls[1]
     assert outer._use_validation_model is False
