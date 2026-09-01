@@ -343,7 +343,8 @@ its GraphReduce search happens inside its single RelArena trial; `--n-trials 1` 
 
 ```bash
 uv sync --group cpu --extra kurversc
-OMP_NUM_THREADS=1 uv run relarena --model kurversc --datasets rel-stack \
+OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
+    --model kurversc --datasets rel-stack \
     --tasks user-badge --n-trials 1 \
     --output kurversc_user_badge.csv
 ```
@@ -352,7 +353,8 @@ To run all 21 RelBench v1 entity classification and regression tasks with the pu
 defaults, omit `--datasets`, `--tasks`, and `--model-config`:
 
 ```bash
-OMP_NUM_THREADS=1 uv run relarena --model kurversc --n-trials 1 \
+OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
+    --model kurversc --n-trials 1 \
     --output kurversc_all_tasks.csv
 ```
 
