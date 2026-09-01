@@ -38,15 +38,6 @@ relational-transformer = false
 kurversc = false
 
 [[package]]
-name = "abstract-jwrotator"
-version = "0.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "setuptools" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9f/76/34278d79392fc54a5dbaa7c6dbd90d493f257dee78a328ddc061e2699242/abstract.jwrotator-0.3.tar.gz", hash = "sha256:6ad9bf4f75325554b47bdfa6e366316ecfbc0742d2faee6f904fd17485c25583", size = 59266, upload-time = "2008-07-09T13:30:32Z" }
-
-[[package]]
 name = "aiohappyeyeballs"
 version = "2.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -813,10 +804,9 @@ wheels = [
 
 [[package]]
 name = "graphreduce"
-version = "1.10.13"
+version = "1.10.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "abstract-jwrotator" },
     { name = "dask", extra = ["dataframe"] },
     { name = "httpx" },
     { name = "icecream" },
@@ -828,9 +818,9 @@ dependencies = [
     { name = "setuptools" },
     { name = "structlog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/d1/a094d1830427df3edbf48cfed649ef76ec6220f93fe55281fcf3fd8adcce/graphreduce-1.10.13.tar.gz", hash = "sha256:03094eecb065626865a1d21ebfad525233d14a55c4ce0d998be7bf574b949b6a", size = 139346, upload-time = "2026-09-01T03:14:25.566Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/ea/c334ab33124c2d45efde80150943d6a271fb8a2ba5d113361ee97809732a/graphreduce-1.10.14.tar.gz", hash = "sha256:c41c9bf3cc9f70c311041a32260a5a65625330d63c10f27ca3c03fcc11aff280", size = 138974, upload-time = "2026-09-01T19:49:22.245Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/c1/e98d7807f44198cbf2122687e2ed091170ba88eef04958b30f4b4d534045/graphreduce-1.10.13-py3-none-any.whl", hash = "sha256:94013bec616c68f5435f14031d3bff2bdc3b5411fa3b5c2c9f679a7cd0910c64", size = 86395, upload-time = "2026-09-01T03:14:24.046Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/bc/0e7a7ebf22b28f26c4649b5d3c834a6ea6c7ae5531374c07b36b3206b8eb/graphreduce-1.10.14-py3-none-any.whl", hash = "sha256:58bd0627f5ef44d2afbe485b786166712488d93fd4c4c63e1293001197897e53", size = 86084, upload-time = "2026-09-01T19:49:20.793Z" },
 ]
 
 [[package]]
@@ -1207,7 +1197,7 @@ wheels = [
 
 [[package]]
 name = "kurversc"
-version = "0.1.0"
+version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "catboost" },
@@ -1219,9 +1209,9 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "structlog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/1f/0b08dbd7c7afc49172ef889d96afec05be442a88238023cb0ca5e640e026/kurversc-0.1.0.tar.gz", hash = "sha256:45000ba6db0040faecf725d2524a41617fdfd3ff0ee37f9a10f2562db67c7aed", size = 77306, upload-time = "2026-09-01T16:34:06.113Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/83/2f5f4b9f59ae26b968c36d8030ffcbba761151470b06f6edc206127ed469/kurversc-0.1.1.tar.gz", hash = "sha256:0ee6da95792b1f3c9a3045cc5525d503600ca0bc829bb905f523d50b3cbc70af", size = 98181, upload-time = "2026-09-01T19:53:41.913Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/ca/8357d6b26da9a2681a25d5370038ee7c96557427821efc0d62c00dfb1380/kurversc-0.1.0-py3-none-any.whl", hash = "sha256:c49329b3f8878e4b618ddf2f0db40ce3138f211242cbb039c08501176bfc41c6", size = 64030, upload-time = "2026-09-01T16:34:04.511Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/18/c8076525955048c94a9c3d2c57df2316e6e6dd60b39386a2201774ea84c1/kurversc-0.1.1-py3-none-any.whl", hash = "sha256:dcfa48ca2208fea9f11a4ca2df8be5b72f7be802e544dbed58a1e5b64586fcb8", size = 69695, upload-time = "2026-09-01T19:53:40.545Z" },
 ]
 
 [[package]]
@@ -2485,6 +2475,7 @@ cpu = [
 ]
 dev = [
     { name = "fastdfs" },
+    { name = "kurversc" },
     { name = "lightgbm" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -2503,7 +2494,7 @@ requires-dist = [
     { name = "fastdfs", marker = "extra == 'tabpfn-rel-api'", specifier = ">=1.1" },
     { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
     { name = "jsonschema", specifier = ">=4.0" },
-    { name = "kurversc", marker = "extra == 'kurversc'", specifier = "==0.1.0" },
+    { name = "kurversc", marker = "extra == 'kurversc'", specifier = "==0.1.1" },
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.3.3,<3.0" },
@@ -2531,6 +2522,7 @@ cpu = [{ name = "torch", index = "https://download.pytorch.org/whl/cpu", conflic
 cuda = []
 dev = [
     { name = "fastdfs", specifier = ">=1.1" },
+    { name = "kurversc", specifier = "==0.1.1" },
     { name = "lightgbm", specifier = ">=4.0,<4.7" },
     { name = "pre-commit", specifier = ">=4.0" },
     { name = "pytest", specifier = ">=9.1.1" },

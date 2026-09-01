@@ -41,6 +41,7 @@ def test__kurversc__registration_and_system_contract() -> None:
         "sample_rows": 50_000,
         "screening_rows": 10_000,
         "confirmation_top_k": 8,
+        "search_full_data": True,
         "rerank_top_k": 3,
         "rerank_cutoff_frames": 3,
         "feature_family_max_columns": 4,

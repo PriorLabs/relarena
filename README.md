@@ -345,7 +345,6 @@ its GraphReduce search happens inside its single RelArena trial; `--n-trials 1` 
 uv sync --group cpu --extra kurversc
 OMP_NUM_THREADS=1 uv run relarena --model kurversc --datasets rel-stack \
     --tasks user-badge --n-trials 1 \
-    --model-config '{"full_training_frames": 1, "sample_rows": 10000, "feature_family_max_columns": 4}' \
     --output kurversc_user_badge.csv
 ```
 
@@ -355,7 +354,10 @@ point-in-time frames, freezes the selected GraphReduce operations, refits from t
 tables, and replays that plan for validation or test prediction. Its bounded multi-fidelity
 search explores GraphReduce feature-family combinations, depth, and automatic annotation while
 pruning candidates that exceed the width guard or cannot produce features for the task schema.
-`screening_rows` controls the low-fidelity screen (`10000` by default), and `sample_rows`
+The published KurveRSC default uses `search_full_data=true`, so every graph
+configuration admitted by the search is evaluated on the complete latest-cutoff
+relational frame. Set `search_full_data=false` for the lower-cost multi-fidelity
+funnel: `screening_rows` controls its low-fidelity screen (`10000` by default), and `sample_rows`
 controls the diverse confirmation-candidate budget (`50000` by default). The top candidates are
 reranked on complete relational frames. `search_training_frames=1` uses the latest eligible
 cutoff during graph search; larger values jointly fit search candidates across evenly spaced
@@ -364,6 +366,16 @@ default) uses the latest eligible production cutoff, while a larger value select
 evenly spaced cutoffs and requires correspondingly more compute and spill space.
 `feature_family_max_columns` limits how many source columns each automatic feature family expands
 per node (`4` by default); set it to `null` to restore the uncapped search.
+
+<p align="center">
+  <img
+    src="docs/kurversc-relarena-default.svg"
+    alt="KurveRSC RelArena default: complete latest-cutoff graph search, top-three reranking over three sequential complete cutoff folds, a frozen graph plan, and final fitting on one complete cutoff."
+    width="1100"
+  />
+</p>
+
+<p align="center"><em>KurveRSC's published RelArena default uses complete source rows while processing graph candidates and temporal folds sequentially.</em></p>
 
 </details>
 

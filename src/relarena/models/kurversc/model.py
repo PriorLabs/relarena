@@ -29,6 +29,7 @@ KURVERSC_SPACE = SearchSpace(
         "sample_rows": 50_000,
         "screening_rows": 10_000,
         "confirmation_top_k": 8,
+        "search_full_data": True,
         "rerank_top_k": 3,
         "rerank_cutoff_frames": 3,
         "feature_family_max_columns": 4,
@@ -167,7 +168,7 @@ class KurveRSCSystem(RelArenaModel):
         confirmation_top_k = int(self.config.get("confirmation_top_k", 8))
         if confirmation_top_k < 0:
             raise ValueError("confirmation_top_k must be non-negative")
-        search_full_data = bool(self.config.get("search_full_data", False))
+        search_full_data = bool(self.config.get("search_full_data", True))
         rerank_top_k = int(self.config.get("rerank_top_k", 3))
         if rerank_top_k < 0:
             raise ValueError("rerank_top_k must be non-negative")

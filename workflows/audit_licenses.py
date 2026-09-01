@@ -132,6 +132,12 @@ ACCEPTED: dict[str, str] = {
         "of that text matches wording from those licenses rather than any term scipy "
         "imposes"
     ),
+    "numpy": (
+        "BSD-3-Clause per its own declaration. Its PyPI license field also carries "
+        "licenses and notices for bundled components, so the non-commercial wording "
+        "matched by the clause scan belongs to bundled material rather than a term "
+        "NumPy imposes"
+    ),
 }
 
 #: Prefixes covering the CUDA binary wheels torch pulls on Linux, each under an
@@ -165,6 +171,9 @@ MANUAL_LICENSES: dict[str, str] = {
     # The relational-transformer v1.8.0 source and wheels ship MIT in LICENSE,
     # while the published wheel declares no license in its metadata.
     "relational-transformer": "MIT",
+    # The KurveRSC 0.1.1 wheel ships an MIT LICENSE and declares
+    # `License-Expression: MIT`; PyPI's JSON API does not expose that PEP 639 field.
+    "kurversc": "MIT",
 }
 
 
