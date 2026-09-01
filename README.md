@@ -348,8 +348,16 @@ OMP_NUM_THREADS=1 uv run relarena --model kurversc --datasets rel-stack \
     --output kurversc_user_badge.csv
 ```
 
-Omit `--datasets` and `--tasks` to run all 21 RelBench v1 entity classification and regression
-tasks. Each phase receives RelArena's officially censored database; KurveRSC searches connected
+To run all 21 RelBench v1 entity classification and regression tasks with the published KurveRSC
+defaults, omit `--datasets`, `--tasks`, and `--model-config`:
+
+```bash
+OMP_NUM_THREADS=1 uv run relarena --model kurversc --n-trials 1 \
+    --output kurversc_all_tasks.csv
+```
+
+Add `--parallel-tasks N` only when the machine has enough memory for `N` complete tasks at once.
+Each phase receives RelArena's officially censored database; KurveRSC searches connected
 point-in-time frames, freezes the selected GraphReduce operations, refits from the full phase
 tables, and replays that plan for validation or test prediction. Its bounded multi-fidelity
 search explores GraphReduce feature-family combinations, depth, and automatic annotation while
