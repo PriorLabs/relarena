@@ -39,6 +39,9 @@ dependencies = [
     # (Also re-record whenever dataset.drop_noncanonical_columns changes.)
     "relbench==2.1.2",
     "numpy>=1.24",
+    # Per-experiment RSS sampling. Unlike resource.ru_maxrss, this can be reset
+    # between tasks executed sequentially in the same CLI process.
+    "psutil>=5.9",
     # Mirrors fastdfs' own pandas range (the dfs extras resolve it);
     # anything below 2.3.3 is unsatisfiable here.
     "pandas>=2.3.3,<3.0",
