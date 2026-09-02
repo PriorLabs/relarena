@@ -37,7 +37,7 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
     - `metric_error` ← `to_metric_error(test_score, <primary metric>)`, using
       the per-row `metric` column (always a registered primary, never the
       auxiliary native-metric columns)
-    - `time_train_s` ← `fit_time_tuning + fit_time_refit`
+    - `time_train_s` ← model fit times, or a system's complete `time_total`
     - `time_infer_s` ← `predict_time_refit`
 
     Only the val-selected config per run contributes (one row per method/task);
@@ -54,6 +54,12 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
         to_metric_error(score, metric)
         for score, metric in zip(rows["test_score"], rows["metric"], strict=True)
     ]
+
+    def seconds(column: str) -> pd.Series:
+        if column not in rows:
+            return pd.Series(0.0, index=rows.index)
+        return rows[column].fillna(0.0)
+
     frame = pd.DataFrame(
         {
             "method": rows["model"].to_numpy(),
@@ -62,9 +68,11 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
             ).to_numpy(),
             "metric_error": metric_error,
             "time_train_s": (
-                rows["fit_time_tuning"].fillna(0.0) + rows["fit_time_refit"].fillna(0.0)
+                seconds("fit_time_tuning")
+                + seconds("fit_time_refit")
+                + seconds("time_total")
             ).to_numpy(),
-            "time_infer_s": rows["predict_time_refit"].fillna(0.0).to_numpy(),
+            "time_infer_s": seconds("predict_time_refit").to_numpy(),
         }
     )
     # A NaN primary score (e.g. roc_auc on a degenerate window) survives the
@@ -102,7 +110,7 @@ def method_kind(model: str) -> str:
     A system faces the same tasks, splits, metrics, and budget as every model —
     the comparison is fair on final performance — but selects its own
     hyperparameters or components inside `fit`, so its score credits the whole
-    package rather than isolating one method (see `RelArenaModel.kind`).
+    package rather than isolating one model (see `RelArenaSystem`).
     Unregistered names (reference baselines, retired methods) rank as models.
     """
     # Built-ins register on this import, which a leaderboard-only caller (load
@@ -113,7 +121,7 @@ def method_kind(model: str) -> str:
     from relarena.registry import registry
 
     try:
-        return registry.get(model).kind
+        return registry.kind(model)
     except KeyError:
         return "model"
 

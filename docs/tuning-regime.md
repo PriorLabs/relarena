@@ -21,15 +21,15 @@ some critical progress that allows us for the first time to compare methods,
 while acknowledging the work that still has to be done to make them perfectly
 comparable.
 
-One deliberate exception to (a): entries registered as **systems**
-(`RelArenaModel.kind`, see
-[adding-a-model.md](adding-a-model.md#model-or-system)) run their own selection
-inside `fit` instead of the standardized tuning pipeline. They stay inside (b)
-— the same runtime policy applies — and inside every protocol rule (splits,
-censoring, leakage guards), so their final scores are fairly earned; what is
-lost is the attribution that (a) buys for models. Leaderboards keep the two
-populations separable rather than pretending a system's score isolates a
-method.
+One deliberate exception to (a): entries registered as **systems** implement
+`RelArenaSystem` (see
+[adding-a-model.md](adding-a-model.md#model-or-system)) and run their own
+selection inside `run` instead of the standardized tuning pipeline. They stay
+inside (b) — the same end-to-end runtime policy applies — and inside every
+protocol rule (splits, censoring, leakage guards), so their final scores are
+fairly earned; what is lost is the attribution that (a) buys for models.
+Leaderboards keep the two populations separable rather than pretending a
+system's score isolates a method.
 
 ## Why is (b) so hard?
 
@@ -100,12 +100,12 @@ larger search spaces for smaller tasks, this increase in size should be
 within reasonable bounds. Tuning your method for 24h on a `rel-f1` task is
 definitely not reasonable. Currently, all methods but `relgt` use a fixed-size
 search space per dataset, i.e. they don't adjust it to the dataset size. In
-general, nearly all methods do not actually hit the 24h constraint, with nearly all of
-them running for at most 12h of recorded runtime per task (excluding the
-cached pre-processing). Only `relgt` and `rt-plurel` currently break the 12h
-barrier, both excluding their pre-processing: `relgt` with up to 41h of pure
-GPU time on `rel-avito/user-visits`, and `rt-plurel` with up to 16.3h on the
-largest `rel-amazon` task.
+general, methods should not aim to exhaust the 24h allowance. Nearly all run
+for at most 12h of recorded runtime per task, even on the largest tasks
+(excluding cached pre-processing). Only `relgt` and `rt-plurel` currently break
+the 12h barrier, both excluding their pre-processing: `relgt` with up to 41h of
+pure GPU time on `rel-avito/user-visits`, and `rt-plurel` with up to 16.3h on
+the largest `rel-amazon` task.
 
 ## What we ran
 

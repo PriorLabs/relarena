@@ -239,7 +239,10 @@ Good starting points are `constant-global` (constant baseline), `lightgbm` (enti
 and the `tabpfn-rel` variants (cross-table features). RPI can run any compatible
 registered model; the package README is the
 [canonical model inventory](../README.md#models), including paper-facing and
-experimental registrations. `n_trials` controls the requested tuning
+local variants. End-to-end `RelArenaSystem` registrations target benchmark
+runs and are not accepted here: RPI fits once and predicts later at a
+caller-selected timestamp, which is a different lifecycle from a system's
+single split-to-predictions `run`. `n_trials` controls the requested tuning
 budget (`0` skips tuning and fits the default config); `seed` sets the RNG. Prefer
 `n_trials=0` for API runs unless repeated hosted fits are intentional.
 
