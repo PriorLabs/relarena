@@ -68,8 +68,7 @@ For a reproducible checkout, the CPU-only torch build, or the leaderboard and pl
 <details>
 <summary><b>🏟️ Benchmark a method across RelBench v1</b> — CLI sweep or in-process loop</summary>
 
-The CLI runs one model across many tasks in-process and writes every evaluated config to a
-CSV:
+The CLI runs one registered method across many tasks in-process and writes its results to a CSV:
 
 ```bash
 relarena --model lightgbm --datasets rel-f1 --output results.csv
@@ -78,8 +77,7 @@ relarena --model lightgbm --datasets rel-f1 --output results.csv
 On a large-memory machine, run independent tasks in separate worker processes:
 
 ```bash
-relarena --model kurversc --parallel-tasks 10 --n-trials 1 \
-    --model-config '{"full_training_frames": 3, "sample_rows": 10000, "feature_family_max_columns": 4}' \
+relarena --model kurversc --parallel-tasks 10 \
     --output kurversc_all_tasks.csv
 ```
 
@@ -88,6 +86,13 @@ construction, configuration trials, inner selection, and outer refitting remain
 sequential within each task. Each worker exits after its task to release native
 DuckDB/CatBoost state and relational frames; completed-task statuses print as they arrive,
 while CSV rows retain the original task order. The default is `1`.
+
+KurveRSC is CPU-only in its current GraphReduce + CatBoost implementation; it neither requires
+nor uses a GPU. For its default sequential sweep, use a Linux host with 96–128 GiB RAM and at
+least 150 GiB of free fast local SSD/NVMe scratch space. A 64 GiB host may work by spilling to
+disk but is closer to the limit on the largest tasks. Parallel task execution multiplies the
+aggregate memory and scratch demand, so `--parallel-tasks 10` is intended for a
+several-hundred-GiB server rather than an ordinary workstation.
 
 Each `(model, dataset, task, seed)` experiment is independent, so sweeps parallelize
 trivially. The building blocks are all public: `run_experiment` executes one experiment,
@@ -338,23 +343,24 @@ Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
 `--extra leaderboard --extra plots` for the reporting stack (`bencheval` resolves from git here,
 pinned by `uv.lock`).
 
-To run KurveRSC, sync its extra and invoke the ordinary RelArena CLI. KurveRSC is a system, so
-its GraphReduce search happens inside its single RelArena trial; `--n-trials 1` is sufficient:
+To run KurveRSC, sync its extra and invoke the ordinary RelArena CLI. KurveRSC is a native system,
+so its GraphReduce search happens inside `RelArenaSystem.run`; the model-only `--n-trials` option
+does not alter its internal search:
 
 ```bash
 uv sync --group cpu --extra kurversc
 OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
     --model kurversc --datasets rel-stack \
-    --tasks user-badge --n-trials 1 \
+    --tasks user-badge \
     --output kurversc_user_badge.csv
 ```
 
 To run all 21 RelBench v1 entity classification and regression tasks with the published KurveRSC
-defaults, omit `--datasets`, `--tasks`, and `--model-config`:
+system recipe, omit `--datasets` and `--tasks`:
 
 ```bash
 OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
-    --model kurversc --n-trials 1 \
+    --model kurversc \
     --output kurversc_all_tasks.csv
 ```
 
@@ -364,18 +370,15 @@ point-in-time frames, freezes the selected GraphReduce operations, refits from t
 tables, and replays that plan for validation or test prediction. Its bounded multi-fidelity
 search explores GraphReduce feature-family combinations, depth, and automatic annotation while
 pruning candidates that exceed the width guard or cannot produce features for the task schema.
-The published KurveRSC default uses `search_full_data=true`, so every graph
-configuration admitted by the search is evaluated on the complete latest-cutoff
-relational frame. Set `search_full_data=false` for the lower-cost multi-fidelity
-funnel: `screening_rows` controls its low-fidelity screen (`10000` by default), and `sample_rows`
-controls the diverse confirmation-candidate budget (`50000` by default). The top candidates are
-reranked on complete relational frames. `search_training_frames=1` uses the latest eligible
-cutoff during graph search; larger values jointly fit search candidates across evenly spaced
-cutoffs and require enough RAM to retain those search frames. `full_training_frames=1` (the safe
-default) uses the latest eligible production cutoff, while a larger value selects that many
-evenly spaced cutoffs and requires correspondingly more compute and spill space.
-`feature_family_max_columns` limits how many source columns each automatic feature family expands
-per node (`4` by default); set it to `null` to restore the uncapped search.
+The published KurveRSC recipe uses `search_full_data=true`, so every graph configuration admitted
+by the search is evaluated on the complete latest-cutoff relational frame; the lower-fidelity
+screening and confirmation stages are bypassed. The top three candidates are reranked over three
+complete cutoff frames processed sequentially. Graph search and final learner fitting each use
+the latest eligible production frame. Each automatic feature family expands at most four source
+columns per node, and the pre-materialization width guard is 8,000 features. These values are
+fixed in [`models/kurversc/model.py`](src/relarena/models/kurversc/model.py) so a registered system
+name denotes one reproducible procedure and its result needs no hidden configuration field. Use
+KurveRSC's own public API for ablations or alternative frame budgets.
 
 <p align="center">
   <img
@@ -492,17 +495,17 @@ documented, method-specific trial budgets chosen to approximately balance comput
 [docs/tuning-regime.md](docs/tuning-regime.md), and the forthcoming model report for the full
 budget rationale.
 
-**What a run records.** Each trial keeps its configuration, metrics, optional predictions, and
-separate tuning and final-fit timings, which is what makes tunability analyses and per-phase
-runtime comparisons possible after the fact.
+**What a run records.** A model keeps one result per trial, including its configuration,
+metrics, optional predictions, and phase timings. A system records one final result with its test
+metrics, optional predictions, total runtime, and per-task peak RSS; it does not synthesize
+model-trial fields.
 
 </details>
 
 <details>
 <summary><b>🤖 Models and systems</b> — the two submission types and the registered inventory</summary>
 
-Following TabArena, method submissions are categorized as models or systems
-(`RelArenaModel.kind`).
+Following TabArena, method submissions use one of two explicit contracts.
 
 - A **model submission** follows the standardized tuning regime, which allows claims about
   isolated methodological effects. It only needs to declare a search space; RelArena-α controls
@@ -520,12 +523,10 @@ research conclusions available from model submissions. Leaderboards should eithe
 systems (`compute_leaderboard(..., kinds={"model"})`) or rank both populations together with
 systems clearly marked; publishing both boards side by side is the recommended presentation.
 
-System support is currently **highly experimental**: systems run through the ordinary model API
-with documented workarounds (all tuning inside a single fit of the default config, state carried
-between the fit and refit phases via module-level globals), and a system submission needs extra
-validation by and discussion with the maintainers. A future release will replace these
-workarounds with an explicit fitting API for systems; see
-[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the current rules.
+A system implements `RelArenaSystem.run` and receives the actual `InnerSplit` and `OuterSplit`
+objects. It may use the inner split for selection or ignore it; RelArena fixes the censored
+inputs, hidden-label boundary, output shape, final evaluation, and total runtime accounting. See
+[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the contract.
 
 This is the canonical inventory of registered methods. The release snapshot and the forthcoming
 model report contain the rows marked **report**; the additional `relgnn` registration is retained
@@ -550,12 +551,14 @@ The report presents `relgnn-es` simply as **RelGNN**, because that published-sty
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
 remains available for experiments but is excluded from the default release leaderboard.
 
-RT-PluRel and KurveRSC are registered **systems**. RT-PluRel uses the relational transformer pretrained on
-PluRel-generated synthetic data and fine-tuned on the given task with a custom, sequential
-tuning regime; its protocol and every configured value are documented in
-[`models/rt/model.py`](src/relarena/models/rt/model.py). Because both of its selections happen
-inside `fit`, nothing ever scores the validation split, so its recorded `val_score` is a
-placeholder (see [`baseline_results/README.md`](baseline_results/README.md)).
+RT-PluRel and KurveRSC are registered **systems**. RT-PluRel uses the relational transformer
+pretrained on PluRel-generated synthetic data and fine-tuned on the given task with a custom,
+sequential tuning regime. KurveRSC jointly selects a GraphReduce feature program and downstream
+learner on the inner split, then freezes and replays that exact operation plan in its reporting
+arm. Their protocols and configured values are documented in
+[`models/rt/model.py`](src/relarena/models/rt/model.py) and
+[`models/kurversc/model.py`](src/relarena/models/kurversc/model.py). Each produces one system row
+with real test metrics and complete runtime, without a harness config or validation score.
 
 Everything else per method lives at its source: install caveats in
 [docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies) (the GNN baselines

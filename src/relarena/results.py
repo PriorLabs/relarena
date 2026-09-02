@@ -159,6 +159,7 @@ def summary_to_dataframe(
             "selected": True,
             "test_score": result.test_score,
             "time_total": result.time_total,
+            "peak_rss_gib": summary.peak_rss_gib,
         }
         if job_id is not None:
             row["id"] = job_id

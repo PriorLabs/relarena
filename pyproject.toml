@@ -68,10 +68,10 @@ Paper = "https://arxiv.org/abs/2608.16319"
 relarena = "relarena.cli:main"
 
 [project.optional-dependencies]
-# Per-model extras (lazy-import + optional-dependency pattern; imported inside fit()).
+# Per-method extras (lazy-import + optional-dependency pattern; imported when run).
 lightgbm = ["lightgbm>=4.0,<4.7"]
 # KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a
-# system entry because selection happens inside its fit implementation.
+# native system entry because selection happens inside its end-to-end run.
 kurversc = ["kurversc==0.1.1"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
 # (tabpfn>=8 for the create_default_for_version API, lazily imported in models/_tfm.py)
