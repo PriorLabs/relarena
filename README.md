@@ -32,7 +32,7 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
   constant predictors.
 - **Shared evaluation.** TabArena's `bencheval` for bootstrapped Elo, ranks,
   critical-difference diagrams, win rates, and normalized scores.
-- **RPI.** Any RelArena-α method applied to your own database in two lines of code, with the
+- **RPI.** Any compatible RelArena-α model applied to your own database in two lines of code, with the
   database and task specified in YAML.
 
 > [!NOTE]
@@ -350,7 +350,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and, for agent-facing notes, [AGENTS.md](
 <details>
 <summary><b>🧱 Baseline dependencies</b> — one extra per baseline, plus two special cases</summary>
 
-Each baseline carries its own extra, and every heavy dependency is lazy-imported inside `fit`, so
+Each baseline carries its own extra, and every heavy dependency is imported only when it runs, so
 registering a method works without its extra installed.
 
 | Extra | Baselines | Notes |
@@ -390,12 +390,12 @@ pip install "relarena[rt]"         # from a release
 <summary><b>🧭 How a run works</b> — splits, tuning procedure, and runtime policy</summary>
 
 ```
-┌─ runner ───── fit config(s) on train -> pick best on val -> final fit -> test
-├─ tuner ────── random search or a fixed grid under a caller-supplied budget;
-│               records configurations, metrics, predictions, and phase timings
-├─ model ────── RelArenaModel: fit / predict  (the contract)
-├─ space ────── SearchSpace: what to tune over, bound to the model in the registry
-└─ RelBench ─── Database, EntityTask, task.evaluate, metrics  (dependency)
+┌─ runner ───── models: tune -> select -> final fit -> test
+│               systems: run(inner_split, outer_split) -> test
+├─ tuner ────── model-only random search or fixed grid
+├─ model ────── RelArenaModel: fit / predict + registered SearchSpace
+├─ system ───── RelArenaSystem: owns the complete prediction procedure
+└─ RelBench ─── censored splits, EntityTask, evaluation, metrics
 ```
 
 **Tuning procedure.** Each method registers a search space in a standardized format together
@@ -428,17 +428,16 @@ documented, method-specific trial budgets chosen to approximately balance comput
 [docs/tuning-regime.md](docs/tuning-regime.md), and the forthcoming model report for the full
 budget rationale.
 
-**What a run records.** Each trial keeps its configuration, metrics, optional predictions, and
-separate tuning and final-fit timings, which is what makes tunability analyses and per-phase
-runtime comparisons possible after the fact.
+**What a run records.** A model keeps one result per trial, including its configuration,
+metrics, optional predictions, and phase timings. A system records one final result with its test
+metrics, optional predictions, and total runtime; it does not synthesize model-trial fields.
 
 </details>
 
 <details>
 <summary><b>🤖 Models and systems</b> — the two submission types and the registered inventory</summary>
 
-Following TabArena, method submissions are categorized as models or systems
-(`RelArenaModel.kind`).
+Following TabArena, method submissions use one of two explicit contracts.
 
 - A **model submission** follows the standardized tuning regime, which allows claims about
   isolated methodological effects. It only needs to declare a search space; RelArena-α controls
@@ -456,12 +455,10 @@ research conclusions available from model submissions. Leaderboards should eithe
 systems (`compute_leaderboard(..., kinds={"model"})`) or rank both populations together with
 systems clearly marked; publishing both boards side by side is the recommended presentation.
 
-System support is currently **highly experimental**: systems run through the ordinary model API
-with documented workarounds (all tuning inside a single fit of the default config, state carried
-between the fit and refit phases via module-level globals), and a system submission needs extra
-validation by and discussion with the maintainers. A future release will replace these
-workarounds with an explicit fitting API for systems; see
-[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the current rules.
+A system implements `RelArenaSystem.run` and receives the actual `InnerSplit` and `OuterSplit`
+objects. It may use the inner split for selection or ignore it; RelArena only fixes the censored
+inputs, hidden-label boundary, output shape, final evaluation, and total runtime accounting. See
+[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the contract.
 
 This is the canonical inventory of registered methods. The release snapshot and the forthcoming
 model report contain the rows marked **report**; the additional `relgnn` registration is retained
@@ -488,9 +485,8 @@ remains available for experiments but is excluded from the default release leade
 RT-PluRel is the sole registered **system**. It uses the relational transformer pretrained on
 PluRel-generated synthetic data and fine-tuned on the given task with a custom, sequential
 tuning regime; its protocol and every configured value are documented in
-[`models/rt/model.py`](src/relarena/models/rt/model.py). Because both of its selections happen
-inside `fit`, nothing ever scores the validation split, so its recorded `val_score` is a
-placeholder (see [`baseline_results/README.md`](baseline_results/README.md)).
+[`models/rt/model.py`](src/relarena/models/rt/model.py). Its result is one system row with the
+real test metrics and complete runtime, without a harness config or validation score.
 
 Everything else per method lives at its source: install caveats in
 [docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies) (the GNN baselines

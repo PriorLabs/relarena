@@ -1,8 +1,8 @@
-"""Tests for the RT baseline (registration, epoch grid, export layout).
+"""Tests for the RT system (registration, internal selection, export layout).
 
 No download and no `rt` import: everything here exercises the parts of the
-wrapper that decide *what* RT will be asked to do — the search space, the step
-budget, and the relbench-3.0.0 directory the preprocessor reads — rather than
+wrapper that decide *what* RT will be asked to do — the step budget and the
+relbench-3.0.0 directory the preprocessor reads — rather than
 the fine-tune itself, which needs a GPU and a published checkpoint.
 """
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -17,17 +18,56 @@ import pytest
 import yaml
 from relbench.base import Table, TaskType
 
-from relarena.models.rt import RT_SPACE, RTPluRelModel
+from relarena.models.rt import RTPluRelSystem
 from relarena.models.rt import config as cfg
 from relarena.models.rt.export import TASK_DIR, _write_dataset_dir, target_stats
 from relarena.registry import registry
 
 
-def test__registry__rt_plurel__is_registered_with_its_space() -> None:
-    assert registry.get("rt-plurel") is RTPluRelModel
-    assert registry.search_space("rt-plurel") is RT_SPACE
-    # The reporting arm retrains on train+val, as every other baseline does.
-    assert RTPluRelModel.refit_on_full_data is True
+def test__registry__rt_plurel__is_registered_as_a_system() -> None:
+    assert registry.get("rt-plurel") is RTPluRelSystem
+    assert registry.kind("rt-plurel") == "system"
+    with pytest.raises(TypeError, match="no harness search space"):
+        registry.search_space("rt-plurel")
+
+
+def test__run__carries_inner_selection_into_outer_arm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    task, inner_db, train = _tiny_source()
+    _, outer_db, val = _tiny_source()
+    test = Table(
+        df=val.df.drop(columns=[task.target_col]),
+        fkey_col_to_pkey_table=val.fkey_col_to_pkey_table,
+        pkey_col=val.pkey_col,
+        time_col=val.time_col,
+    )
+    inner = SimpleNamespace(db_state=inner_db, train_table=train, eval_table=val)
+    outer = SimpleNamespace(
+        db_state=outer_db, train_table=train, val_table=val, eval_table=test
+    )
+    chosen = cfg.Selection(step=300, rows=len(train.df), context=(256, 256, 64, True))
+    calls: list[tuple[Any, ...]] = []
+    system = RTPluRelSystem()
+
+    def fit_arm(*args: Any, **kwargs: Any) -> cfg.Selection | None:
+        calls.append((*args, kwargs))
+        return chosen if kwargs["phase"] == cfg.PHASE_INNER else None
+
+    monkeypatch.setattr(system, "_fit_arm", fit_arm)
+    monkeypatch.setattr(system, "_predict", lambda *args: np.arange(len(test.df)))
+
+    pred = system.run(task, inner_split=inner, outer_split=outer, seed=7)
+
+    assert calls[0][1] is inner_db
+    assert calls[0][2] is train
+    assert calls[0][3] is val
+    assert calls[0][-1]["phase"] == cfg.PHASE_INNER
+    assert calls[1][1] is outer_db
+    assert len(calls[1][2].df) == len(train.df) + len(val.df)
+    assert calls[1][-1]["phase"] == cfg.PHASE_OUTER
+    assert calls[1][-1]["selection"] is chosen
+    assert pred.tolist() == [0, 1, 2]
 
 
 def _tiny_source() -> tuple[SimpleNamespace, SimpleNamespace, Table]:
@@ -123,11 +163,11 @@ def test__target_stats__constant_target__std_is_one_not_zero() -> None:
     assert std == 1.0
 
 
-def test__predict__before_fit__raises() -> None:
+def test__test_prediction__before_reporting_arm__raises() -> None:
     task, db, label = _tiny_source()
-    model = RTPluRelModel({})
-    with pytest.raises(RuntimeError, match="before fit"):
-        model.predict(task, db, label)
+    model = RTPluRelSystem()
+    with pytest.raises(RuntimeError, match="before the reporting arm"):
+        model._predict(task, db, label)
 
 
 def test__config__departures_from_upstream_are_the_declared_ones() -> None:
@@ -153,10 +193,9 @@ def test__config__departures_from_upstream_are_the_declared_ones() -> None:
 
 
 def test__supported_task_types__entity_clf_and_reg_only() -> None:
-    assert RTPluRelModel.supported_task_types == frozenset(
+    assert RTPluRelSystem.supported_task_types == frozenset(
         {TaskType.BINARY_CLASSIFICATION, TaskType.REGRESSION}
     )
-    assert RTPluRelModel.refit_on_full_data is True
 
 
 def test__seed_offset__reads_the_preprocessed_table_info(tmp_path: Path) -> None:
@@ -264,33 +303,14 @@ def test__eval_args__carries_the_per_member_seed() -> None:
     )
 
 
-def test__predict__inner_arm__returns_a_placeholder_not_a_score() -> None:
-    # rt reports no validation score: the checkpoint was chosen inside fit, and
-    # scoring the whole val split would cost a large fraction of the training
-    # arm to produce a number nothing selects on.
-    task, db, label = _tiny_source()
-    model = RTPluRelModel({})
-    model._phase = cfg.PHASE_INNER
-    model._checkpoint = Path("/nonexistent.safetensors")
-    model._task_type = TaskType.REGRESSION
-    pred = model.predict(task, db, label)
-    # No checkpoint was loaded and no evaluator built -- the path above does not
-    # exist, so reaching rt at all would have raised.
-    assert pred.shape == (len(label.df),)
-    assert not pred.any()
+def test__system__has_no_placeholder_predict_method() -> None:
+    assert not hasattr(RTPluRelSystem, "predict")
 
 
 def test__preprocess_args__embeds_under_the_checkpoints_embedder() -> None:
     args = cfg.preprocess_args(dataset="/ds", out_dir="/pre", embed=False)
     assert args["embedder"] == _example_train_args()["embedder"]
     assert args["skip_tasks"] is False and args["embed"] is False
-
-
-def test__space__is_parameter_free() -> None:
-    # rt.train chooses the epoch budget inside one fit, so there is nothing for
-    # the tuner to search over.
-    assert RT_SPACE.default_overrides == {}
-    assert RT_SPACE.is_tunable is False
 
 
 def test__selection_steps__is_a_flat_step_budget() -> None:
@@ -690,8 +710,8 @@ def test__denormalization__uses_the_same_table_rustler_normalized_by() -> None:
     materially: on rel-f1/driver-position, mean 13.901 -> 13.725 and std 7.026
     -> 6.934.
 
-    `fit` therefore has to take `target_stats` from the *same* table it exports
-    as `train`, and `predict` has to export that same table beside the split it
+    `_fit_arm` therefore takes `target_stats` from the *same* table it exports
+    as `train`, and `_predict` exports that same table beside the split it
     scores. Denormalizing a refit's predictions with train-only statistics would
     shift and rescale every one of them.
     """
@@ -706,12 +726,12 @@ def test__denormalization__uses_the_same_table_rustler_normalized_by() -> None:
     # nothing.
     assert target_stats(union, task) != target_stats(label, task)
 
-    model = RTPluRelModel({})
+    model = RTPluRelSystem()
     model._task_type = TaskType.REGRESSION
     model._target_stats = target_stats(union, task)
     model._train_table = union
 
-    # What fit() pairs: stats and exported `train` come from one table.
+    # What _fit_arm() pairs: stats and exported `train` come from one table.
     assert model._target_stats == target_stats(model._train_table, task)
 
     # And the denormalizer is that pair, applied as `raw * std + mean`.
@@ -855,28 +875,29 @@ def test__best_checkpoint__nothing_published__reports_the_warm_start(
     assert path == cfg.warm_start(TaskType.REGRESSION)
 
 
-def test__fit__outer_arm_at_step_zero__still_carries_the_chosen_context(
+def test__fit_arm__outer_at_step_zero__still_carries_the_chosen_context(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # The step-0 reporting arm reports the warm start unmodified and never
-    # trains, so it never reaches `_refit_steps` -- which is what normally hands
-    # the context across the arms. `predict` still has to report under the
+    # trains, so it never reaches `_refit_steps` -- which normally hands the
+    # context across the arms. Test prediction still has to report under the
     # context validation chose; leaving it unset unpacks None in `eval_args`.
     from relarena.models.rt import model as rt_model
 
     task, db, label = _tiny_source()
     chosen = (256, 256, 64, True)
 
-    model = RTPluRelModel({})
-    model.run_identity = SimpleNamespace(phase=cfg.PHASE_OUTER, dataset="ds", task="tk")
+    model = RTPluRelSystem()
     monkeypatch.setattr(rt_model, "preprocessed_dir", lambda *a, **k: tmp_path)
-    monkeypatch.setitem(
-        rt_model._SELECTED,
-        model._selection_key(0),
-        cfg.Selection(step=0, rows=3, context=chosen),
+    model._fit_arm(
+        task,
+        db,
+        label,
+        None,
+        phase=cfg.PHASE_OUTER,
+        seed=0,
+        selection=cfg.Selection(step=0, rows=3, context=chosen),
     )
-
-    model.fit(task, db, label, None, seed=0)
 
     assert model._checkpoint == cfg.warm_start(TaskType.REGRESSION)
     assert model._context == chosen
