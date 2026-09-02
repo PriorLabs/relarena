@@ -20,9 +20,20 @@ from relarena.checksums import (
 from relarena.dataset import InnerSplit, OuterSplit, RelBenchDatasetTask, Split
 from relarena.identity import RunIdentity
 from relarena.model import RelArenaModel
-from relarena.registry import ModelRegistry, register_model, registry
-from relarena.results import TrialResult, summary_to_dataframe
-from relarena.runner import run_experiment
+from relarena.registry import (
+    MethodRegistry,
+    ModelRegistry,
+    register_model,
+    register_system,
+    registry,
+)
+from relarena.results import SystemResult, TrialResult, summary_to_dataframe
+from relarena.runner import (
+    run_experiment,
+    run_model_experiment,
+    run_system_experiment,
+)
+from relarena.system import RelArenaSystem
 from relarena.tasks import RELBENCH_V1_DATASETS, TaskSpec, list_entity_tasks
 from relarena.tuner import tune
 
@@ -31,9 +42,12 @@ __all__ = [
     "CacheConfig",
     "CacheMiss",
     "RelArenaModel",
+    "RelArenaSystem",
     "RunIdentity",
     "ModelRegistry",
+    "MethodRegistry",
     "register_model",
+    "register_system",
     "registry",
     "RelBenchDatasetTask",
     "Split",
@@ -41,10 +55,13 @@ __all__ = [
     "OuterSplit",
     "TaskSpec",
     "TrialResult",
+    "SystemResult",
     "cache_key",
     "cached_artifact",
     "list_entity_tasks",
     "run_experiment",
+    "run_model_experiment",
+    "run_system_experiment",
     "summary_to_dataframe",
     "tune",
     "table_checksum",

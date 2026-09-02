@@ -25,7 +25,7 @@ import pandas as pd
 import relarena.models  # noqa: F401  (registers built-in models)
 from relarena.registry import registry
 from relarena.results import summary_to_dataframe
-from relarena.runner import run_experiment
+from relarena.runner import SystemExperimentSummary, run_experiment
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
 
 
@@ -109,16 +109,22 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    ERROR: {exc!r}", file=sys.stderr)
             continue
         frames.append(summary_to_dataframe(summary))
-        best = summary.tuned or summary.default
-        if best is None or best.val_score is None:
-            print("    (no successful trial)")
+        if isinstance(summary, SystemExperimentSummary):
+            score = summary.result.test_score
+            score_str = f"{score:.4f}" if score is not None else "n/a"
+            print(f"    {summary.metric_name}: test={score_str}")
         else:
-            test_str = (
-                f"{best.test_score:.4f}" if best.test_score is not None else "n/a"
-            )
-            print(
-                f"    {summary.metric_name}: val={best.val_score:.4f} test={test_str}"
-            )
+            best = summary.tuned or summary.default
+            if best is None or best.val_score is None:
+                print("    (no successful trial)")
+            else:
+                test_str = (
+                    f"{best.test_score:.4f}" if best.test_score is not None else "n/a"
+                )
+                print(
+                    f"    {summary.metric_name}: val={best.val_score:.4f} "
+                    f"test={test_str}"
+                )
 
     if not frames:
         print("No successful runs.", file=sys.stderr)

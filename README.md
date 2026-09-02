@@ -21,7 +21,7 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
 **TabPFN-Rel**, our relational harness for TabPFN-3, and an initial version of the
 **Relational Predictive Interface (RPI)**. What the framework contributes:
 
-- **Reproducibility.** Every reported method re-run through one unified model API, with
+- **Reproducibility.** Every reported method re-run through explicit model and system APIs, with
   implementations aligned, bugs fixed, and missing training scripts reconstructed.
 - **Tuning regimes.** Model submissions declare only a search space and are tuned by the
   framework; system submissions bring their own regime.
@@ -114,7 +114,8 @@ preprocessing cost.
 We want the set of included baselines to be as representative as possible, so adding a method is
 meant to be cheap. A model is a folder under `src/relarena/models/` implementing the
 `RelArenaModel` contract (`fit` and `predict`) with a `SearchSpace` registered via
-`@register_model(search_space=...)`; the registry discovers the folder automatically.
+`@register_model(search_space=...)`; an end-to-end procedure implements
+`RelArenaSystem.run` and uses `@register_system`. The registry discovers the folder automatically.
 `models/lightgbm/` is the smallest complete example to copy.
 
 The full guide is [docs/adding-a-model.md](docs/adding-a-model.md): the layout, the datatypes
@@ -420,11 +421,12 @@ boundaries are not yet standardized across methods.
 
 **Runtime policy.** The current policy allows a maximum total runtime of 24 hours per task,
 including preprocessing, measured on the largest tasks; moderately larger search spaces are
-permitted on smaller tasks when their cost stays reasonable. All released baseline models except
-RelGT run for less than 12 hours per task. Because equalizing tuning compute across methods
-remains unsolved, the α-release uses documented, method-specific trial budgets chosen to
-approximately balance compute. See [docs/tuning-regime.md](docs/tuning-regime.md), and the
-forthcoming model report for the full budget rationale.
+permitted on smaller tasks when their cost stays reasonable. The 24-hour limit is a ceiling, not a
+target; all released baseline models except RelGT run for less than 12 hours even on the largest
+tasks. Because equalizing tuning compute across methods remains unsolved, the α-release uses
+documented, method-specific trial budgets chosen to approximately balance compute. See
+[docs/tuning-regime.md](docs/tuning-regime.md), and the forthcoming model report for the full
+budget rationale.
 
 **What a run records.** Each trial keeps its configuration, metrics, optional predictions, and
 separate tuning and final-fit timings, which is what makes tunability analyses and per-phase

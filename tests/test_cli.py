@@ -9,6 +9,7 @@ or trains.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -16,8 +17,8 @@ import pytest
 from relbench.base import TaskType
 
 from relarena import cli
-from relarena.results import TrialResult
-from relarena.runner import ExperimentSummary
+from relarena.results import SystemResult, TrialResult, summary_to_dataframe
+from relarena.runner import ExperimentSummary, SystemExperimentSummary
 from relarena.tasks import TaskSpec
 
 
@@ -90,6 +91,14 @@ def test__cli__successful_runs__writes_all_metrics_for_every_config(
     assert selected["test_roc_auc"].iloc[0] == pytest.approx(0.88)
 
 
+def test__summary_to_dataframe__preserves_legacy_adapter_system_kind() -> None:
+    summary = replace(_summary(), kind="system")
+
+    frame = summary_to_dataframe(summary)
+
+    assert set(frame["kind"]) == {"system"}
+
+
 def test__cli__no_successful_runs__returns_nonzero(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -117,3 +126,34 @@ def test__cli__cache_dir__is_forwarded_to_runner(
     monkeypatch.setattr(cli, "run_experiment", run)
     assert cli.main(["--model", "constant-global", "--cache-dir", str(tmp_path)]) == 0
     assert seen["cache_dir"] == str(tmp_path)
+
+
+def test__cli__system_summary__writes_native_system_row(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    spec = TaskSpec("rel-f1", "driver-dnf", TaskType.BINARY_CLASSIFICATION)
+    monkeypatch.setattr(cli, "list_entity_tasks", lambda datasets: [spec])
+    summary = SystemExperimentSummary(
+        system_name="rt-plurel",
+        dataset="rel-f1",
+        task_name="driver-dnf",
+        task_type=TaskType.BINARY_CLASSIFICATION,
+        metric_name="roc_auc",
+        seed=0,
+        result=SystemResult(
+            test_score=0.9,
+            test_metrics={"roc_auc": 0.9},
+            time_total=12.0,
+        ),
+    )
+    monkeypatch.setattr(cli, "run_experiment", lambda *a, **k: summary)
+
+    out = tmp_path / "results.csv"
+    assert cli.main(["--model", "rt-plurel", "--output", str(out)]) == 0
+
+    row = pd.read_csv(out).iloc[0]
+    assert row["kind"] == "system"
+    assert row["time_total"] == pytest.approx(12.0)
+    assert row["selected"]
+    assert "config" not in row.index
+    assert "val_score" not in row.index

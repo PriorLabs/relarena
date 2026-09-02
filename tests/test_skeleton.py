@@ -15,6 +15,7 @@ from relarena.model import RelArenaModel
 from relarena.registry import ModelRegistry
 from relarena.results import TrialResult, config_id_for, trials_to_dataframe
 from relarena.search_space import SearchSpace
+from relarena.system import RelArenaSystem
 
 
 def test_metric_direction() -> None:
@@ -79,9 +80,31 @@ def test_registry_rejects_duplicate_name() -> None:
         reg.register(B, SearchSpace(default_overrides={}))
 
 
+def test_registry_registers_system_without_search_space() -> None:
+    reg = ModelRegistry()
+
+    class S(RelArenaSystem):
+        name = "s"
+
+        def run(self, *a, **k) -> np.ndarray:
+            return np.zeros(1)
+
+    reg.register_system(S)
+
+    assert reg.get("s") is S
+    assert reg.kind("s") == "system"
+    with pytest.raises(TypeError, match="no harness search space"):
+        reg.search_space("s")
+
+
 def test_abstract_model_cannot_be_instantiated() -> None:
     with pytest.raises(TypeError):
         RelArenaModel()
+
+
+def test_abstract_system_cannot_be_instantiated() -> None:
+    with pytest.raises(TypeError):
+        RelArenaSystem()
 
 
 def test__refit_on_full_data__defaults_true_and_is_overridable() -> None:

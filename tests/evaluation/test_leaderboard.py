@@ -109,6 +109,27 @@ def test__to_bencheval_frame__dense_matrix__passes_bencheval_verify_data() -> No
     assert len(out) == 2  # one ranked row per method
 
 
+def test__to_bencheval_frame__system_total_time__is_preserved() -> None:
+    results = pd.DataFrame(
+        [
+            {
+                "model": "a-system",
+                "dataset": "rel-f1",
+                "task": "driver-dnf",
+                "metric": "roc_auc",
+                "selected": True,
+                "test_score": 0.9,
+                "time_total": 12.5,
+            }
+        ]
+    )
+
+    row = to_bencheval_frame(results).iloc[0]
+
+    assert row["time_train_s"] == pytest.approx(12.5)
+    assert row["time_infer_s"] == pytest.approx(0.0)
+
+
 def test__compute_leaderboard__dense_results__ranks_by_normalized_loss() -> None:
     pytest.importorskip("bencheval.evaluator")
     # constant-global is worst on both tasks, lightgbm best -> lightgbm ranks first.

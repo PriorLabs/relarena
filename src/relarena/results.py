@@ -1,8 +1,7 @@
-"""Result schema.
+"""Model and system result schemas.
 
-A `TrialResult` is the atomic record: one config fit & evaluated on one
-`(task, seed)`. It stores configurations, metrics, **wall-clock times**, and
-optional predictions as useful metadata for downstream analysis.
+Models produce one `TrialResult` per harness-selected configuration. Systems
+produce one `SystemResult` for their complete internal procedure.
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ import numpy as np
 if TYPE_CHECKING:
     import pandas as pd
 
-    from relarena.runner import ExperimentSummary
+    from relarena.runner import ExperimentSummary, SystemExperimentSummary
 
 
 def config_id_for(config: dict[str, Any]) -> str:
@@ -72,6 +71,21 @@ class TrialResult:
         return self.error is None
 
 
+@dataclass
+class SystemResult:
+    """Outcome of one end-to-end system run.
+
+    Systems do not expose harness-selected configurations or validation scores.
+    Their complete internal procedure is represented by a final test result and
+    one total wall-clock time.
+    """
+
+    test_score: float | None = None
+    test_metrics: dict[str, float] = field(default_factory=dict)
+    time_total: float = 0.0
+    test_pred: np.ndarray | None = field(default=None, repr=False)
+
+
 #: Prediction-array fields dropped when flattening trials to a tidy DataFrame.
 #: The native-metric dicts (`val_metrics` / `test_metrics`) are *not* dropped
 #: — they're expanded into `val_<metric>` / `test_<metric>` columns.
@@ -105,6 +119,7 @@ def trials_to_dataframe(trials: list[TrialResult]) -> pd.DataFrame:
 _IDENTITY_COLS = (
     "id",
     "model",
+    "kind",
     "dataset",
     "task",
     "task_type",
@@ -115,22 +130,45 @@ _IDENTITY_COLS = (
 
 
 def summary_to_dataframe(
-    summary: ExperimentSummary,
+    summary: ExperimentSummary | SystemExperimentSummary,
     *,
     job_id: str | None = None,
 ) -> pd.DataFrame:
-    """One row per evaluated config (the full search), with identity columns.
+    """Flatten a model or system experiment into the shared results frame.
 
-    The single results schema shared by the `relarena` CLI and batch sweeps:
-    every trial keeps its native scores and all metrics (`val_<m>` /
-    `test_<m>`, from `trials_to_dataframe`) plus phase times; only the
-    val-selected config (`selected=True`) and the zero-tuning default carry a
-    refit `test_score`. The hyperparameter `config` is JSON-encoded for
-    portability. The run's identity (model/dataset/task/task_type/seed/n_trials/
-    metric) comes straight off the self-describing `summary`; `job_id` is a
-    batch run's cache key, omitted for in-process CLI runs (so the `id` column
-    is then absent).
+    Model summaries contain one row per trial, including config, validation
+    metrics, and phase timings. A system summary contains one selected row with
+    its final test metrics and `time_total`; it has no synthetic config,
+    validation score, or trial count. `job_id` is an optional batch cache key.
     """
+    import pandas as pd
+
+    # Import at call time to avoid a results ↔ runner import cycle.
+    from relarena.runner import SystemExperimentSummary
+
+    if isinstance(summary, SystemExperimentSummary):
+        result = summary.result
+        row: dict[str, Any] = {
+            "model": summary.system_name,
+            "kind": "system",
+            "dataset": summary.dataset,
+            "task": summary.task_name,
+            "task_type": summary.task_type.name,
+            "seed": summary.seed,
+            "metric": summary.metric_name,
+            "selected": True,
+            "test_score": result.test_score,
+            "time_total": result.time_total,
+        }
+        if job_id is not None:
+            row["id"] = job_id
+        row.update(
+            {f"test_{name}": value for name, value in result.test_metrics.items()}
+        )
+        front = [c for c in _IDENTITY_COLS if c in row] + ["selected"]
+        remaining = [key for key in row if key not in front]
+        return pd.DataFrame([{column: row[column] for column in front + remaining}])
+
     df = trials_to_dataframe(summary.trials)
     if "config" in df.columns:
         df["config"] = df["config"].map(
@@ -141,6 +179,7 @@ def summary_to_dataframe(
     if job_id is not None:
         df["id"] = job_id
     df["model"] = summary.model_name
+    df["kind"] = summary.kind
     df["dataset"] = summary.dataset
     df["task"] = summary.task_name
     df["task_type"] = summary.task_type.name
