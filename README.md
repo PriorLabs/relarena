@@ -68,32 +68,12 @@ For a reproducible checkout, the CPU-only torch build, or the leaderboard and pl
 <details>
 <summary><b>🏟️ Benchmark a method across RelBench v1</b> — CLI sweep or in-process loop</summary>
 
-The CLI runs one registered method across many tasks in-process and writes its results to a CSV:
+The CLI runs one model across many tasks in-process and writes every evaluated config to a
+CSV:
 
 ```bash
 relarena --model lightgbm --datasets rel-f1 --output results.csv
 ```
-
-On a large-memory machine, run independent tasks in separate worker processes:
-
-```bash
-relarena --model kurversc --parallel-tasks 10 \
-    --output kurversc_all_tasks.csv
-```
-
-`--parallel-tasks` parallelizes complete dataset/task experiments only. Frame
-construction, configuration trials, inner selection, and outer refitting remain
-sequential within each task. Workers use a clean `spawn` context so no Torch or other
-native-library state is inherited from the parent. Each worker exits after its task to release native
-DuckDB/CatBoost state and relational frames; completed-task statuses print as they arrive,
-while CSV rows retain the original task order. The default is `1`.
-
-KurveRSC is CPU-only in its current GraphReduce + CatBoost implementation; it neither requires
-nor uses a GPU. For its default sequential sweep, use a Linux host with 96–128 GiB RAM and at
-least 150 GiB of free fast local SSD/NVMe scratch space. A 64 GiB host may work by spilling to
-disk but is closer to the limit on the largest tasks. Parallel task execution multiplies the
-aggregate memory and scratch demand, so `--parallel-tasks 10` is intended for a
-several-hundred-GiB server rather than an ordinary workstation.
 
 Each `(model, dataset, task, seed)` experiment is independent, so sweeps parallelize
 trivially. The building blocks are all public: `run_experiment` executes one experiment,
@@ -344,53 +324,6 @@ Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
 `--extra leaderboard --extra plots` for the reporting stack (`bencheval` resolves from git here,
 pinned by `uv.lock`).
 
-To run KurveRSC, sync its extra and invoke the ordinary RelArena CLI. KurveRSC is a native system,
-so its GraphReduce search happens inside `RelArenaSystem.run`; the model-only `--n-trials` option
-does not alter its internal search:
-
-```bash
-uv sync --group cpu --extra kurversc
-OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
-    --model kurversc --datasets rel-stack \
-    --tasks user-badge \
-    --output kurversc_user_badge.csv
-```
-
-To run all 21 RelBench v1 entity classification and regression tasks with the published KurveRSC
-system recipe, omit `--datasets` and `--tasks`:
-
-```bash
-OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
-    --model kurversc \
-    --output kurversc_all_tasks.csv
-```
-
-Add `--parallel-tasks N` only when the machine has enough memory for `N` complete tasks at once.
-Each phase receives RelArena's officially censored database; KurveRSC searches connected
-point-in-time frames, freezes the selected GraphReduce operations, refits from the full phase
-tables, and replays that plan for validation or test prediction. Its bounded multi-fidelity
-search explores GraphReduce feature-family combinations, depth, and automatic annotation while
-pruning candidates that exceed the width guard or cannot produce features for the task schema.
-The published KurveRSC recipe uses `search_full_data=true`, so every graph configuration admitted
-by the search is evaluated on the complete latest-cutoff relational frame; the lower-fidelity
-screening and confirmation stages are bypassed. The top three candidates are reranked over three
-complete cutoff frames processed sequentially. Graph search and final learner fitting each use
-the latest eligible production frame. Each automatic feature family expands at most four source
-columns per node, and the pre-materialization width guard is 8,000 features. These values are
-fixed in [`models/kurversc/model.py`](src/relarena/models/kurversc/model.py) so a registered system
-name denotes one reproducible procedure and its result needs no hidden configuration field. Use
-KurveRSC's own public API for ablations or alternative frame budgets.
-
-<p align="center">
-  <img
-    src="docs/kurversc-relarena-default.svg"
-    alt="KurveRSC RelArena default: complete latest-cutoff graph search, top-three reranking over three sequential complete cutoff folds, a frozen graph plan, and final fitting on one complete cutoff."
-    width="1100"
-  />
-</p>
-
-<p align="center"><em>KurveRSC's published RelArena default uses complete source rows while processing graph candidates and temporal folds sequentially.</em></p>
-
 </details>
 
 <details>
@@ -423,7 +356,7 @@ registering a method works without its extra installed.
 | Extra | Baselines | Notes |
 |---|---|---|
 | `lightgbm` | LightGBM | CPU only |
-| `kurversc` | KurveRSC | GraphReduce configuration search + CatBoost; CPU only |
+| `kurversc` | [KurveRSC](docs/models/kurversc.md) | GraphReduce configuration search + CatBoost; CPU only |
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | same stack as `rdblearn`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
@@ -496,10 +429,9 @@ documented, method-specific trial budgets chosen to approximately balance comput
 [docs/tuning-regime.md](docs/tuning-regime.md), and the forthcoming model report for the full
 budget rationale.
 
-**What a run records.** A model keeps one result per trial, including its configuration,
-metrics, optional predictions, and phase timings. A system records one final result with its test
-metrics, optional predictions, total runtime, and per-task peak RSS; it does not synthesize
-model-trial fields.
+**What a run records.** Each trial keeps its configuration, metrics, optional predictions, and
+separate tuning and final-fit timings, which is what makes tunability analyses and per-phase
+runtime comparisons possible after the fact.
 
 </details>
 
@@ -538,7 +470,7 @@ as an experimental final-fit variant.
 | `constant-global` | Constant (global) | global constant | model | report | train + val | core |
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
-| `kurversc` | KurveRSC | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
+| `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |

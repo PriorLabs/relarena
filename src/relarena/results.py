@@ -159,7 +159,6 @@ def summary_to_dataframe(
             "selected": True,
             "test_score": result.test_score,
             "time_total": result.time_total,
-            "peak_rss_gib": summary.peak_rss_gib,
         }
         if job_id is not None:
             row["id"] = job_id
@@ -187,6 +186,5 @@ def summary_to_dataframe(
     df["seed"] = summary.seed
     df["n_trials"] = summary.n_trials
     df["metric"] = summary.metric_name
-    df["peak_rss_gib"] = summary.peak_rss_gib
     front = [c for c in _IDENTITY_COLS if c in df.columns] + ["selected"]
     return df[front + [c for c in df.columns if c not in front]]

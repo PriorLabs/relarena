@@ -9,7 +9,6 @@ or trains.
 
 from __future__ import annotations
 
-from concurrent.futures import Future
 from dataclasses import replace
 from pathlib import Path
 
@@ -18,7 +17,7 @@ import pytest
 from relbench.base import TaskType
 
 from relarena import cli
-from relarena.results import SystemResult, TrialResult
+from relarena.results import SystemResult, TrialResult, summary_to_dataframe
 from relarena.runner import ExperimentSummary, SystemExperimentSummary
 from relarena.tasks import TaskSpec
 
@@ -53,7 +52,6 @@ def _summary() -> ExperimentSummary:
         default=default,
         tuned=best,
         trials=[default, best],
-        peak_rss_gib=1.25,
     )
 
 
@@ -68,6 +66,8 @@ def test__cli__successful_runs__writes_all_metrics_for_every_config(
     assert cli.main(["--model", "constant-global", "--output", str(out)]) == 0
 
     df = pd.read_csv(out)
+    # All configs are written (default + tuned), with every native metric expanded
+    # into val_<m> / test_<m> columns and the full identity, mirroring the sweep.
     assert len(df) == 2
     assert {
         "model",
@@ -82,15 +82,21 @@ def test__cli__successful_runs__writes_all_metrics_for_every_config(
         "val_f1",
         "test_roc_auc",
         "test_f1",
-        "peak_rss_gib",
     }.issubset(df.columns)
-    assert "id" not in df.columns
+    assert "id" not in df.columns  # in-process CLI run: no distributed cache id
 
     selected = df[df["selected"]]
     assert len(selected) == 1
     assert selected["config_id"].iloc[0] == "b"
     assert selected["test_roc_auc"].iloc[0] == pytest.approx(0.88)
-    assert selected["peak_rss_gib"].iloc[0] == pytest.approx(1.25)
+
+
+def test__summary_to_dataframe__preserves_legacy_adapter_system_kind() -> None:
+    summary = replace(_summary(), kind="system")
+
+    frame = summary_to_dataframe(summary)
+
+    assert set(frame["kind"]) == {"system"}
 
 
 def test__cli__no_successful_runs__returns_nonzero(
@@ -122,82 +128,6 @@ def test__cli__cache_dir__is_forwarded_to_runner(
     assert seen["cache_dir"] == str(tmp_path)
 
 
-def test__cli__parallel_tasks__runs_tasks_in_workers_and_preserves_output_order(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    specs = [
-        TaskSpec("rel-f1", "second", TaskType.BINARY_CLASSIFICATION),
-        TaskSpec("rel-f1", "first", TaskType.BINARY_CLASSIFICATION),
-    ]
-    monkeypatch.setattr(cli, "list_entity_tasks", lambda datasets: specs)
-    seen_workers: list[int] = []
-    seen_calls: list[tuple[str, str, dict[str, object]]] = []
-
-    def run(
-        model_cls: object,
-        dataset: str,
-        task: str,
-        **kwargs: object,
-    ) -> ExperimentSummary:
-        seen_calls.append((dataset, task, kwargs))
-        return replace(_summary(), dataset=dataset, task_name=task)
-
-    class ImmediateExecutor:
-        def __init__(
-            self,
-            *,
-            max_workers: int,
-            mp_context: object,
-            max_tasks_per_child: int,
-        ) -> None:
-            seen_workers.append(max_workers)
-            assert mp_context.get_start_method() == "spawn"
-            assert max_tasks_per_child == 1
-
-        def __enter__(self) -> ImmediateExecutor:
-            return self
-
-        def __exit__(self, *args: object) -> None:
-            return None
-
-        def submit(self, fn: object, *args: object, **kwargs: object) -> Future:
-            future: Future = Future()
-            try:
-                future.set_result(fn(*args, **kwargs))
-            except Exception as exc:  # pragma: no cover - mirrors executor contract
-                future.set_exception(exc)
-            return future
-
-    monkeypatch.setattr(cli, "run_experiment", run)
-    monkeypatch.setattr(cli, "ProcessPoolExecutor", ImmediateExecutor)
-    out = tmp_path / "parallel.csv"
-
-    assert (
-        cli.main(
-            [
-                "--model",
-                "constant-global",
-                "--parallel-tasks",
-                "2",
-                "--output",
-                str(out),
-            ]
-        )
-        == 0
-    )
-
-    assert seen_workers == [2]
-    assert [task for _, task, _ in seen_calls] == ["second", "first"]
-    assert all(call[2]["cache_predictions"] is False for call in seen_calls)
-    selected = pd.read_csv(out).query("selected")
-    assert selected["task"].tolist() == ["second", "first"]
-
-
-def test__cli__parallel_tasks__must_be_positive() -> None:
-    with pytest.raises(SystemExit):
-        cli.main(["--model", "constant-global", "--parallel-tasks", "0"])
-
-
 def test__cli__system_summary__writes_native_system_row(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -215,7 +145,6 @@ def test__cli__system_summary__writes_native_system_row(
             test_metrics={"roc_auc": 0.9},
             time_total=12.0,
         ),
-        peak_rss_gib=2.5,
     )
     monkeypatch.setattr(cli, "run_experiment", lambda *a, **k: summary)
 
@@ -225,7 +154,6 @@ def test__cli__system_summary__writes_native_system_row(
     row = pd.read_csv(out).iloc[0]
     assert row["kind"] == "system"
     assert row["time_total"] == pytest.approx(12.0)
-    assert row["peak_rss_gib"] == pytest.approx(2.5)
     assert row["selected"]
     assert "config" not in row.index
     assert "val_score" not in row.index

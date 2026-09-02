@@ -150,7 +150,7 @@ def test__run_model_experiment__cache_dir__passes_one_resolved_config(
 def test__run_experiment__model_dispatches_to_model_runner(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    expected = SimpleNamespace(peak_rss_gib=None)
+    expected = object()
     seen: dict[str, Any] = {}
 
     def run_model(*args: Any, **kwargs: Any) -> object:
@@ -248,31 +248,3 @@ def test__run_system_experiment__wrong_prediction_shape__raises(
 
     with pytest.raises(ValueError, match=r"expected \(3,\)"):
         runner.run_system_experiment(S, "rel-f1", "driver-dnf", download=False)
-
-
-def test__peak_rss_monitor__resets_between_sequential_tasks() -> None:
-    gib = 1024**3
-
-    class Process:
-        def __init__(self, samples: list[int]) -> None:
-            self.samples = iter(samples)
-
-        def memory_info(self) -> SimpleNamespace:
-            return SimpleNamespace(rss=next(self.samples))
-
-    first = runner._PeakRSSMonitor(
-        process=Process([1 * gib, 3 * gib, 2 * gib]),
-        interval_seconds=60,
-    )
-    with first:
-        first._sample()
-
-    second = runner._PeakRSSMonitor(
-        process=Process([1 * gib, 2 * gib, 1 * gib]),
-        interval_seconds=60,
-    )
-    with second:
-        second._sample()
-
-    assert first.peak_rss_gib == pytest.approx(3.0)
-    assert second.peak_rss_gib == pytest.approx(2.0)
