@@ -83,7 +83,8 @@ relarena --model kurversc --parallel-tasks 10 \
 
 `--parallel-tasks` parallelizes complete dataset/task experiments only. Frame
 construction, configuration trials, inner selection, and outer refitting remain
-sequential within each task. Each worker exits after its task to release native
+sequential within each task. Workers use a clean `spawn` context so no Torch or other
+native-library state is inherited from the parent. Each worker exits after its task to release native
 DuckDB/CatBoost state and relational frames; completed-task statuses print as they arrive,
 while CSV rows retain the original task order. The default is `1`.
 

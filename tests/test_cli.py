@@ -143,8 +143,15 @@ def test__cli__parallel_tasks__runs_tasks_in_workers_and_preserves_output_order(
         return replace(_summary(), dataset=dataset, task_name=task)
 
     class ImmediateExecutor:
-        def __init__(self, *, max_workers: int, max_tasks_per_child: int) -> None:
+        def __init__(
+            self,
+            *,
+            max_workers: int,
+            mp_context: object,
+            max_tasks_per_child: int,
+        ) -> None:
             seen_workers.append(max_workers)
+            assert mp_context.get_start_method() == "spawn"
             assert max_tasks_per_child == 1
 
         def __enter__(self) -> ImmediateExecutor:

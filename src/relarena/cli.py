@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import get_context
 
 import pandas as pd
 
@@ -162,6 +163,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         with ProcessPoolExecutor(
             max_workers=workers,
+            # `relarena.models` may import native runtimes (including torch)
+            # before this pool is created. Never fork that initialized parent:
+            # spawn a clean interpreter for every worker instead.
+            mp_context=get_context("spawn"),
             # Release native-library state and large relational frames after
             # every task instead of retaining them in a long-lived worker.
             max_tasks_per_child=1,
