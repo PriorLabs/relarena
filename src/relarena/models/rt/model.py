@@ -7,8 +7,8 @@ never seen. This wrapper runs the published fine-tuning recipe — a delta
 fine-tune from RT-P, the PluRel-pretrained checkpoint the name refers to, every
 value of it in [`config.py`](config.py) — on the harness's censored database.
 
-**The two arms.** Upstream's fine-tuning script runs a *selection* arm and a
-*reporting* arm, and they are RelArena's two phases exactly:
+**The two arms.** One system run receives both RelArena splits and executes
+upstream's *selection* and *reporting* arms in sequence:
 
   * **inner** — train on `train` for `config.selection_steps()`, and let
     `rt.train`'s own in-loop validation pick the checkpoint: every 100 steps it
@@ -27,32 +27,25 @@ value of it in [`config.py`](config.py) — on the harness's censored database.
 Rescaled rather than copied, because the outer split is bigger: the same raw
 step count would train the reported model on proportionally less data than the
 model validation chose. `Selection` carries the step, the row count it was
-measured over, and the context.
+measured over, and the context directly between the two arms.
 
 **Why the context is searchable at all.** Training draws each batch's context
 shape at random from a cross-product of shapes rather than fixing one, so the
 checkpoint is usable at any of them and the shape can be chosen after the fact,
 with no retraining per configuration. The two halves only make sense together.
 
-**Parameter-free from the harness's side.** There is no search space: what gets
-tuned — the step and the context — is chosen inside a single fit, not by
-refitting once per candidate, so nothing is drawn from a RelArena config.
+There is no harness search space: the step and context are selected internally,
+without refitting once per candidate.
 
-**Prediction, and the val score this model does not report.** Only the outer arm
-predicts: eight context seeds, their **raw** outputs averaged, and the sigmoid
+**Prediction.** After the outer arm, eight context seeds are evaluated, their
+**raw** outputs averaged, and the sigmoid
 (classification) or denormalization (regression) applied to the average — the
 order upstream scores in. Predictions come back keyed by rustler node index, not
 in table order, so they are scattered back to their rows through the split's
 `node_idx_offset`.
 
-The inner arm's `predict` returns **zeros**. The harness scores whatever
-`predict` returns and files it as `val_score`, so that column is a placeholder,
-**not a validation result** — read it as "not reported" and ignore it in any
-leaderboard or plot. The reason is cost: on the largest tasks a real val pass is
-a sixth to a quarter of the training arm it would be reporting on, and it
-selects nothing — the step was chosen by `rt.train`'s in-loop eval and the
-context by `_tune_context`, both before `predict` is ever called. The test score
-is unaffected; it is a real 8-seed ensemble over the whole test split.
+The result uses the system schema: one real test prediction and the complete
+runtime, with no dummy configuration or placeholder validation score.
 """
 
 from __future__ import annotations
@@ -66,11 +59,12 @@ from typing import Any
 import numpy as np
 from relbench.base import Database, EntityTask, Table, TaskType
 
-from relarena.model import RelArenaModel
+from relarena.dataset import InnerSplit, OuterSplit, concat_tables
+from relarena.identity import RunIdentity
 from relarena.models.rt import config as cfg
 from relarena.models.rt.export import TASK_DIR, preprocessed_dir, target_stats
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
+from relarena.registry import register_system
+from relarena.system import RelArenaSystem
 
 logger = logging.getLogger(__name__)
 
@@ -78,9 +72,6 @@ logger = logging.getLogger(__name__)
 #: `(db_name, task_name)`; both are fixed because the identity that matters
 #: lives in the cache key, not in the exported tree.
 DB_NAME = "relarena"
-
-#: Nothing to tune: `rt.train` chooses the epoch budget inside a single fit.
-RT_SPACE = SearchSpace(default_overrides={})
 
 #: RT's own name for each task type, as its checkpoint files are named.
 _RT_TASK_TYPE = {
@@ -174,14 +165,6 @@ def _last_checkpoint(out_dir: Path) -> Path:
     return path
 
 
-#: The inner arm's choice, per `(dataset, task, seed)`, read by the outer arm.
-#: The harness builds a *fresh model instance* for the refit, so the budget
-#: validation picked cannot ride along on `self`; and it cannot ride in the
-#: config either, since a parameter-free model's config is empty by definition.
-#: Module level is therefore the only place left — which also means the two
-#: phases must run in one process, as `run_experiment` does.
-_SELECTED: dict[tuple[str, str, int], cfg.Selection] = {}
-
 #: Scratch that has to outlive a single call (the tensor exports when no cache
 #: is configured, and every training output directory). Process-lifetime, and
 #: cleaned by `clear_scratch`.
@@ -196,16 +179,15 @@ def _scratch() -> Path:
 
 
 def clear_scratch() -> None:
-    """Drop the carried selections and delete this process's scratch directory."""
+    """Delete this process's scratch directory."""
     global _SCRATCH
-    _SELECTED.clear()
     if _SCRATCH is not None:
         _SCRATCH.cleanup()
         _SCRATCH = None
 
 
-@register_model(search_space=RT_SPACE)
-class RTPluRelModel(RelArenaModel):
+@register_system
+class RTPluRelSystem(RelArenaSystem):
     """Relational Transformer, delta-fine-tuned per task from the PluRel RT-P.
 
     Named for its warm start: every arm begins from `stanford-star/rt-p`, the
@@ -217,29 +199,16 @@ class RTPluRelModel(RelArenaModel):
     supported_task_types = frozenset(
         {TaskType.BINARY_CLASSIFICATION, TaskType.REGRESSION}
     )
-    #: The reporting arm trains on train+val, at the budget the selection arm
-    #: chose. There is no held-out split left, and none is needed.
-    refit_on_full_data = True
-    #: A system, not a model: the step, the context configuration, and the
-    #: warm start's whole training recipe are chosen inside `fit`, outside the
-    #: harness's tuning pipeline. The score is the package's, and how much of
-    #: it belongs to the architecture rather than the selection machinery is
-    #: not identifiable from the benchmark alone. Implemented through the
-    #: experimental system workarounds of the model API: all tuning inside a
-    #: single fit of the parameter-free default config, and the selection
-    #: carried to the refit phase via a module-level global (`_SELECTED`).
-    kind = "system"
 
-    def __init__(self, config: dict[str, Any], **kwargs: Any) -> None:
-        """Instantiate the model for a single hyperparameter `config`."""
-        super().__init__(config, **kwargs)
+    def __init__(self, **kwargs: Any) -> None:
+        """Instantiate the system for one complete inner-to-outer run."""
+        super().__init__(**kwargs)
         # A local safetensors path, or a Hub spec when the warm start is what
-        # validation chose (see `fit`). `from_pretrained` takes either.
+        # validation chose (see `_fit_arm`). `from_pretrained` takes either.
         self._checkpoint: Path | str | None = None
         self._target_stats: tuple[float, float] | None = None
         self._task_type: TaskType | None = None
-        self._phase: str = cfg.PHASE_OUTER
-        # The split this instance trained on. `predict` exports it beside the
+        # The split this instance trained on. `_predict` exports it beside the
         # table it scores: rustler normalizes a target by the *train* split's
         # statistics, so the scored split has to travel with the very rows the
         # model was fit on or it is denormalized by the wrong constants.
@@ -248,40 +217,59 @@ class RTPluRelModel(RelArenaModel):
         #: selection arm, carried to the reporting arm in `Selection`.
         self._context: tuple[int, int, int, bool] | None = None
 
-    # -- fit ---------------------------------------------------------------
+    # -- complete system run ----------------------------------------------
 
-    def fit(
+    def run(
         self,
         task: EntityTask,
-        db: Database,
-        train_table: Table,
-        val_table: Table | None,
         *,
+        inner_split: InnerSplit,
+        outer_split: OuterSplit,
         seed: int,
         time_limit: float | None = None,
-    ) -> None:
-        """Run whichever arm this phase is (see the module docstring).
-
-        `val_table` decides: present is the selection arm, absent the reporting
-        arm. That is the harness's own signal for which phase it is in, so
-        nothing here has to be told.
-
-        `time_limit` is not honored. RT's loop has no wall-clock cutoff, and
-        cutting it short would report a model trained for fewer epochs than the
-        run it is recorded as. (The selection arm's early stopping is a
-        different thing: it ends a search that has stopped improving, and never
-        changes which step is reported.)
-        """
+    ) -> np.ndarray:
+        """Select on the inner split, refit on the outer split, and predict."""
         if time_limit is not None:
             logger.warning(
                 "rt does not honor time_limit (%.0fs): the budget is the budget.",
                 time_limit,
             )
 
+        selection = self._fit_arm(
+            task,
+            inner_split.db_state,
+            inner_split.train_table,
+            inner_split.eval_table,
+            phase=cfg.PHASE_INNER,
+            seed=seed,
+        )
+        outer_train = concat_tables(outer_split.train_table, outer_split.val_table)
+        self._fit_arm(
+            task,
+            outer_split.db_state,
+            outer_train,
+            None,
+            phase=cfg.PHASE_OUTER,
+            seed=seed,
+            selection=selection,
+        )
+        return self._predict(task, outer_split.db_state, outer_split.eval_table)
+
+    def _fit_arm(
+        self,
+        task: EntityTask,
+        db: Database,
+        train_table: Table,
+        val_table: Table | None,
+        *,
+        phase: str,
+        seed: int,
+        selection: cfg.Selection | None = None,
+    ) -> cfg.Selection | None:
+        """Run one RT arm, returning the inner arm's choices."""
         self._task_type = task.task_type
         self._target_stats = target_stats(train_table, task)
         self._train_table = train_table
-        self._phase = self._phase_of(val_table)
 
         splits = {"train": train_table}
         if val_table is not None:
@@ -291,86 +279,61 @@ class RTPluRelModel(RelArenaModel):
             task,
             splits,
             cache=self.cache,
-            identity=self.run_identity,
+            identity=self._identity_for(phase),
             scratch_root=_scratch() / "export",
             db_name=DB_NAME,
         )
 
         rows = len(train_table.df)
-        if self._phase == cfg.PHASE_OUTER:
-            selection = _SELECTED.get(self._selection_key(seed))
-            if selection is not None and selection.step == 0:
-                # Validation preferred the published checkpoint to every
-                # fine-tuned step it saw. Training zero steps of it is not a
-                # thing `rt.train` can be asked for, and one step is not what
-                # was chosen -- so the reported model is the warm start itself,
-                # unmodified, which is exactly what "step 0" means.
+        if phase == cfg.PHASE_OUTER:
+            if selection is None:
+                raise RuntimeError("rt: reporting arm requires the inner selection.")
+            if selection.step == 0:
                 logger.warning(
                     "rt: validation chose step 0 -- fine-tuning never beat the "
                     "published checkpoint on val. Reporting %s zero-shot.",
                     cfg.warm_start(task.task_type),
                 )
                 self._checkpoint = cfg.warm_start(task.task_type)
-                # The context the inner arm chose still governs `predict`.
-                # `_refit_steps` is what normally carries it across the arms,
-                # and this path does not reach it.
                 self._context = selection.context
-                return
+                return None
+
         total_steps = (
             cfg.selection_steps()
-            if self._phase == cfg.PHASE_INNER
-            else self._refit_steps(rows, seed)
+            if phase == cfg.PHASE_INNER
+            else self._refit_steps(rows, selection)
         )
-
-        # One rule, both arms: bound the context at the horizon of the phase.
-        # The selection arm's database is censored at `val_timestamp` and it
-        # scores `val`; the reporting arm's is censored at `test_timestamp`.
-        # Naming both is upstream's `db_cutoff="val"` / `"test"` exactly.
-        cutoff = cfg.context_cutoff(
-            task, "val" if self._phase == cfg.PHASE_INNER else "test"
-        )
+        cutoff = cfg.context_cutoff(task, "val" if phase == cfg.PHASE_INNER else "test")
         out_dir = self._train(
             task,
             pre_dir,
             total_steps,
             seed,
+            phase=phase,
             has_val=val_table is not None,
             db_cutoff=cutoff,
         )
 
-        if self._phase == cfg.PHASE_INNER:
+        if phase == cfg.PHASE_INNER:
+            if val_table is None:
+                raise RuntimeError("rt: selection arm requires a validation table.")
             self._checkpoint, step = _best_checkpoint(out_dir, task.task_type)
             self._context = self._tune_context(task, pre_dir, val_table, seed)
-            _SELECTED[self._selection_key(seed)] = cfg.Selection(
-                step=step,
-                rows=rows,
-                checkpoint=str(self._checkpoint),
-                context=self._context,
-            )
+            selected = cfg.Selection(step=step, rows=rows, context=self._context)
             logger.info(
                 "rt: validation chose step %d of %d over %d rows.",
                 step,
                 total_steps,
                 rows,
             )
-        else:
-            self._checkpoint = _last_checkpoint(out_dir)
+            return selected
 
-    def _phase_of(self, val_table: Table | None) -> str:
-        """Which arm this `fit` call is: the harness's own phase label.
+        self._checkpoint = _last_checkpoint(out_dir)
+        return None
 
-        `run_identity.phase` is what the runner sets (`"inner"` / `"outer"`),
-        which is more robust than reading `val_table is None`: the two agree
-        under `refit_on_full_data=True`, but the phase label is the harness's
-        own statement of which arm this is rather than an inference from the
-        shape of the call.
-        """
-        phase = None if self.run_identity is None else self.run_identity.phase
-        if phase in (cfg.PHASE_INNER, cfg.PHASE_OUTER):
-            return phase
-        # No identity (a direct caller, not the runner): fall back to the shape
-        # of the call, which is right for the default regime.
-        return cfg.PHASE_INNER if val_table is not None else cfg.PHASE_OUTER
+    def _identity_for(self, phase: str) -> RunIdentity | None:
+        """Scope this run's cache identity to one RT arm."""
+        return None if self.run_identity is None else self.run_identity.for_phase(phase)
 
     def _tune_context(
         self, task: EntityTask, pre_dir: Path, val_table: Table, seed: int
@@ -472,28 +435,9 @@ class RTPluRelModel(RelArenaModel):
         )
         return best_context
 
-    def _selection_key(self, seed: int) -> tuple[str, str, int]:
-        """What the inner arm's choice is filed under for the outer arm."""
-        identity = self.run_identity
-        dataset = "direct" if identity is None else identity.dataset
-        task_name = (
-            "direct" if identity is None or identity.task is None else identity.task
-        )
-        return (dataset, task_name, seed)
-
-    def _refit_steps(self, rows: int, seed: int) -> int:
+    def _refit_steps(self, rows: int, selection: cfg.Selection) -> int:
         """The outer arm's budget: the chosen step, rescaled to the bigger split."""
-        selection = _SELECTED.get(self._selection_key(seed))
-        if selection is not None:
-            self._context = selection.context
-        if selection is None:
-            logger.warning(
-                "rt: no selection recorded for %s; refitting at the full %d "
-                "steps. The selection arm has to run first, in this process.",
-                self._selection_key(seed),
-                cfg.selection_steps(),
-            )
-            return cfg.selection_steps()
+        self._context = selection.context
         steps = cfg.refit_steps(
             chosen_step=selection.step, inner_rows=selection.rows, outer_rows=rows
         )
@@ -513,16 +457,17 @@ class RTPluRelModel(RelArenaModel):
         total_steps: int,
         seed: int,
         *,
+        phase: str,
         has_val: bool,
         db_cutoff: int | None,
     ) -> Path:
         """Run one arm of the fine-tune; return its output directory."""
         from rt.train import main as train_main
 
-        run_id = f"{self._phase}-seed{seed}-steps{total_steps}"
+        run_id = f"{phase}-seed{seed}-steps{total_steps}"
         out_root = _scratch() / "train"
         args = cfg.train_args(
-            phase=self._phase,
+            phase=phase,
             task_type=task.task_type,
             pre_dir=str(pre_dir),
             db_name=DB_NAME,
@@ -537,7 +482,7 @@ class RTPluRelModel(RelArenaModel):
         )
         logger.info(
             "rt: %s arm, %d steps from %s",
-            self._phase,
+            phase,
             total_steps,
             args["load_ckpt_path"],
         )
@@ -545,7 +490,7 @@ class RTPluRelModel(RelArenaModel):
         # `run_subdir(entity, project, run_id)` with entity=None.
         return out_root / "no-entity" / args["project"] / run_id
 
-    # -- inference machinery, shared by predict and the context search -------
+    # -- inference machinery, shared by test prediction and context search ---
 
     def _raw_predictions(
         self,
@@ -598,41 +543,24 @@ class RTPluRelModel(RelArenaModel):
         seen = np.flatnonzero(counts)
         return seen, total[seen] / counts[seen]
 
-    # -- predict -----------------------------------------------------------
+    # -- test prediction ---------------------------------------------------
 
-    def predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
-        """Score `table` — for real on the outer arm, as a placeholder on the inner.
-
-        **The inner arm returns zeros.** Nothing downstream of it selects
-        anything (the checkpoint was chosen inside `fit`, by `rt.train`'s in-loop
-        validation over 1024 rows), and scoring the whole val split at ensemble 1
-        costs up to a quarter of the training arm on the largest tasks. So the
-        `val_score` the harness derives from this is a placeholder — see the
-        module docstring. The outer arm's test prediction is a real 8-seed
-        context ensemble over every row.
-        """
+    def _predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
+        """Score the outer split's masked test table."""
         if self._task_type is None:
-            raise RuntimeError("rt.predict called before fit.")
-
-        if self._phase == cfg.PHASE_INNER:
-            logger.info(
-                "rt: skipping the val prediction (%d rows); rt reports no "
-                "validation score, and nothing downstream selects on it.",
-                len(table.df),
-            )
-            return np.zeros(len(table.df), dtype=np.float64)
+            raise RuntimeError("rt test prediction called before the reporting arm.")
 
         # Only the reporting arm gets this far, and it needs both: the
         # checkpoint to score with, and the split it was fit on, which travels
         # into the export because rustler takes its normalizing statistics from
         # the train split (see export.py).
         if self._checkpoint is None or self._train_table is None:
-            raise RuntimeError("rt.predict called before fit.")
+            raise RuntimeError("rt test prediction called before the reporting arm.")
 
         import torch
         from rt import RelationalTransformer
 
-        # The masked test table is not handed to `fit`, so it is exported here —
+        # The masked test table is not handed to `_fit_arm`, so it is exported here —
         # beside the train split the model was fit on, which is what rustler
         # takes the normalizing statistics from (see export.py).
         split = "test"
@@ -641,7 +569,7 @@ class RTPluRelModel(RelArenaModel):
             task,
             {"train": self._train_table, split: table},
             cache=self.cache,
-            identity=self.run_identity,
+            identity=self._identity_for(cfg.PHASE_OUTER),
             scratch_root=_scratch() / "export",
             db_name=DB_NAME,
         )
@@ -680,4 +608,4 @@ class RTPluRelModel(RelArenaModel):
         return 1.0 / (1.0 + np.exp(-raw))
 
 
-__all__ = ["RT_SPACE", "RTPluRelModel", "clear_scratch"]
+__all__ = ["RTPluRelSystem", "clear_scratch"]

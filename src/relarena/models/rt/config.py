@@ -743,8 +743,5 @@ class Selection:
     #: rescale it to its own.
     rows: int
     #: The `(ctx, local_ctx, bfs_width, prefer_latest)` validation picked out of
-    #: `context_grid()`. What `predict` reports under.
+    #: `context_grid()`. What the final test prediction reports under.
     context: tuple[int, int, int, bool]
-    #: The checkpoint at that step, for the debug record. The reporting arm
-    #: retrains to `step` on train+val rather than loading it.
-    checkpoint: str = ""
