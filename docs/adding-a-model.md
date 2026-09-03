@@ -418,6 +418,7 @@ Reuse an existing extra where the stack matches:
 | `lightgbm` | LightGBM | `lightgbm` |
 | `rdblearn` | DFS deps (TFM is core) | `rdblearn`, `tabpfn-rel-local` |
 | `tabpfn-rel-api` | DFS + `tabpfn-client` | `tabpfn-rel-client` |
+| `nori-rel` | DFS + frozen Nori 30M | `nori-rel` |
 | `rdl` | shared RDL stack: PyG, PyTorch Frame, text embedder | umbrella, not used directly |
 | `graphsage` / `relgnn` / `relgt` | `relarena[rdl]` (+ `einops`, `h5py` for `relgt`) | the GNN baselines |
 
@@ -488,6 +489,7 @@ uv run pre-commit run --all-files
 | `lightgbm` | `lightgbm/` | `space`, 14 params | `{}` | `True` | all | `lightgbm` | `featurization/entity`, `_shared/gbdt/lgb` |
 | `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `featurization/dfs` + cache, `_shared/tfm` |
 | `tabpfn-rel-local`, `tabpfn-rel-client` | `tabpfn_rel/` | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `rdblearn` / `tabpfn-rel-api` | `featurization/dfs` + cache, `_shared/tfm` |
+| `nori-rel` | `nori_rel/` | neither | `{max_depth: 2}` | `True` | regression | `nori-rel` | `featurization/dfs` + cache |
 | `graphsage` | `graphsage/` | `space` | explicit | `True` | binary, regression | `graphsage` | `_shared/gnn/{graph,training,_vendor/gnn}` |
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |

@@ -359,9 +359,14 @@ registering a method works without its extra installed.
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | same stack as `rdblearn`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
+| `nori-rel` | Nori-Rel 30M | DFS + frozen Nori 30M; regression only |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
 | `rt` | RT-PluRel | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
+
+The [Nori-Rel walkthrough](examples/nori_rel.ipynb) covers installation,
+choosing a regression task, warming its DFS feature cache, running the frozen
+30M checkpoint, and saving the result.
 
 **GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
 `relgt` build on RelBench's GNN stack (PyG + PyTorch Frame + a text embedder), pulled by their
@@ -472,6 +477,7 @@ as an experimental final-fit variant.
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
+| `nori-rel` | Nori-Rel 30M | DFS + Nori 30M | model | available | train + val | `nori-rel` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
@@ -624,13 +630,13 @@ RPI, please cite:
 
 ```bibtex
 @misc{hayler2026advancingopenreproduciblerelational,
-      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI}, 
+      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI},
       author={Adrian Hayler and Klemens Flöge and Alan Arazi and Rishabh Ranjan and Jure Leskovec and Felix Birkel and Brendan Roof and Anurag Garg and Kristina Collins and Lydia Sidhoum and Jonas Kübler and Siyuan Guo and Oscar Key and Jan Hendrik Metzen and Rylee Grace and David Salinas and Arthur Cahu and Simon Bing and Benjamin Jäger and Tuana Çelik and Mihir Manium and Vitor Monteiro and Jake Robertson and Jerry Chen and Eliott Kalfon and Tomás Pereda and Lilly Wehrhahn and Dominik Safaric and Tobias Schroeder and Georg Grab and Diana Kriuchkova and Clara Cornu and Philipp Singer and Nick Erickson and Vahid Balazadeh and Marie Salmon and Simone Alessi and Kürşat Kaya and Philipp Jund and Léo Grinsztajn and Yann LeCun and Bernhard Schölkopf and Madelon Hulsebos and Lennart Purucker and Sauraj Gambhir and Frank Hutter and Noah Hollmann},
       year={2026},
       eprint={2608.16319},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2608.16319}, 
+      url={https://arxiv.org/abs/2608.16319},
 }
 ```
 
