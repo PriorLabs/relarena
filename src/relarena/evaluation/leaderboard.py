@@ -9,6 +9,9 @@ Two steps:
 - `compute_leaderboard` ranks that frame with `bencheval.BenchmarkEvaluator`.
   `bencheval` is the optional `leaderboard` extra, imported lazily inside the
   function so importing this module stays dependency-free.
+
+The board's task set comes from the frame it is given (optionally narrowed by a
+`subsets.TaskSubset`); methods that do not cover it are dropped.
 """
 
 from __future__ import annotations
@@ -17,6 +20,7 @@ import logging
 
 import pandas as pd
 
+from relarena.evaluation.subsets import TaskMask, apply_subset
 from relarena.metrics import to_metric_error
 
 logger = logging.getLogger(__name__)
@@ -33,7 +37,7 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
     - `metric_error` ← `to_metric_error(test_score, <primary metric>)`, using
       the per-row `metric` column (always a registered primary, never the
       auxiliary native-metric columns)
-    - `time_train_s` ← `fit_time_tuning + fit_time_refit`
+    - `time_train_s` ← model fit times, or a system's complete `time_total`
     - `time_infer_s` ← `predict_time_refit`
 
     Only the val-selected config per run contributes (one row per method/task);
@@ -50,6 +54,12 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
         to_metric_error(score, metric)
         for score, metric in zip(rows["test_score"], rows["metric"], strict=True)
     ]
+
+    def seconds(column: str) -> pd.Series:
+        if column not in rows:
+            return pd.Series(0.0, index=rows.index)
+        return rows[column].fillna(0.0)
+
     frame = pd.DataFrame(
         {
             "method": rows["model"].to_numpy(),
@@ -58,9 +68,11 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
             ).to_numpy(),
             "metric_error": metric_error,
             "time_train_s": (
-                rows["fit_time_tuning"].fillna(0.0) + rows["fit_time_refit"].fillna(0.0)
+                seconds("fit_time_tuning")
+                + seconds("fit_time_refit")
+                + seconds("time_total")
             ).to_numpy(),
-            "time_infer_s": rows["predict_time_refit"].fillna(0.0).to_numpy(),
+            "time_infer_s": seconds("predict_time_refit").to_numpy(),
         }
     )
     # A NaN primary score (e.g. roc_auc on a degenerate window) survives the
@@ -68,27 +80,28 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
     return frame[frame["metric_error"].notna()].reset_index(drop=True)
 
 
-def _drop_incomplete_tasks(frame: pd.DataFrame) -> pd.DataFrame:
-    """Drop tasks not run by every method, logging them.
+def _drop_incomplete_methods(frame: pd.DataFrame) -> pd.DataFrame:
+    """Drop methods without a result on every task in the frame, logging them.
 
-    `bencheval` requires a dense method × task matrix; a partial sweep would
-    otherwise hard-fail. Logging the dropped tasks keeps the shrink visible
-    instead of silent.
+    `bencheval` requires a dense method × task matrix, and one row per
+    (method, task) as `to_bencheval_frame` produces. Dropping the *methods*
+    rather than the tasks keeps the task set fixed by the frame, so one
+    method's partial coverage never shrinks the board the others are ranked on;
+    narrow the frame with `subset=` to rank it on a set it does cover.
     """
     if frame.empty:
         return frame
-    n_methods = frame["method"].nunique()
-    per_task = frame.groupby("task")["method"].nunique()
-    complete = per_task[per_task == n_methods].index
-    dropped = sorted(set(per_task.index) - set(complete))
-    if dropped:
+    n_tasks = frame["task"].nunique()
+    per_method = frame.groupby("method")["task"].nunique()
+    dropped = per_method[per_method < n_tasks]
+    if not dropped.empty:
         logger.warning(
-            "Leaderboard: dropping %d task(s) not run by all %d methods: %s",
+            "Leaderboard: dropping %d method(s) without a result on all %d tasks: %s",
             len(dropped),
-            n_methods,
-            ", ".join(dropped),
+            n_tasks,
+            ", ".join(f"{m} (missing {n_tasks - n})" for m, n in dropped.items()),
         )
-    return frame[frame["task"].isin(complete)].reset_index(drop=True)
+    return frame[~frame["method"].isin(dropped.index)].reset_index(drop=True)
 
 
 def method_kind(model: str) -> str:
@@ -97,7 +110,7 @@ def method_kind(model: str) -> str:
     A system faces the same tasks, splits, metrics, and budget as every model —
     the comparison is fair on final performance — but selects its own
     hyperparameters or components inside `fit`, so its score credits the whole
-    package rather than isolating one method (see `RelArenaModel.kind`).
+    package rather than isolating one model (see `RelArenaSystem`).
     Unregistered names (reference baselines, retired methods) rank as models.
     """
     # Built-ins register on this import, which a leaderboard-only caller (load
@@ -108,7 +121,7 @@ def method_kind(model: str) -> str:
     from relarena.registry import registry
 
     try:
-        return registry.get(model).kind
+        return registry.kind(model)
     except KeyError:
         return "model"
 
@@ -119,18 +132,23 @@ def compute_leaderboard(
     reference: pd.DataFrame | None = None,
     baseline_method: str | None = "constant-global",
     kinds: frozenset[str] | None = None,
+    subset: str | TaskMask = "all",
 ) -> pd.DataFrame:
     """Rank a RelArena results frame into a TabArena-style leaderboard.
 
-    Builds the bencheval input with `to_bencheval_frame`, drops tasks not
-    run by every method (see `_drop_incomplete_tasks`), then ranks with
+    Builds the bencheval input with `to_bencheval_frame`, drops methods that
+    did not run every task (see `_drop_incomplete_methods`), then ranks with
     `bencheval.BenchmarkEvaluator`. The board is sorted by normalized loss
     (`loss_rescaled` — per-task min-max error averaged across tasks) and also
     reports mean rank, win-rate, and ELO. ELO is anchored on `baseline_method`
     so its scale is stable across runs; the anchor is ignored if that method is
     absent, and ELO is skipped entirely for a single method (it scores pairwise
-    comparisons, of which there are none). Returns an empty frame if no complete
-    task remains.
+    comparisons, of which there are none). Returns an empty frame if no method
+    covers the whole task set.
+
+    `subset` narrows the board's tasks (see `relarena.evaluation.subsets`),
+    applied before the density check so a method covering only that subset ranks
+    here while the full board still drops it.
 
     Pass `reference` (a frame from `relarena.evaluation.load_reference_results`)
     to rank self-reported baselines alongside the reproduced runs as ordinary
@@ -148,7 +166,8 @@ def compute_leaderboard(
         results = pd.concat([results, reference], ignore_index=True)
     if kinds is not None:
         results = results[results["model"].map(method_kind).isin(kinds)]
-    frame = _drop_incomplete_tasks(to_bencheval_frame(results))
+    results = apply_subset(results, subset)
+    frame = _drop_incomplete_methods(to_bencheval_frame(results))
     if frame.empty:
         return pd.DataFrame()
     anchor = baseline_method if baseline_method in set(frame["method"]) else None

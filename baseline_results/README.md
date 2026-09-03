@@ -3,11 +3,11 @@
 A snapshot of RelArena baseline runs over the RelBench-v1 entity-task grid
 (7 datasets, 21 tasks, seed 0):
 
-- `results.csv` — every config evaluated during tuning (the full sweep). Two
-  rows per job carry a `test_score`: the val-selected config and the
-  default-tagged config, which is refit the same way so every run reports both
-  a tuned and an untuned number. Filter on `selected` for the tuned board;
-  filtering on `test_score` alone double-counts every model. The `device` column records the
+- `results.csv` — every model config evaluated during tuning, plus one row per
+  system run. For models, two rows per job carry a `test_score`: the val-selected
+  config and the default-tagged config. System rows instead carry `time_total`
+  and no config, validation, or trial-budget fields. Filter on `selected` for
+  one reportable row per job. The `device` column records the
   hardware each job ran on (`cpu` / `rtx-pro-6000`), for reading the wall-clock
   time columns in context. This is the single persisted
   artifact: the TabArena-style leaderboard is a cheap, on-demand view of it
@@ -24,12 +24,9 @@ own best-val checkpoint (`refit_on_full_data=False`) per its published protocol;
 routine sweeps should not spend service quota; `rt-plurel` is the Relational
 Transformer, registered as a **system** — see the package README.)
 
-> **`rt-plurel`'s `val_score` is a placeholder, not a validation result** — 0.5
-> on a classification task, roughly `mean |y|` on a regression one. Both of its
-> selections (training step, context configuration) happen inside `fit`, so
-> nothing ever scores the val split; ignore the column in any leaderboard or
-> plot. Its `test_score` is a real 8-seed context ensemble over the whole test
-> split.
+`rt-plurel` rows use the native system schema. Their `test_score` is the real
+8-seed context ensemble over the whole test split, and `time_total` is the sum
+of the original selection, reporting, and prediction timings.
 - `experiment_results.csv` — same schema as `results.csv`, for exploratory runs kept
   for reference but deliberately **excluded from the default leaderboard** (nothing
   loads it automatically; pass it explicitly if you want it). Currently it contains

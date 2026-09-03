@@ -50,11 +50,9 @@ class RelArenaModel(ABC):
     #: protocol reports a best-val checkpoint rather than a train+val refit.
     refit_on_full_data: ClassVar[bool] = True
 
-    #: `"model"` (selection through the registered search space) or `"system"`
-    #: (selection inside `fit`). Leaderboards and plots read this to keep the
-    #: two populations separable — they are not the same kind of result. What
-    #: qualifies, the experimental status of system support, and the submission
-    #: rules live in docs/adding-a-model.md, "Model or system?".
+    #: Result category for models. Native systems implement `RelArenaSystem`;
+    #: this attribute remains for compatibility with older system adapters that
+    #: implemented the model contract.
     kind: ClassVar[str] = "model"
 
     def __init__(

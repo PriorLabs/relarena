@@ -21,15 +21,15 @@ some critical progress that allows us for the first time to compare methods,
 while acknowledging the work that still has to be done to make them perfectly
 comparable.
 
-One deliberate exception to (a): entries registered as **systems**
-(`RelArenaModel.kind`, see
-[adding-a-model.md](adding-a-model.md#model-or-system)) run their own selection
-inside `fit` instead of the standardized tuning pipeline. They stay inside (b)
-— the same runtime policy applies — and inside every protocol rule (splits,
-censoring, leakage guards), so their final scores are fairly earned; what is
-lost is the attribution that (a) buys for models. Leaderboards keep the two
-populations separable rather than pretending a system's score isolates a
-method.
+One deliberate exception to (a): entries registered as **systems** implement
+`RelArenaSystem` (see
+[adding-a-model.md](adding-a-model.md#model-or-system)) and run their own
+selection inside `run` instead of the standardized tuning pipeline. They stay
+inside (b) — the same end-to-end runtime policy applies — and inside every
+protocol rule (splits, censoring, leakage guards), so their final scores are
+fairly earned; what is lost is the attribution that (a) buys for models.
+Leaderboards keep the two populations separable rather than pretending a
+system's score isolates a method.
 
 ## Why is (b) so hard?
 
@@ -100,12 +100,12 @@ larger search spaces for smaller tasks, this increase in size should be
 within reasonable bounds. Tuning your method for 24h on a `rel-f1` task is
 definitely not reasonable. Currently, all methods but `relgt` use a fixed-size
 search space per dataset, i.e. they don't adjust it to the dataset size. In
-general, nearly all methods do not actually hit the 24h constraint, with nearly all of
-them running for at most 12h of recorded runtime per task (excluding the
-cached pre-processing). Only `relgt` and `rt-plurel` currently break the 12h
-barrier, both excluding their pre-processing: `relgt` with up to 41h of pure
-GPU time on `rel-avito/user-visits`, and `rt-plurel` with up to 16.3h on the
-largest `rel-amazon` task.
+general, methods should not aim to exhaust the 24h allowance. Nearly all run
+for at most 12h of recorded runtime per task, even on the largest tasks
+(excluding cached pre-processing). Only `relgt` and `rt-plurel` currently break
+the 12h barrier, both excluding their pre-processing: `relgt` with up to 41h of
+pure GPU time on `rel-avito/user-visits`, and `rt-plurel` with up to 16.3h on
+the largest `rel-amazon` task.
 
 ## What we ran
 
@@ -149,11 +149,11 @@ hours (`rdblearn`, `tabpfn-rel`, RelGNN, `relgt`):_
 | `tabpfn-rel-client` | 3 | 76 min | 18 min | 72 min | 88 min | 94 min | 108 min |
 | `relgnn-es` (RelGNN) | 10 | 73 min | 1 min | 6 min | 28 min | 99 min | 336 min |
 | `relgt` | 9 | 511 min | 40 min | 175 min | 273 min | 466 min | 2442 min |
-| `rt-plurel` | 0 | 351 min | 109 min | 129 min | 231 min | 516 min | 979 min |
+| `rt-plurel` | — | 351 min | 109 min | 129 min | 231 min | 516 min | 979 min |
 
-Total runtime is per (dataset, task): all four recorded time columns summed
-over every trial plus every recorded refit, with the distribution taken over the
-21 RelBench v1 tasks.
+Total runtime is per (dataset, task): all four model phase-time columns summed
+over every trial and refit, or the system's `time_total`, with the distribution
+taken over the 21 RelBench v1 tasks.
 
 The budget is set in exactly one place — `--n-trials` on the CLI (default 10),
 or `PredictiveQuery.fit(n_trials=...)`. Nothing derives it from the search
@@ -164,10 +164,9 @@ operator choices. Five caveats on reading them:
   configurations. A sampled space evaluates its default plus `n_trials` random
   samples; a fixed grid evaluates at most its first `n_trials` entries; an
   untunable model evaluates only its default.
-- `rt-plurel` is a system: its `n_trials` is 0, but its runtime *includes* the
-  selection it runs inside each fit (the training-step search with in-loop
-  validation and the context-configuration grid), so its row is not comparable
-  to a model's single untuned fit.
+- `rt-plurel` is a system and has no `n_trials`. Its `time_total` includes the
+  training-step search with in-loop validation, the context-configuration grid,
+  the reporting arm, and final prediction.
 - For `rdblearn` and the `tabpfn-rel` variants, the requested budget equals the
   grid size (`rdblearn` 6 = 2 TFMs × 3 depths; `tabpfn-rel` 3 = depths 2–4),
   meaning "run the whole grid" rather than a budget decision. The free choices

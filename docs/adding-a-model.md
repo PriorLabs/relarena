@@ -125,44 +125,88 @@ split construction in [`dataset.py`](../src/relarena/dataset.py).
 | `name` | unique string | — | required |
 | `supported_task_types` | `ENTITY_TASK_TYPES`, or a narrower frozenset | all entity task types | `graphsage`, `relgt` → binary + regression only. Runner refuses out-of-set tasks rather than producing a meaningless number |
 | `refit_on_full_data` | `True` / `False` | `True` | `relgt`, `relgnn-es`, `rdblearn` → `False` |
-| `kind` | `"model"` / `"system"` | `"model"` | `rt-plurel` → `"system"` |
-
 `refit_on_full_data` is a genuine modelling decision, not just a flag — see
 [3e](#3e-refit-on-full-data).
 
 ### Model or system?
 
-Declare `kind = "system"` when the entry does its selection *inside* `fit`
-instead of through the registered search space — its own hyperparameter
-search, training-budget selection, component choices, or a pretrained recipe
-the harness cannot decompose. Systems and models are not the same kind of
-result: both face the same tasks, splits, metrics, and budget, so the
-comparison is fair on final performance, but a model's score isolates one
-method under the shared tuning pipeline while a system's score credits the
-whole package without attributing it to any one part.
+RelArena accommodates end-to-end systems through a separate contract instead
+of forcing them into the model tuning loop. Implement `RelArenaSystem` when the
+entry owns the complete procedure that produces its final predictions: its own
+hyperparameter search, training-budget selection, component choices, ensemble,
+or pretrained recipe. Register it with `@register_system`; systems do not
+declare a `SearchSpace`.
 
-What the flag does **not** change: a system still obeys every protocol rule in
-this document — the censored databases, the per-example timestamps, the
-leakage guards, the runtime policy, and the public label-free cache warmers.
-It only changes how the entry is reported: leaderboards and plots read
-`RelArenaModel.kind` (via `evaluation.method_kind`) to rank models alone, or
-both populations together with systems clearly marked.
+```python
+import numpy as np
+from relbench.base import EntityTask
 
-A parameter-free space does not by itself make a system: `constant-global` runs one
-config under the shared pipeline and stays a model. The test is whether the
+from relarena.dataset import InnerSplit, OuterSplit
+from relarena.registry import register_system
+from relarena.system import RelArenaSystem
+
+
+@register_system
+class MySystem(RelArenaSystem):
+    name = "mysystem"
+
+    def run(
+        self,
+        task: EntityTask,
+        *,
+        inner_split: InnerSplit,
+        outer_split: OuterSplit,
+        seed: int,
+        time_limit: float | None = None,
+    ) -> np.ndarray:
+        ...
+        return predictions  # aligned with outer_split.eval_table
+```
+
+The harness passes the actual split objects, not a separate system-input
+wrapper. A system usually uses `inner_split` to make its internal choices and
+`outer_split` to produce the reportable predictions, but the API does not
+prescribe that algorithm: a system may ignore the inner split.
+
+Systems and models are not the same kind of result. Both receive the same
+censored data and hidden-label test protocol, but a model's score isolates one
+method under the shared tuning pipeline while a system's score credits its
+whole procedure. A system therefore produces one `SystemResult` with final test
+metrics and total runtime. It does not produce fake configs, a placeholder
+validation score, or an `n_trials` value. Result frames mark the row with
+`kind="system"` so leaderboards can report models alone or both populations.
+
+A system still obeys the protocol boundaries: it only receives the censored
+databases in the split objects, `outer_split.eval_table` is masked, and the
+outer split contains no test labels. The framework validates the returned
+shape and owns final evaluation.
+
+#### Shared end-to-end runtime constraint
+
+Systems have the same runtime allowance as models. The current policy sets a
+24-hour ceiling for the complete run on the largest tasks, including
+preprocessing. Methods should not aim to exhaust that allowance; most methods
+finish in under 12 hours even on the largest tasks. For a model, the total
+covers every tuning trial, selection, final fit, and prediction. For a system,
+it covers all work used to produce the returned predictions, including internal
+search, component training, refitting, and ensembling. Moving selection inside
+`run` does not move it outside the runtime budget.
+
+`SystemResult.time_total` measures the call to `RelArenaSystem.run`. If a
+submission performs preprocessing separately through a public cache warmer,
+that time is reported and counted toward the same end-to-end allowance even
+though it is not part of `time_total`. The `time_limit` argument is a soft
+budget; a system must either honor it or document why its training loop cannot
+stop safely at an arbitrary wall-clock boundary. See
+[The tuning regime](tuning-regime.md) for the full runtime policy.
+
+The two execution paths are available directly as `run_model_experiment` and
+`run_system_experiment`. `run_experiment` is the shared dispatcher used by the
+CLI when it only has a registered method class.
+
+A parameter-free space does not by itself make a system: `constant-global` runs
+one config under the shared pipeline and stays a model. The test is whether the
 score can be attributed to the method itself under the harness's controls.
-
-**System support is experimental.** There is no dedicated system interface
-yet: a system implements the ordinary model API and works around it — the
-established tricks are running all of its tuning inside a single fit of the
-default config (register a space with empty `default_overrides` and nothing to
-sample) and carrying what the tuning phase chose over to the refit phase
-through module-level globals, since the harness constructs a fresh instance
-per phase and a parameter-free config cannot carry state. Both tricks impose
-real constraints (the phases must share a process, and `--n-trials` becomes a
-no-op), so **a system submission needs extra validation by and discussion with the maintainers**
-beyond the ordinary review checklist before it can land. A future release will
-replace these workarounds with an explicit fitting API for systems.
 
 ## 3. Tuning
 
@@ -424,9 +468,11 @@ uv run pre-commit run --all-files
 - [ ] Compute knobs (batch size, epochs, steps) fixed outside the space
 - [ ] `supported_task_types` narrowed if the model cannot do a task type
 - [ ] `refit_on_full_data` matches the method's published protocol
-- [ ] `kind = "system"` if selection happens inside `fit` rather than through
-      the registered space (see [Model or system?](#model-or-system))
-- [ ] Heavy imports inside `fit`; extra declared in `pyproject.toml`
+- [ ] Use `RelArenaSystem` + `@register_system` if the method owns its selection
+      (see [Model or system?](#model-or-system))
+- [ ] The complete model or system procedure stays within the shared runtime
+      allowance, including separately run preprocessing
+- [ ] Heavy imports inside `fit`, `predict`, or `run`; extra declared in `pyproject.toml`
 - [ ] Shared helpers in `_shared/`, not imported from a sibling model
 - [ ] Vendored code in `_vendor/` with docstring + `.coveragerc` + `NOTICE` + license text
 - [ ] Expensive CPU pre-processing goes through a public, label-free cache-warm
@@ -446,3 +492,7 @@ uv run pre-commit run --all-files
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |
 | `relgt` | `relgt/` | `Callable[[TaskStats], SearchSpace]` → `fixed_grid` | explicit | `False` | binary, regression | `relgt` | `_shared/gnn`, own `_vendor/` + `tokenize.py` |
+
+`rt-plurel` is a `RelArenaSystem`, so model search-space and final-fit columns
+do not apply. It supports binary classification and regression and uses the
+`rt` extra.

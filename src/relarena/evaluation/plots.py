@@ -23,9 +23,10 @@ from pathlib import Path
 import pandas as pd
 
 from relarena.evaluation.leaderboard import (
-    _drop_incomplete_tasks,
+    _drop_incomplete_methods,
     to_bencheval_frame,
 )
+from relarena.evaluation.subsets import TaskMask, apply_subset
 
 _TASK_TYPE_LABELS = {
     "BINARY_CLASSIFICATION": "classification",
@@ -35,6 +36,12 @@ _TASK_TYPE_LABELS = {
 
 #: Dark end of the white->blue heatmap ramps.
 _HEATMAP_BLUE = "#08519c"
+
+#: `autorank`, behind the critical-difference diagram, refuses fewer tasks (its
+#: "performance estimations") or methods than these. A narrow `subset` can fall
+#: below either, so the diagram is skipped rather than raising.
+_CD_MIN_TASKS = 5
+_CD_MIN_METHODS = 2
 
 
 def _normalized_loss(results: pd.DataFrame) -> pd.DataFrame:
@@ -217,13 +224,18 @@ def plot_raw_score_heatmap(
 def plot_critical_difference(results: pd.DataFrame, save_path: str | Path) -> bool:
     """Write bencheval's critical-difference diagram over mean ranks.
 
-    Returns `False` (writing nothing) when no dense task remains to rank.
+    Returns `False` (writing nothing) when nothing remains to rank, or when
+    fewer than five tasks or two methods do, which `autorank` refuses to run on.
     """
     import matplotlib.pyplot as plt
     from bencheval.evaluator import BenchmarkEvaluator
 
-    frame = _drop_incomplete_tasks(to_bencheval_frame(results))
-    if frame.empty:
+    frame = _drop_incomplete_methods(to_bencheval_frame(results))
+    if (
+        frame.empty
+        or frame["task"].nunique() < _CD_MIN_TASKS
+        or frame["method"].nunique() < _CD_MIN_METHODS
+    ):
         return False
 
     board = BenchmarkEvaluator()
@@ -240,12 +252,12 @@ def plot_critical_difference(results: pd.DataFrame, save_path: str | Path) -> bo
 def plot_winrate_matrix(results: pd.DataFrame, save_path: str | Path) -> bool:
     """Write bencheval's pairwise win-rate matrix (% of tasks method i beats j).
 
-    Returns `False` (writing nothing) when no dense task remains to rank.
+    Returns `False` (writing nothing) when no method covers the whole task set.
     """
     import matplotlib.pyplot as plt
     from bencheval.evaluator import BenchmarkEvaluator
 
-    frame = _drop_incomplete_tasks(to_bencheval_frame(results))
+    frame = _drop_incomplete_methods(to_bencheval_frame(results))
     if frame.empty:
         return False
 
@@ -265,6 +277,7 @@ def write_leaderboard_plots(
     out_dir: str | Path,
     *,
     reference: pd.DataFrame | None = None,
+    subset: str | TaskMask = "all",
 ) -> list[Path]:
     """Write all leaderboard plots into `out_dir`; return the paths written.
 
@@ -274,10 +287,15 @@ def write_leaderboard_plots(
 
     Pass `reference` (a frame from `relarena.evaluation.load_reference_results`)
     to show self-reported baselines alongside the reproduced runs as ordinary
-    methods.
+    methods, and `subset` (see `relarena.evaluation.subsets`) to narrow every
+    plot to one task subset.
+
+    The heatmaps keep sparse cells, while the win-rate matrix and
+    critical-difference diagram drop incomplete methods as the leaderboard does.
     """
     if reference is not None:
         results = pd.concat([results, reference], ignore_index=True)
+    results = apply_subset(results, subset)
     out_dir = Path(out_dir)
     written: list[Path] = []
     for task_type, label in _TASK_TYPE_LABELS.items():

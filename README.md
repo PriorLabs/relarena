@@ -21,7 +21,7 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
 **TabPFN-Rel**, our relational harness for TabPFN-3, and an initial version of the
 **Relational Predictive Interface (RPI)**. What the framework contributes:
 
-- **Reproducibility.** Every reported method re-run through one unified model API, with
+- **Reproducibility.** Every reported method re-run through explicit model and system APIs, with
   implementations aligned, bugs fixed, and missing training scripts reconstructed.
 - **Tuning regimes.** Model submissions declare only a search space and are tuned by the
   framework; system submissions bring their own regime.
@@ -32,7 +32,7 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
   constant predictors.
 - **Shared evaluation.** TabArena's `bencheval` for bootstrapped Elo, ranks,
   critical-difference diagrams, win rates, and normalized scores.
-- **RPI.** Any RelArena-α method applied to your own database in two lines of code, with the
+- **RPI.** Any compatible RelArena-α model applied to your own database in two lines of code, with the
   database and task specified in YAML.
 
 > [!NOTE]
@@ -114,7 +114,8 @@ preprocessing cost.
 We want the set of included baselines to be as representative as possible, so adding a method is
 meant to be cheap. A model is a folder under `src/relarena/models/` implementing the
 `RelArenaModel` contract (`fit` and `predict`) with a `SearchSpace` registered via
-`@register_model(search_space=...)`; the registry discovers the folder automatically.
+`@register_model(search_space=...)`; an end-to-end procedure implements
+`RelArenaSystem.run` and uses `@register_system`. The registry discovers the folder automatically.
 `models/lightgbm/` is the smallest complete example to copy.
 
 The full guide is [docs/adding-a-model.md](docs/adding-a-model.md): the layout, the datatypes
@@ -242,7 +243,7 @@ entity-level RelBench v1 tasks:
 
 | File | Contents |
 |---|---|
-| `results.csv` | Every evaluated config of the release sweep (7 databases, 21 tasks, seed 0). Feed it to `compute_leaderboard`; filter on `selected` for the tuned board. |
+| `results.csv` | Every evaluated config of the release sweep (7 databases, 21 tasks, seed 0). Feed it to `compute_leaderboard`; pass `subset=` to filter which tasks the board covers. |
 | `experiment_results.csv` | Same schema, for exploratory runs deliberately **excluded** from the default leaderboard (currently the experimental full-data-refit `relgnn` variant). |
 | `reference_results.csv` | Per-task scores for methods **not reproduced in this pipeline**, transcribed from published model reports and flagged with a `_MR` (**model report**) suffix. |
 
@@ -260,6 +261,29 @@ average ranks, bootstrapped Elo ratings with confidence intervals, pairwise win 
 normalized or baseline-relative scores (needs the `leaderboard` extra). Normalized-loss heatmaps
 and the critical-difference diagram come from `relarena.evaluation.write_leaderboard_plots` with
 the `plots` extra.
+
+A board covers the tasks present in the frame you hand it, and any method without a result on
+every one of them is dropped, with a warning naming it. `subset=` allows for creating custom
+leaderboards computed on a restricted set of tasks. The filtering is run before the completeness
+check mentioned above. `SUBSETS` ships two examples, allowing easy comparison on only
+classification or regression tasks:
+
+```python
+from relarena.evaluation import compute_leaderboard
+
+overall = compute_leaderboard(results)  # every task in the frame
+classification = compute_leaderboard(results, subset="classification")
+regression = compute_leaderboard(results, subset="regression")
+```
+
+In addition to providing a registry of example subsets, it is also easy to define custom
+filters using `lambda` functions:
+
+```python
+board = compute_leaderboard(results, subset=lambda d: d["dataset"] == "rel-f1")
+```
+
+The `subset` argument of `write_leaderboard_plots` works analogously.
 
 </details>
 
@@ -326,7 +350,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and, for agent-facing notes, [AGENTS.md](
 <details>
 <summary><b>🧱 Baseline dependencies</b> — one extra per baseline, plus two special cases</summary>
 
-Each baseline carries its own extra, and every heavy dependency is lazy-imported inside `fit`, so
+Each baseline carries its own extra, and every heavy dependency is imported only when it runs, so
 registering a method works without its extra installed.
 
 | Extra | Baselines | Notes |
@@ -366,12 +390,12 @@ pip install "relarena[rt]"         # from a release
 <summary><b>🧭 How a run works</b> — splits, tuning procedure, and runtime policy</summary>
 
 ```
-┌─ runner ───── fit config(s) on train -> pick best on val -> final fit -> test
-├─ tuner ────── random search or a fixed grid under a caller-supplied budget;
-│               records configurations, metrics, predictions, and phase timings
-├─ model ────── RelArenaModel: fit / predict  (the contract)
-├─ space ────── SearchSpace: what to tune over, bound to the model in the registry
-└─ RelBench ─── Database, EntityTask, task.evaluate, metrics  (dependency)
+┌─ runner ───── models: tune -> select -> final fit -> test
+│               systems: run(inner_split, outer_split) -> test
+├─ tuner ────── model-only random search or fixed grid
+├─ model ────── RelArenaModel: fit / predict + registered SearchSpace
+├─ system ───── RelArenaSystem: owns the complete prediction procedure
+└─ RelBench ─── censored splits, EntityTask, evaluation, metrics
 ```
 
 **Tuning procedure.** Each method registers a search space in a standardized format together
@@ -397,23 +421,23 @@ boundaries are not yet standardized across methods.
 
 **Runtime policy.** The current policy allows a maximum total runtime of 24 hours per task,
 including preprocessing, measured on the largest tasks; moderately larger search spaces are
-permitted on smaller tasks when their cost stays reasonable. All released baseline models except
-RelGT run for less than 12 hours per task. Because equalizing tuning compute across methods
-remains unsolved, the α-release uses documented, method-specific trial budgets chosen to
-approximately balance compute. See [docs/tuning-regime.md](docs/tuning-regime.md), and the
-forthcoming model report for the full budget rationale.
+permitted on smaller tasks when their cost stays reasonable. The 24-hour limit is a ceiling, not a
+target; all released baseline models except RelGT run for less than 12 hours even on the largest
+tasks. Because equalizing tuning compute across methods remains unsolved, the α-release uses
+documented, method-specific trial budgets chosen to approximately balance compute. See
+[docs/tuning-regime.md](docs/tuning-regime.md), and the forthcoming model report for the full
+budget rationale.
 
-**What a run records.** Each trial keeps its configuration, metrics, optional predictions, and
-separate tuning and final-fit timings, which is what makes tunability analyses and per-phase
-runtime comparisons possible after the fact.
+**What a run records.** A model keeps one result per trial, including its configuration,
+metrics, optional predictions, and phase timings. A system records one final result with its test
+metrics, optional predictions, and total runtime; it does not synthesize model-trial fields.
 
 </details>
 
 <details>
 <summary><b>🤖 Models and systems</b> — the two submission types and the registered inventory</summary>
 
-Following TabArena, method submissions are categorized as models or systems
-(`RelArenaModel.kind`).
+Following TabArena, method submissions use one of two explicit contracts.
 
 - A **model submission** follows the standardized tuning regime, which allows claims about
   isolated methodological effects. It only needs to declare a search space; RelArena-α controls
@@ -431,12 +455,10 @@ research conclusions available from model submissions. Leaderboards should eithe
 systems (`compute_leaderboard(..., kinds={"model"})`) or rank both populations together with
 systems clearly marked; publishing both boards side by side is the recommended presentation.
 
-System support is currently **highly experimental**: systems run through the ordinary model API
-with documented workarounds (all tuning inside a single fit of the default config, state carried
-between the fit and refit phases via module-level globals), and a system submission needs extra
-validation by and discussion with the maintainers. A future release will replace these
-workarounds with an explicit fitting API for systems; see
-[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the current rules.
+A system implements `RelArenaSystem.run` and receives the actual `InnerSplit` and `OuterSplit`
+objects. It may use the inner split for selection or ignore it; RelArena only fixes the censored
+inputs, hidden-label boundary, output shape, final evaluation, and total runtime accounting. See
+[adding-a-model.md](docs/adding-a-model.md#model-or-system) for the contract.
 
 This is the canonical inventory of registered methods. The release snapshot and the forthcoming
 model report contain the rows marked **report**; the additional `relgnn` registration is retained
@@ -463,9 +485,8 @@ remains available for experiments but is excluded from the default release leade
 RT-PluRel is the sole registered **system**. It uses the relational transformer pretrained on
 PluRel-generated synthetic data and fine-tuned on the given task with a custom, sequential
 tuning regime; its protocol and every configured value are documented in
-[`models/rt/model.py`](src/relarena/models/rt/model.py). Because both of its selections happen
-inside `fit`, nothing ever scores the validation split, so its recorded `val_score` is a
-placeholder (see [`baseline_results/README.md`](baseline_results/README.md)).
+[`models/rt/model.py`](src/relarena/models/rt/model.py). Its result is one system row with the
+real test metrics and complete runtime, without a harness config or validation score.
 
 Everything else per method lives at its source: install caveats in
 [docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies) (the GNN baselines

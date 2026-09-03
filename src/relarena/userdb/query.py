@@ -33,6 +33,7 @@ from relarena.model import RelArenaModel
 from relarena.registry import registry
 from relarena.runner import select_best
 from relarena.search_space import TaskStats, resolve_search_space
+from relarena.system import RelArenaSystem
 from relarena.tuner import tune as run_tuning
 from relarena.userdb._schema import load_schema, validate
 from relarena.userdb.ingest import DatabaseSpec, build_dataset
@@ -122,6 +123,12 @@ class PredictiveQuery:
         self._warn_schema_only_cache(cache)
         self._cache = cache
         model_cls = registry.get(model)
+        if isinstance(model_cls, type) and issubclass(model_cls, RelArenaSystem):
+            raise TypeError(
+                f"'{model}' is a RelArenaSystem. PredictiveQuery requires a "
+                "RelArenaModel because it fits once and predicts at a later, "
+                "caller-selected timestamp."
+            )
         search_space = registry.search_space(model)
 
         # fill: on a custom DB the store starts empty, so build it as we go (the

@@ -2,6 +2,14 @@
 
 Start with the [README](README.md) for what the package is and how a run works.
 
+## This repo is public
+
+Everything committed here is published under Apache-2.0 — code, docs, and
+`baseline_results/` alike. Nothing may reference Prior Labs–internal
+infrastructure, systems, names, or paths. This applies to everything pushed
+to the remote, not just tracked files: commit messages, branch names, and PR
+text included.
+
 ## Adding or changing a model
 
 Read [docs/adding-a-model.md](docs/adding-a-model.md) first. Model development

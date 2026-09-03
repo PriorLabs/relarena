@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Type
 
+import numpy as np
 from relbench.base import TaskType
 
 from relarena.cache import resolve_cache_config
@@ -21,8 +23,9 @@ from relarena.dataset import RelBenchDatasetTask
 from relarena.metrics import is_better
 from relarena.model import RelArenaModel
 from relarena.registry import registry
-from relarena.results import TrialResult
+from relarena.results import SystemResult, TrialResult
 from relarena.search_space import SearchSpaceProvider
+from relarena.system import RelArenaSystem
 from relarena.tasks import ENTITY_TASK_TYPES
 from relarena.tuner import refit_and_evaluate, tune
 
@@ -61,9 +64,104 @@ class ExperimentSummary:
     default: TrialResult | None  # the zero-tuning config
     tuned: TrialResult | None  # best config by validation score
     trials: list[TrialResult]  # all trials and their analysis metadata
+    kind: str = "model"
 
 
-def run_experiment(
+@dataclass
+class SystemExperimentSummary:
+    """The result for one end-to-end `(system, dataset, task, seed)` run."""
+
+    system_name: str
+    dataset: str
+    task_name: str
+    task_type: TaskType
+    metric_name: str
+    seed: int
+    result: SystemResult
+
+
+def run_system_experiment(
+    system_cls: Type[RelArenaSystem],
+    dataset_name: str,
+    task_name: str,
+    *,
+    seed: int = 0,
+    time_limit: float | None = None,
+    download: bool = True,
+    cache_predictions: bool = True,
+    cache_dir: str | Path | None = None,
+    evaluate_test: bool = True,
+) -> SystemExperimentSummary:
+    """Run one system with both protocol splits and record its final result.
+
+    RelArena constructs the correctly censored `InnerSplit` and `OuterSplit`
+    objects, withholds test labels, and evaluates the returned predictions. The
+    system owns every step between receiving the splits and returning those
+    predictions; in particular, it may use the inner split for selection or
+    ignore it.
+    """
+    source = RelBenchDatasetTask(dataset_name, task_name, download=download)
+    task = source.task
+    cache = resolve_cache_config(cache_dir, on_miss="raise")
+
+    assert task.task_type in ENTITY_TASK_TYPES, (
+        f"RelArena only handles regression and binary classification tasks; got "
+        f"{task.task_type} for task '{task_name}'."
+    )
+    if task.task_type not in system_cls.supported_task_types:
+        raise ValueError(
+            f"System '{system_cls.name}' does not support task_type "
+            f"{task.task_type} (task '{task_name}')."
+        )
+
+    inner = source.inner_split()
+    outer = source.outer_split()
+    system = system_cls(cache=cache, run_identity=source.run_identity())
+    started = time.perf_counter()
+    predictions = np.asarray(
+        system.run(
+            task,
+            inner_split=inner,
+            outer_split=outer,
+            seed=seed,
+            time_limit=time_limit,
+        )
+    )
+    time_total = time.perf_counter() - started
+    expected_shape = (len(outer.eval_table.df),)
+    if predictions.shape != expected_shape:
+        raise ValueError(
+            f"System '{system_cls.name}' returned predictions with shape "
+            f"{predictions.shape}; expected {expected_shape}."
+        )
+
+    metric = source.metric
+    test_metrics: dict[str, float] = {}
+    test_score = None
+    if evaluate_test:
+        metrics = list(task.metrics)
+        if metric.__name__ not in {m.__name__ for m in metrics}:
+            metrics.append(metric)
+        test_metrics = task.evaluate(predictions, None, metrics=metrics)
+        test_score = float(test_metrics[metric.__name__])
+
+    return SystemExperimentSummary(
+        system_name=system_cls.name,
+        dataset=dataset_name,
+        task_name=task_name,
+        task_type=task.task_type,
+        metric_name=metric.__name__,
+        seed=seed,
+        result=SystemResult(
+            test_score=test_score,
+            test_metrics=test_metrics,
+            time_total=time_total,
+            test_pred=predictions if cache_predictions else None,
+        ),
+    )
+
+
+def run_model_experiment(
     model_cls: Type[RelArenaModel],
     dataset_name: str,
     task_name: str,
@@ -78,7 +176,7 @@ def run_experiment(
     evaluate_test: bool = True,
     require_all_trials: bool = True,
 ) -> ExperimentSummary:
-    """Tune `model_cls` on one RelBench entity task and summarize the result.
+    """Tune one model on a RelBench entity task and summarize its trials.
 
     `search_space` defaults to the one registered for `model_cls` (via
     `@register_model`); pass it explicitly to override.
@@ -198,4 +296,58 @@ def run_experiment(
         default=default,
         tuned=tuned,
         trials=trials,
+        kind=getattr(model_cls, "kind", "model"),
+    )
+
+
+def run_experiment(
+    method_cls: Type[RelArenaModel] | Type[RelArenaSystem],
+    dataset_name: str,
+    task_name: str,
+    *,
+    search_space: SearchSpaceProvider | None = None,
+    seed: int = 0,
+    n_trials: int = 10,
+    time_limit_per_trial: float | None = None,
+    download: bool = True,
+    cache_predictions: bool = True,
+    cache_dir: str | Path | None = None,
+    evaluate_test: bool = True,
+    require_all_trials: bool = True,
+) -> ExperimentSummary | SystemExperimentSummary:
+    """Dispatch one experiment to the model or system runner.
+
+    Call `run_model_experiment` or `run_system_experiment` directly when the
+    method kind is already known. This wrapper keeps the CLI and registry-based
+    callers uniform. Model-only search arguments do not affect a native system;
+    `time_limit_per_trial` becomes its single soft time limit.
+    """
+    if isinstance(method_cls, type) and issubclass(method_cls, RelArenaSystem):
+        if search_space is not None:
+            raise TypeError("A RelArenaSystem does not have a harness search space.")
+        return run_system_experiment(
+            method_cls,
+            dataset_name,
+            task_name,
+            seed=seed,
+            time_limit=time_limit_per_trial,
+            download=download,
+            cache_predictions=cache_predictions,
+            cache_dir=cache_dir,
+            evaluate_test=evaluate_test,
+        )
+
+    return run_model_experiment(
+        method_cls,
+        dataset_name,
+        task_name,
+        search_space=search_space,
+        seed=seed,
+        n_trials=n_trials,
+        time_limit_per_trial=time_limit_per_trial,
+        download=download,
+        cache_predictions=cache_predictions,
+        cache_dir=cache_dir,
+        evaluate_test=evaluate_test,
+        require_all_trials=require_all_trials,
     )
