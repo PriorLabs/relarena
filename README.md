@@ -508,10 +508,7 @@ Elo ratings of the release snapshot at a single seed, computed with `bencheval` 
 pairwise task outcomes under the Bradley-Terry model.
 Ratings are anchored to the global constant predictor at 1000 points, where a 400-point gap
 implies a win probability of about 91%. Ratings are relative, so the same method scores slightly
-differently when the participant or task set changes. Bootstrap values report the lower and upper
-deviations from the fitted Elo rating.
-
-**Models and systems Elo leaderboard**
+differently in each board.
 
 | Rank | Method | Elo | Bootstrap -/+ |
 |---:|---|---:|---:|
@@ -542,7 +539,8 @@ observations, discussed in full in the forthcoming model report:
   wall-clock time, and on the more expensive databases some methods are prohibitively slow for
   real-world use.
 
-Per-task scores for every method live in
+The trivial entity-only LightGBM baseline enters the rank and Elo computation but is omitted from
+the table above. Per-task scores for everything live in
 [`baseline_results/results.csv`](baseline_results/results.csv).
 
 </details>
