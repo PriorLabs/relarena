@@ -65,8 +65,11 @@ Paper = "https://arxiv.org/abs/2608.16319"
 relarena = "relarena.cli:main"
 
 [project.optional-dependencies]
-# Per-model extras (lazy-import + optional-dependency pattern; imported inside fit()).
+# Per-method extras (lazy-import + optional-dependency pattern; imported when run).
 lightgbm = ["lightgbm>=4.0,<4.7"]
+# KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a
+# native system entry because selection happens inside its end-to-end run.
+kurversc = ["kurversc==0.1.1"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
 # (tabpfn>=8 for the create_default_for_version API, lazily imported in models/_tfm.py)
 # plus the DFS featurization deps; `tabpfn-rel-local` uses this same extra.
@@ -111,6 +114,8 @@ dev = [
     "pytest>=9.1.1",
     "pre-commit>=4.0",
     "ruff==0.15.13",
+    # Focused adapter tests exercise the public optional-package boundary.
+    "kurversc==0.1.1",
     "lightgbm>=4.0,<4.7",
     "fastdfs>=1.1",
     # Same woodwork/pkg_resources cap as the DFS extras above.
@@ -125,9 +130,10 @@ cpu = ["torch"]
 
 [tool.uv]
 exclude-newer = "3 days"
-# v1.8.0 was published after the global cutoff while this release was being
-# prepared. The exact dependency pin above keeps this exemption reproducible.
-exclude-newer-package = { relational-transformer = false }
+# These packages were published after the global cutoff while their exact
+# dependency pins were being integrated. Exact pins keep the exemptions
+# reproducible without weakening the cutoff for unrelated dependencies.
+exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
