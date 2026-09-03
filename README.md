@@ -508,19 +508,24 @@ Elo ratings of the release snapshot at a single seed, computed with `bencheval` 
 pairwise task outcomes under the Bradley-Terry model.
 Ratings are anchored to the global constant predictor at 1000 points, where a 400-point gap
 implies a win probability of about 91%. Ratings are relative, so the same method scores slightly
-differently in each board.
+differently when the participant or task set changes. Bootstrap values report the lower and upper
+deviations from the fitted Elo rating.
 
-| Method | Kind | Model board | Model + system board |
-|---|---|---:|---:|
-| RT-PluRel | system | | 1861 |
-| TabPFN-Rel (API) | model | 1821 | 1826 |
-| TabPFN-Rel (OSS) | model | 1706 | 1727 |
-| GraphSAGE | model | 1658 | 1655 |
-| RelGT | model | 1575 | 1584 |
-| RDBLearn | model | 1548 | 1554 |
-| RelGNN | model | 1506 | 1519 |
-| Constant (per-entity) | model | 1256 | 1256 |
-| Constant (global) | model | 1000 | 1000 |
+**Models and systems Elo leaderboard**
+
+| Rank | Method | Elo | Bootstrap -/+ |
+|---:|---|---:|---:|
+| 1 | RT-PluRel | 1859.7 | -103.2/+91.8 |
+| 2 | TabPFN-Rel API | 1829.7 | -68.7/+99.0 |
+| 3 | KurveRSC | 1783.0 | -79.4/+78.7 |
+| 4 | TabPFN-Rel Local | 1730.5 | -85.0/+89.6 |
+| 5 | GraphSAGE | 1663.6 | -75.5/+83.8 |
+| 6 | RelGT | 1579.1 | -107.0/+123.9 |
+| 7 | RDBLearn | 1560.2 | -101.2/+93.2 |
+| 8 | RelGNN-ES | 1528.3 | -78.2/+90.2 |
+| 9 | LightGBM | 1359.9 | -126.6/+83.3 |
+| 10 | Constant per entity | 1259.5 | -147.1/+123.6 |
+| 11 | Constant global | 1000.0 | -139.0/+74.3 |
 
 TabPFN-Rel ranks first among models sharing the standardized tuning regime; the system
 submission RT-PluRel achieves the highest end-to-end predictive performance. Three further
@@ -537,8 +542,7 @@ observations, discussed in full in the forthcoming model report:
   wall-clock time, and on the more expensive databases some methods are prohibitively slow for
   real-world use.
 
-The trivial entity-only LightGBM baseline enters the rank and Elo computation but is omitted from
-the table above. Per-task scores for everything live in
+Per-task scores for every method live in
 [`baseline_results/results.csv`](baseline_results/results.csv).
 
 </details>
