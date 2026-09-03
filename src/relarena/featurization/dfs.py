@@ -541,6 +541,8 @@ def build_dfs_features(
     from fastdfs.dfs import dfs_feature_column_name, get_dfs_engine
     from fastdfs.utils.type_utils import safe_convert_to_string
 
+    from relarena.featurization.dfs2sql_grouped import GROUPED_DFS2SQL_ENGINE
+
     cache = cache or CacheConfig(directory=None, on_miss="compute")
 
     entity_table = db.table_dict[task.entity_table]
@@ -586,7 +588,9 @@ def build_dfs_features(
     # matrix is built; only the computed frames outlive this block.
     with tempfile.TemporaryDirectory(prefix="relarena_dfs_") as engine_dir:
         cfg = DFSConfig(
-            max_depth=max_depth, engine_path=str(Path(engine_dir) / "dfs.db")
+            max_depth=max_depth,
+            engine=GROUPED_DFS2SQL_ENGINE,
+            engine_path=str(Path(engine_dir) / "dfs.db"),
         )
 
         def _compute_matrix() -> pd.DataFrame:
