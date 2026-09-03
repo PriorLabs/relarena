@@ -356,6 +356,7 @@ registering a method works without its extra installed.
 | Extra | Baselines | Notes |
 |---|---|---|
 | `lightgbm` | LightGBM | CPU only |
+| `kurversc` | [KurveRSC](docs/models/kurversc.md) | GraphReduce configuration search + CatBoost; CPU only |
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | same stack as `rdblearn`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
@@ -469,6 +470,7 @@ as an experimental final-fit variant.
 | `constant-global` | Constant (global) | global constant | model | report | train + val | core |
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
+| `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
@@ -482,11 +484,14 @@ The report presents `relgnn-es` simply as **RelGNN**, because that published-sty
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
 remains available for experiments but is excluded from the default release leaderboard.
 
-RT-PluRel is the sole registered **system**. It uses the relational transformer pretrained on
-PluRel-generated synthetic data and fine-tuned on the given task with a custom, sequential
-tuning regime; its protocol and every configured value are documented in
-[`models/rt/model.py`](src/relarena/models/rt/model.py). Its result is one system row with the
-real test metrics and complete runtime, without a harness config or validation score.
+RT-PluRel and KurveRSC are registered **systems**. RT-PluRel uses the relational transformer
+pretrained on PluRel-generated synthetic data and fine-tuned on the given task with a custom,
+sequential tuning regime. KurveRSC jointly selects a GraphReduce feature program and downstream
+learner on the inner split, then freezes and replays that exact operation plan in its reporting
+arm. Their protocols and configured values are documented in
+[`models/rt/model.py`](src/relarena/models/rt/model.py) and
+[`models/kurversc/model.py`](src/relarena/models/kurversc/model.py). Each produces one system row
+with real test metrics and complete runtime, without a harness config or validation score.
 
 Everything else per method lives at its source: install caveats in
 [docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies) (the GNN baselines
@@ -624,13 +629,13 @@ RPI, please cite:
 
 ```bibtex
 @misc{hayler2026advancingopenreproduciblerelational,
-      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI}, 
+      title={Advancing Open and Reproducible Relational Learning: RelArena-$\alpha$, TabPFN-Rel and RPI},
       author={Adrian Hayler and Klemens Flöge and Alan Arazi and Rishabh Ranjan and Jure Leskovec and Felix Birkel and Brendan Roof and Anurag Garg and Kristina Collins and Lydia Sidhoum and Jonas Kübler and Siyuan Guo and Oscar Key and Jan Hendrik Metzen and Rylee Grace and David Salinas and Arthur Cahu and Simon Bing and Benjamin Jäger and Tuana Çelik and Mihir Manium and Vitor Monteiro and Jake Robertson and Jerry Chen and Eliott Kalfon and Tomás Pereda and Lilly Wehrhahn and Dominik Safaric and Tobias Schroeder and Georg Grab and Diana Kriuchkova and Clara Cornu and Philipp Singer and Nick Erickson and Vahid Balazadeh and Marie Salmon and Simone Alessi and Kürşat Kaya and Philipp Jund and Léo Grinsztajn and Yann LeCun and Bernhard Schölkopf and Madelon Hulsebos and Lennart Purucker and Sauraj Gambhir and Frank Hutter and Noah Hollmann},
       year={2026},
       eprint={2608.16319},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2608.16319}, 
+      url={https://arxiv.org/abs/2608.16319},
 }
 ```
 

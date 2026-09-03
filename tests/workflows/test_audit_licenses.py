@@ -138,6 +138,25 @@ def test__classify__declared_as_copyleft__is_blocked(
         assert audit.classify("x", declared, declared)[0] == "BLOCKED", declared
 
 
+def test__classify__accepted_bundled_license_notice__is_accepted(
+    audit: types.ModuleType,
+) -> None:
+    verdict, note = audit.classify(
+        "numpy",
+        "BSD License",
+        "BSD 3-Clause License\nBundled component: non-commercial use only",
+    )
+
+    assert verdict == "ACCEPTED"
+    assert "bundled" in note.lower()
+
+
+def test__manual_licenses__covers_kurversc_pep639_metadata_gap(
+    audit: types.ModuleType,
+) -> None:
+    assert audit.MANUAL_LICENSES["kurversc"] == "MIT"
+
+
 def test__fetch_pypi_license__transient_failure__retries_and_recovers(
     audit: types.ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
