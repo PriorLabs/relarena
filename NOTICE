@@ -24,13 +24,16 @@ retained alongside the code in this package:
     https://github.com/snap-stanford/relgt
     src/relarena/models/relgt/_vendor/
 
-  * RDBLearn (method adaptation; no files copied)
+The following upstream works are acknowledged for attribution; no files are
+copied into this package:
+
+  * RDBLearn (method adaptation), licensed under Apache-2.0
     Copyright (c) HKU Shanghai X-Lab
     https://github.com/HKUSHXLab/rdblearn
     src/relarena/models/rdblearn/model.py, src/relarena/models/_shared/tfm/tfm.py,
     src/relarena/featurization/dfs.py
 
-  * Relational Transformer (RT) (dependency; no files copied)
+  * Relational Transformer (RT) (dependency)
     Copyright (c) 2025 Stanford STAR / Relational Transformer authors
     https://github.com/rishabh-ranjan/relational-transformer
     src/relarena/models/rt/ -- installed from the `rt` extra, not vendored.
