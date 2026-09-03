@@ -130,6 +130,35 @@ def test__to_bencheval_frame__system_total_time__is_preserved() -> None:
     assert row["time_infer_s"] == pytest.approx(0.0)
 
 
+def test__release_rt_results__use_native_system_fields() -> None:
+    path = _BASELINE_DIR / "results.csv"
+    if not path.exists():
+        pytest.skip("no committed baseline_results/results.csv")
+
+    rt = pd.read_csv(path).query("model == 'rt-plurel'")
+
+    assert not rt.empty
+    assert set(rt["kind"]) == {"system"}
+    assert rt["time_total"].notna().all()
+    assert (
+        rt[
+            [
+                "n_trials",
+                "config",
+                "config_id",
+                "config_tag",
+                "val_score",
+                "fit_time_tuning",
+                "predict_time_tuning",
+                "fit_time_refit",
+                "predict_time_refit",
+            ]
+        ]
+        .isna()
+        .all(axis=None)
+    )
+
+
 def test__compute_leaderboard__dense_results__ranks_by_normalized_loss() -> None:
     pytest.importorskip("bencheval.evaluator")
     # constant-global is worst on both tasks, lightgbm best -> lightgbm ranks first.

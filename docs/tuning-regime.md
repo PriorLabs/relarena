@@ -149,11 +149,11 @@ hours (`rdblearn`, `tabpfn-rel`, RelGNN, `relgt`):_
 | `tabpfn-rel-client` | 3 | 76 min | 18 min | 72 min | 88 min | 94 min | 108 min |
 | `relgnn-es` (RelGNN) | 10 | 73 min | 1 min | 6 min | 28 min | 99 min | 336 min |
 | `relgt` | 9 | 511 min | 40 min | 175 min | 273 min | 466 min | 2442 min |
-| `rt-plurel` | 0 | 351 min | 109 min | 129 min | 231 min | 516 min | 979 min |
+| `rt-plurel` | — | 351 min | 109 min | 129 min | 231 min | 516 min | 979 min |
 
-Total runtime is per (dataset, task): all four recorded time columns summed
-over every trial plus every recorded refit, with the distribution taken over the
-21 RelBench v1 tasks.
+Total runtime is per (dataset, task): all four model phase-time columns summed
+over every trial and refit, or the system's `time_total`, with the distribution
+taken over the 21 RelBench v1 tasks.
 
 The budget is set in exactly one place — `--n-trials` on the CLI (default 10),
 or `PredictiveQuery.fit(n_trials=...)`. Nothing derives it from the search
@@ -164,10 +164,9 @@ operator choices. Five caveats on reading them:
   configurations. A sampled space evaluates its default plus `n_trials` random
   samples; a fixed grid evaluates at most its first `n_trials` entries; an
   untunable model evaluates only its default.
-- `rt-plurel` is a system: its `n_trials` is 0, but its runtime *includes* the
-  selection it runs inside each fit (the training-step search with in-loop
-  validation and the context-configuration grid), so its row is not comparable
-  to a model's single untuned fit.
+- `rt-plurel` is a system and has no `n_trials`. Its `time_total` includes the
+  training-step search with in-loop validation, the context-configuration grid,
+  the reporting arm, and final prediction.
 - For `rdblearn` and the `tabpfn-rel` variants, the requested budget equals the
   grid size (`rdblearn` 6 = 2 TFMs × 3 depths; `tabpfn-rel` 3 = depths 2–4),
   meaning "run the whole grid" rather than a budget decision. The free choices
