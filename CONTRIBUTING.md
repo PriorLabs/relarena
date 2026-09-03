@@ -25,6 +25,9 @@ uv build
 ```
 
 For model integrations, follow [docs/adding-a-model.md](docs/adding-a-model.md).
+Open the pull request from a fork owned by your personal account with **Allow
+edits from maintainers** enabled, so maintainers can push rerun results to your
+branch (see [Submitting](docs/adding-a-model.md#10-submitting)).
 Keep optional dependencies lazy, document provenance for adapted or vendored
 code, and include focused tests. By contributing, you agree that your changes
 are licensed under this repository's Apache-2.0 license.

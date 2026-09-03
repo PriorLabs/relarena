@@ -479,6 +479,24 @@ uv run pre-commit run --all-files
       script
 - [ ] `tests/mymodel/{__init__,test_model}.py`
 - [ ] `uv run pre-commit run --all-files` clean, from the repo root
+- [ ] Pull request opened from a fork owned by a personal account, with
+      **Allow edits from maintainers** enabled (see [Submitting](#10-submitting))
+
+## 10. Submitting
+
+This is the submission process for now; it may change as the benchmark matures.
+
+Open the pull request with the implementation, docs, and tests only. Leave
+`baseline_results/` untouched: maintainers rerun every submitted method on
+fixed hardware, push the resulting rows to your branch, and merge once you have
+confirmed the numbers.
+
+For maintainers to push to your branch, the pull request must come from a fork
+owned by a **personal account**, with **Allow edits from maintainers** enabled
+in the pull request sidebar. GitHub does not offer that option for forks owned
+by an organization; a pull request from an organization fork forces the results
+through a separate pull request against your fork and a manual merge on your
+side.
 
 ## Appendix — what every existing model chose
 
