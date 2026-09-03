@@ -492,3 +492,7 @@ uv run pre-commit run --all-files
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |
 | `relgt` | `relgt/` | `Callable[[TaskStats], SearchSpace]` → `fixed_grid` | explicit | `False` | binary, regression | `relgt` | `_shared/gnn`, own `_vendor/` + `tokenize.py` |
+
+`rt-plurel` is a `RelArenaSystem`, so model search-space and final-fit columns
+do not apply. It supports binary classification and regression and uses the
+`rt` extra.
