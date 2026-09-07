@@ -644,3 +644,19 @@ RPI, please cite:
 RelArena-α redistributes no data, retrieving every database at runtime through
 [RelBench](https://github.com/snap-stanford/relbench), so please also cite RelBench when you
 report results on these tasks.
+
+<details>
+<summary><b>🙏 Acknowledgements</b> — EuroHPC LUMI and the EU-funded ELLIOT project</summary>
+
+We acknowledge the EuroHPC Joint Undertaking for awarding this project access to the EuroHPC
+supercomputer LUMI, hosted by CSC (Finland) and the LUMI consortium through a EuroHPC Regular
+Access call.
+
+This work was supported by European Union's Horizon Europe research and innovation programme
+under grant agreement number 101214398 (ELLIOT).
+
+Funded by the European Union. Views and opinions expressed are however those of the author(s)
+only and do not necessarily reflect those of the European Union or the European Commission.
+Neither the European Union nor the European Commission can be held responsible for them.
+
+</details>
