@@ -655,8 +655,9 @@ Access call.
 This work was supported by European Union's Horizon Europe research and innovation programme
 under grant agreement number 101214398 (ELLIOT).
 
-Funded by the European Union. Views and opinions expressed are however those of the author(s)
-only and do not necessarily reflect those of the European Union or the European Commission.
-Neither the European Union nor the European Commission can be held responsible for them.
+**Disclaimer:** *Funded by the European Union. Views and opinions expressed are however those of
+the author(s) only and do not necessarily reflect those of the European Union or the European
+Commission. Neither the European Union nor the European Commission can be held responsible for
+them.*
 
 </details>
