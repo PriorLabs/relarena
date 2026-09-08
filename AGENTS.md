@@ -10,6 +10,25 @@ infrastructure, systems, names, or paths. This applies to everything pushed
 to the remote, not just tracked files: commit messages, branch names, and PR
 text included.
 
+## CI is the trust boundary
+
+Changes under `.github/` need an approval from the `release-maintainers`
+team that cannot be bypassed. Ordinary code review can be bypassed by
+relational maintainers, so `.github/` is where secrets are guarded:
+
+- A workflow step with access to a secret or an OIDC token may only run
+  pinned actions or scripts under `.github/scripts/`. It must not run the
+  package, the tests, or anything else outside `.github/`, since all of
+  that would execute with the secret in its environment.
+- Scripts under `.github/scripts/` are standalone: standard library or
+  explicitly pinned dependencies, no imports from `relarena`.
+- Scripts under `workflows/` are ordinary maintenance tooling under the
+  normal review rules. Move a script into `.github/scripts/` before a
+  secret-bearing step calls it.
+
+Reviewers of a workflow change check every step that references
+`secrets.*` or requests `id-token: write` against these rules.
+
 ## Adding or changing a model
 
 Read [docs/adding-a-model.md](docs/adding-a-model.md) first. Model development
