@@ -24,8 +24,8 @@ from pathlib import Path
 
 from relbench.base import EntityTask, Table
 
-from relarena.core.fingerprints import array_checksum, database_checksum, table_checksum
 from relarena.dataset import RelBenchDatasetTask, drop_noncanonical_task_columns
+from relarena_core.fingerprints import array_checksum, database_checksum, table_checksum
 
 #: Recorded baseline, shipped as package data beside this module.
 CHECKSUMS_PATH = Path(__file__).with_name("relbench_v1_checksums.json")

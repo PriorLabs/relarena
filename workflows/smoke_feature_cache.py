@@ -17,12 +17,12 @@ import tempfile
 import time
 from pathlib import Path
 
-import relarena.core.featurization.dfs as dfs_mod
-from relarena.core.cache import CacheConfig
-from relarena.core.dataset import concat_tables
-from relarena.core.featurization import DFS_MAX_DEPTH, build_dfs_features
-from relarena.core.featurization.warm_cache import warm_dfs_cache
+import relarena_core.featurization.dfs as dfs_mod
 from relarena.dataset import RelBenchDatasetTask
+from relarena_core.cache import CacheConfig
+from relarena_core.dataset import concat_tables
+from relarena_core.featurization import DFS_MAX_DEPTH, build_dfs_features
+from relarena_core.featurization.warm_cache import warm_dfs_cache
 
 DATASET, TASK = "rel-f1", "driver-dnf"
 

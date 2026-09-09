@@ -11,10 +11,10 @@ from unittest.mock import Mock
 import pandas as pd
 import pytest
 
-from relarena.core.cache import CacheConfig
-from relarena.core.identity import RunIdentity
-from relarena.core.userdb.query import PredictiveQuery, PredictiveQuerySpec
 from relarena.userdb import relbench_v1_spec, relbench_v1_tasks
+from relarena_core.cache import CacheConfig
+from relarena_core.identity import RunIdentity
+from relarena_core.userdb.query import PredictiveQuery, PredictiveQuerySpec
 
 _EXAMPLES = Path(__file__).resolve().parents[4] / "examples"
 _DB_YAML = "drivers:\n  pkey: driverId\n"
@@ -175,7 +175,7 @@ def test__precompute_cache__delegates_to_dfs_owner(
     query = _schema_only_query(data_version="v1")
     query._source = Mock()
     warm = Mock()
-    monkeypatch.setattr("relarena.core.featurization.warm_cache.warm_dfs_cache", warm)
+    monkeypatch.setattr("relarena_core.featurization.warm_cache.warm_dfs_cache", warm)
 
     assert query.precompute_cache(tmp_path) == tmp_path
 
@@ -226,7 +226,7 @@ def test__predict__anchor_after_test_cutoff__warns_about_frozen_db(
     query._at_timestamp = pd.Timestamp("2020-02-01")
     query._entities = "all"
     predict_at = Mock(return_value=pd.DataFrame({"driverId": [], "y_pred": []}))
-    monkeypatch.setattr("relarena.core.userdb.query.predict_at", predict_at)
+    monkeypatch.setattr("relarena_core.userdb.query.predict_at", predict_at)
 
     with pytest.warns(UserWarning, match="feature database remains frozen"):
         query.predict()

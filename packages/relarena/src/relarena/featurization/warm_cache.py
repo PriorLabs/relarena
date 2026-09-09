@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from relarena.core.cache import resolve_cache_config
-from relarena.core.featurization.dfs import DFS_MAX_DEPTH
-from relarena.core.featurization.warm_cache import warm_dfs_cache
 from relarena.dataset import RelBenchDatasetTask
+from relarena_core.cache import resolve_cache_config
+from relarena_core.featurization.dfs import DFS_MAX_DEPTH
+from relarena_core.featurization.warm_cache import warm_dfs_cache
 
 
 def main(argv: list[str] | None = None) -> int:

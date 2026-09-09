@@ -15,7 +15,7 @@ from __future__ import annotations
 import pandas as pd
 from relbench.base import Database, EntityTask, Table
 
-from relarena.core.featurization.columns import type_columns
+from relarena_core.featurization.columns import type_columns
 
 
 def build_entity_features(

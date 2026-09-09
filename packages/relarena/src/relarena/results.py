@@ -6,7 +6,7 @@ import json
 from dataclasses import fields
 from typing import TYPE_CHECKING, Any
 
-from relarena.core.results import SystemResult, TrialResult
+from relarena_core.results import SystemResult, TrialResult
 
 if TYPE_CHECKING:
     import pandas as pd

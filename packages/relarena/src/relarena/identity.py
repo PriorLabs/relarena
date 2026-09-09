@@ -4,7 +4,7 @@ import json
 from functools import cache
 from pathlib import Path
 
-from relarena.core.identity import (
+from relarena_core.identity import (
     RunIdentity,
     metadata_fingerprint,
 )

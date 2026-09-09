@@ -6,7 +6,7 @@ from typing import NamedTuple, Sequence
 
 from relbench.base import TaskType
 
-from relarena.core.tasks import ENTITY_TASK_TYPES as ENTITY_TASK_TYPES
+from relarena_core.tasks import ENTITY_TASK_TYPES as ENTITY_TASK_TYPES
 
 #: The seven original RelBench (v1) datasets.
 #:

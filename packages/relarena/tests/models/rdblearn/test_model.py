@@ -12,11 +12,11 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
-from relarena.core.cache import CacheConfig
-from relarena.core.registry import registry
-from relarena.core.tfm import TFMSpec
 from relarena.models.rdblearn import RDBLEARN_SPACE, RDBLearnModel, tfm
 from relarena.models.rdblearn import model as rdblearn
+from relarena_core.cache import CacheConfig
+from relarena_core.registry import registry
+from relarena_core.tfm import TFMSpec
 
 
 def test_registered_under_name_rdblearn() -> None:

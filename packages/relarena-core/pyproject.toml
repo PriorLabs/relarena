@@ -1,0 +1,27 @@
+[build-system]
+requires = ["uv_build>=0.11.15"]
+build-backend = "uv_build"
+
+[project]
+name = "relarena-core"
+version = "0.0.1"
+description = "Shared contracts, temporal validation and predictive queries for relational models."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Prior Labs" }]
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "relbench==2.1.2",
+    "numpy>=1.24",
+    "pandas>=2.3.3,<3.0",
+    "scikit-learn>=1.3",
+    "configspace>=1.0",
+    "pyyaml>=6.0",
+    "jsonschema>=4.0",
+    "duckdb>=1.2.2",
+    "torch",
+]
+
+[project.optional-dependencies]
+dfs = ["fastdfs>=1.1", "setuptools<82"]

@@ -82,10 +82,10 @@ post-boundary data, and it does not recreate the alternative evaluation regime
 that advances the database to each test entity's timestamp.
 
 Shared split construction lives in core's
-[`dataset.py`](../packages/relarena-core/src/relarena.core/dataset.py), with named
+[`dataset.py`](../packages/relarena-core/src/relarena_core/dataset.py), with named
 benchmark loading in RelArena's
 [`dataset.py`](../packages/relarena/src/relarena/dataset.py). Tuning lives in core's
-[`tuner.py`](../packages/relarena-core/src/relarena.core/tuner.py); benchmark
+[`tuner.py`](../packages/relarena-core/src/relarena_core/tuner.py); benchmark
 orchestration and final test scoring live in
 [`runner.py`](../packages/relarena/src/relarena/runner.py) and
 [`refit.py`](../packages/relarena/src/relarena/refit.py).

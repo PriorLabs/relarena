@@ -33,9 +33,9 @@ One folder may register **several** models: `dummy` → `constant-global` +
 import numpy as np
 from relbench.base import Database, EntityTask, Table
 
-from relarena.core.model import RelArenaModel
-from relarena.core.registry import register_model
-from relarena.core.search_space import SearchSpace
+from relarena_core.model import RelArenaModel
+from relarena_core.registry import register_model
+from relarena_core.search_space import SearchSpace
 
 MYMODEL_SPACE = SearchSpace(space=_config_space(), default_overrides={})
 
@@ -142,8 +142,8 @@ import numpy as np
 from relbench.base import EntityTask
 
 from relarena.dataset import InnerSplit, OuterSplit
-from relarena.core.registry import register_system
-from relarena.core.system import RelArenaSystem
+from relarena_core.registry import register_system
+from relarena_core.system import RelArenaSystem
 
 
 @register_system
@@ -378,7 +378,7 @@ training settings that do not affect it. Content fingerprints and explicit
 preprocessing versions can be used to invalidate artifacts when their inputs or
 meaning change.
 
-See [`relarena.core.cache`](../src/relarena/cache.py) for the API and its design
+See [`relarena_core.cache`](../src/relarena/cache.py) for the API and its design
 notes, and [`tests/fixtures/cached_model.py`](../tests/fixtures/cached_model.py)
 for a compact end-to-end example.
 

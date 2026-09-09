@@ -19,14 +19,14 @@ import argparse
 import pandas as pd
 from relbench.tasks import get_task
 
-from relarena.core.userdb.ingest import build_dataset
-from relarena.core.userdb.task import UserEntityTask
 from relarena.dataset import drop_noncanonical_task_columns
 from relarena.userdb import (
     materialize_relbench,
     relbench_v1_spec,
     relbench_v1_tasks,
 )
+from relarena_core.userdb.ingest import build_dataset
+from relarena_core.userdb.task import UserEntityTask
 
 
 def _split_matches(want: pd.DataFrame, got: pd.DataFrame, keys: list[str]) -> bool:

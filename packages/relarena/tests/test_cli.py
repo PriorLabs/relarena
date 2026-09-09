@@ -17,10 +17,10 @@ import pytest
 from relbench.base import TaskType
 
 from relarena import cli
-from relarena.core.results import SystemResult, TrialResult
 from relarena.results import summary_to_dataframe
 from relarena.runner import ExperimentSummary, SystemExperimentSummary
 from relarena.tasks import TaskSpec
+from relarena_core.results import SystemResult, TrialResult
 
 
 def _summary() -> ExperimentSummary:
