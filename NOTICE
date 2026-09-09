@@ -10,19 +10,19 @@ retained alongside the code in this package:
   * RelBench example GNN building blocks
     Copyright (c) 2023 RelBench Team
     https://github.com/snap-stanford/relbench
-    src/relarena/models/_shared/gnn/_vendor/gnn.py
+    packages/relarena/src/relarena/models/_shared/gnn/_vendor/gnn.py
 
   * RelGNN composite-message-passing GNN
     Copyright (c) 2023 RelBench Team
     https://github.com/snap-stanford/RelGNN
-    src/relarena/models/relgnn/_vendor/
+    packages/relarena/src/relarena/models/relgnn/_vendor/
 
   * RelGT Relational Graph Transformer
     Copyright (c) 2025 Vijay Prakash Dwivedi, Sri Jaladi, Yangyi Shen,
     Federico López, Charilaos I. Kanatsoulis, Rishi Puri, Matthias Fey,
     Jure Leskovec
     https://github.com/snap-stanford/relgt
-    src/relarena/models/relgt/_vendor/
+    packages/relarena/src/relarena/models/relgt/_vendor/
 
 The following upstream works are acknowledged for attribution; no files are
 copied into this package:
@@ -30,13 +30,13 @@ copied into this package:
   * RDBLearn (method adaptation), licensed under Apache-2.0
     Copyright (c) HKU Shanghai X-Lab
     https://github.com/HKUSHXLab/rdblearn
-    src/relarena/models/rdblearn/model.py, src/relarena/models/_shared/tfm/tfm.py,
-    src/relarena/featurization/dfs.py
+    packages/relarena/src/relarena/models/rdblearn/model.py, packages/relarena/src/relarena/models/rdblearn/tfm.py,
+    packages/relarena-core/src/relarena_core/featurization/dfs.py
 
   * Relational Transformer (RT) (dependency)
     Copyright (c) 2025 Stanford STAR / Relational Transformer authors
     https://github.com/rishabh-ranjan/relational-transformer
-    src/relarena/models/rt/ -- installed from the `rt` extra, not vendored.
+    packages/relarena/src/relarena/models/rt/ -- installed from the `rt` extra, not vendored.
 
 Datasets are not distributed with this package. They are downloaded at runtime by
 relbench and remain subject to their own upstream terms.
@@ -47,14 +47,14 @@ Vendored component provenance
 RelBench example GNN building blocks were copied from
 https://github.com/snap-stanford/relbench at commit 74d4c37
 (`examples/model.py` and `examples/text_embedder.py`). Their imports were merged
-into `src/relarena/models/_shared/gnn/_vendor/gnn.py`; only Ruff formatting was
+into `packages/relarena/src/relarena/models/_shared/gnn/_vendor/gnn.py`; only Ruff formatting was
 otherwise normalized. The GNN layers themselves are imported from the installed
 `relbench.modeling.nn` package and are not copied.
 
 RelGNN model building blocks were copied from
 https://github.com/snap-stanford/RelGNN at commit cffdb8b. The upstream example
 modules were split into the matching modules under
-`src/relarena/models/relgnn/_vendor/`; package imports were rewritten and Ruff
+`packages/relarena/src/relarena/models/relgnn/_vendor/`; package imports were rewritten and Ruff
 formatting normalized. Duplicate RelBench encoders were not copied.
 
 RelGT model and sampler building blocks were copied from
@@ -67,5 +67,5 @@ RelArena adapter code, not vendored files.
 RDBLearn is a method adaptation rather than a file copy. RelArena reimplements
 the Deep Feature Synthesis to tabular-foundation-model recipe from
 https://github.com/HKUSHXLab/rdblearn. The closest adaptation is the
-non-stratified train downsampling in `models/_shared/tfm/tfm.py`; RelArena's DFS
+non-stratified train downsampling in `packages/relarena-core/src/relarena_core/tfm.py`; RelArena's DFS
 cache and TabPFN-Rel extensions are original work.
