@@ -47,3 +47,7 @@ jobs:
         run: uv build --all-packages
       - name: Verify required package data
         run: python workflows/verify_distributions.py
+      - name: Test isolated wheel installations
+        env:
+          OMP_NUM_THREADS: "1"
+        run: uv run --no-sync python workflows/check_package_split.py --output "$RUNNER_TEMP/package-split"

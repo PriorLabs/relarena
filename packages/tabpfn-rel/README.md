@@ -103,4 +103,5 @@ contains ordinary version requirements. The candidate distributions must be
 released before the index-only installation commands above are available.
 
 The tests exercise feature and context behavior without downloading model weights
-or making hosted API requests.
+or making hosted API requests. Integration tests use real DFS and a small test
+estimator to cover the predictive interface and temporal tuning.
