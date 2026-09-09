@@ -11,13 +11,16 @@ def main() -> None:
     """Check the wheel and sdist under ``dist/``."""
     wheel = next(Path("dist").glob("*.whl"))
     sdist = next(Path("dist").glob("*.tar.gz"))
-    spec_root = Path("src/relarena/userdb/relbench_v1")
+    spec_root = Path("packages/relarena/src/relarena/userdb/relbench_v1")
     required = {
         "relarena/models/VENDORED-LICENSES",
         "relarena/checksums/relbench_v1_checksums.json",
         "relarena/userdb/database.schema.json",
         "relarena/userdb/task.schema.json",
-        *(str(path.relative_to("src")) for path in spec_root.glob("*/*.yaml")),
+        *(
+            str(path.relative_to("packages/relarena/src"))
+            for path in spec_root.glob("*/*.yaml")
+        ),
     }
 
     with zipfile.ZipFile(wheel) as archive:

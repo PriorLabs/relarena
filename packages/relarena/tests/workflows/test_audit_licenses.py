@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-MODULE_PATH = Path(__file__).resolve().parents[2] / "workflows" / "audit_licenses.py"
+MODULE_PATH = Path(__file__).resolve().parents[4] / "workflows" / "audit_licenses.py"
 
 
 @pytest.fixture(scope="module")

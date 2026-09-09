@@ -13,7 +13,7 @@ import pytest
 pytest.importorskip("matplotlib")
 pytest.importorskip("bencheval.evaluator")
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[4]
 
 
 @pytest.fixture

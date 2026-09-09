@@ -186,7 +186,7 @@ preprocessing cost.
 <summary><b>🧩 Add your own model</b> — the <code>fit</code> / <code>predict</code> contract plus a search space</summary>
 
 We want the set of included baselines to be as representative as possible, so adding a method is
-meant to be cheap. A model is a folder under `src/relarena/models/` implementing the
+meant to be cheap. A model is a folder under `packages/relarena/src/relarena/models/` implementing the
 `RelArenaModel` contract (`fit` and `predict`) with a `SearchSpace` registered via
 `@register_model(search_space=...)`; an end-to-end procedure implements
 `RelArenaSystem.run` and uses `@register_system`. The registry discovers the folder automatically.
@@ -220,7 +220,7 @@ predictions = PredictiveQuery(spec).fit("tabpfn-rel-client").predict()
 Any registered RelArena-α method runs this way, hyperparameter tuning included. See
 [docs/predictive-task.md](docs/predictive-task.md) for the task definition, SQL rules, split
 semantics, and worked examples;
-[`src/relarena/userdb/relbench_v1/`](src/relarena/userdb/relbench_v1) for example specifications
+[`packages/relarena/src/relarena/userdb/relbench_v1/`](packages/relarena/src/relarena/userdb/relbench_v1) for example specifications
 covering all 21 entity-level RelBench v1 tasks; and
 [`examples/olist_seller_churn.py`](examples/olist_seller_churn.py) for the full path on a real
 7-table Kaggle database. That example predicts seller churn, where held-out ROC AUC is 0.50 for
@@ -246,7 +246,7 @@ preprocessing and GPU-bound training have different hardware requirements. RelAr
 permits methods to compute preprocessing artifacts once and cache them on disk before a run.
 
 Caching is not required. RelArena provides an **optional, experimental** helper API in
-[`relarena.cache`](src/relarena/cache.py) for local paths, miss policies, private scratch
+[`relarena.cache`](packages/relarena/src/relarena/cache.py) for local paths, miss policies, private scratch
 computation, and atomic publication. A method may ignore this API and implement caching
 independently. The helper does not bring cache warming into a timed RelArena experiment;
 preprocessing scripts still run separately, so their runtime is not currently included in the
@@ -289,7 +289,7 @@ those nodes. The workflow warms every RelBench v1 task:
 
 ```bash
 RELARENA_CACHE_DIR=~/relarena-cache \
-    uv run --extra rdblearn python workflows/warm_feature_cache.py
+    uv run --all-packages --extra rdblearn python workflows/warm_feature_cache.py
 ```
 
 It invokes `relarena.featurization.warm_cache` for both protocol splits and warms both
@@ -390,8 +390,8 @@ checkout for those.
 ```bash
 git clone https://github.com/PriorLabs/relarena.git
 cd relarena
-uv sync                          # the dev group (pytest, ruff, ...) installs by default
-OMP_NUM_THREADS=1 uv run pytest  # the prefix is required on macOS; harmless elsewhere
+uv sync --all-packages                          # the dev group (pytest, ruff, ...) installs by default
+OMP_NUM_THREADS=1 uv run --all-packages pytest  # the prefix is required on macOS; harmless elsewhere
 ```
 
 Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
@@ -404,17 +404,17 @@ pinned by `uv.lock`).
 <summary><b>🛠️ Developer setup</b> — everything, plus pre-commit</summary>
 
 ```bash
-uv sync --group dev --group cpu --extra leaderboard --extra plots
-uv run pre-commit install
+uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
+uv run --all-packages pre-commit install
 ```
 
 Before opening a pull request:
 
 ```bash
-uv run ruff format --check .
-uv run ruff check .
-OMP_NUM_THREADS=1 uv run pytest
-uv build
+uv run --all-packages ruff format --check .
+uv run --all-packages ruff check .
+OMP_NUM_THREADS=1 uv run --all-packages pytest
+uv build --all-packages
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and, for agent-facing notes, [AGENTS.md](AGENTS.md).
@@ -453,7 +453,7 @@ currently supported by RelArena's RT integration, and a GPU is strongly recommen
 fine-tuning runtimes.
 
 ```bash
-uv sync --extra rt                 # from a source checkout
+uv sync --all-packages --extra rt                 # from a source checkout
 pip install "relarena[rt]"         # from a release
 ```
 
@@ -563,8 +563,8 @@ pretrained on PluRel-generated synthetic data and fine-tuned on the given task w
 sequential tuning regime. KurveRSC jointly selects a GraphReduce feature program and downstream
 learner on the inner split, then freezes and replays that exact operation plan in its reporting
 arm. Their protocols and configured values are documented in
-[`models/rt/model.py`](src/relarena/models/rt/model.py) and
-[`models/kurversc/model.py`](src/relarena/models/kurversc/model.py). Each produces one system row
+[`models/rt/model.py`](packages/relarena/src/relarena/models/rt/model.py) and
+[`models/kurversc/model.py`](packages/relarena/src/relarena/models/kurversc/model.py). Each produces one system row
 with real test metrics and complete runtime, without a harness config or validation score.
 
 Everything else per method lives at its source: install caveats in
@@ -606,7 +606,7 @@ from RDBLearn and improves on it in four ways:
 
 ```
 relarena/
-├── src/relarena/          # the package
+├── packages/relarena/src/relarena/          # the package
 │   ├── model.py           # RelArenaModel, the contract every model implements
 │   ├── search_space.py    # SearchSpace, declarative HPO space (ConfigSpace or grid)
 │   ├── registry.py        # string-keyed model registry, binds model to search space

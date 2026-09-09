@@ -8,8 +8,8 @@ improvements, new model integrations, and reproducibility fixes are welcome.
 RelArena requires Python 3.11 and uses [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv sync --group dev --group cpu --extra leaderboard --extra plots
-uv run pre-commit install
+uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
+uv run --all-packages pre-commit install
 ```
 
 On macOS, prefix test and CLI commands with `OMP_NUM_THREADS=1` to avoid the
@@ -18,10 +18,10 @@ known conflict between the OpenMP runtimes bundled by PyTorch and LightGBM.
 Before opening a pull request, run:
 
 ```bash
-uv run ruff format --check .
-uv run ruff check .
-OMP_NUM_THREADS=1 uv run pytest
-uv build
+uv run --all-packages ruff format --check .
+uv run --all-packages ruff check .
+OMP_NUM_THREADS=1 uv run --all-packages pytest
+uv build --all-packages
 ```
 
 For model integrations, follow [docs/adding-a-model.md](docs/adding-a-model.md).
