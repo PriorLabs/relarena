@@ -8,7 +8,7 @@ both final-fit protocols.
 
 No TFM or GPU is involved. Run:
 
-    OMP_NUM_THREADS=1 uv run --extra rdblearn python workflows/smoke_feature_cache.py
+    OMP_NUM_THREADS=1 uv run --all-packages --extra rdblearn python workflows/smoke_feature_cache.py
 """
 
 from __future__ import annotations
@@ -17,11 +17,12 @@ import tempfile
 import time
 from pathlib import Path
 
-import relarena.featurization.dfs as dfs_mod
-from relarena.cache import CacheConfig
-from relarena.dataset import RelBenchDatasetTask, concat_tables
-from relarena.featurization import DFS_MAX_DEPTH, build_dfs_features
-from relarena.featurization.warm_cache import warm_dfs_cache
+import relarena_core.featurization.dfs as dfs_mod
+from relarena.dataset import RelBenchDatasetTask
+from relarena_core.cache import CacheConfig
+from relarena_core.dataset import concat_tables
+from relarena_core.featurization import DFS_MAX_DEPTH, build_dfs_features
+from relarena_core.featurization.warm_cache import warm_dfs_cache
 
 DATASET, TASK = "rel-f1", "driver-dnf"
 

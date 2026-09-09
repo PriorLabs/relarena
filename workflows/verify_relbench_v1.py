@@ -25,8 +25,8 @@ from relarena.userdb import (
     relbench_v1_spec,
     relbench_v1_tasks,
 )
-from relarena.userdb.ingest import build_dataset
-from relarena.userdb.task import UserEntityTask
+from relarena_core.userdb.ingest import build_dataset
+from relarena_core.userdb.task import UserEntityTask
 
 
 def _split_matches(want: pd.DataFrame, got: pd.DataFrame, keys: list[str]) -> bool:

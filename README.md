@@ -17,9 +17,9 @@
 **RelArena-α** is a unified framework for running and comparing baselines on
 [RelBench v1](https://github.com/snap-stanford/relbench), standardizing data loading, evaluation
 protocols, tuning regimes, and support for systems with custom tuning, inspired by established
-tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also open-sources
-**TabPFN-Rel**, our relational harness for TabPFN-3, and an initial version of the
-**Relational Predictive Interface (RPI)**. What the framework contributes:
+tabular benchmarks such as [TabArena](https://tabarena.ai). It benchmarks the separately packaged
+**[TabPFN-Rel](packages/tabpfn-rel)** model and provides the
+**Relational Predictive Interface (RPI)** for prediction on your own database. What the framework contributes:
 
 - **Reproducibility.** Every reported method re-run through explicit model and system APIs, with
   implementations aligned, bugs fixed, and missing training scripts reconstructed.
@@ -41,6 +41,9 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
 > baselines, API, and tuning regime will evolve with community feedback. Research code, not
 > production-ready. The model report covering RelArena-α, TabPFN-Rel, and the RPI is available
 > at [arXiv:2608.16319](https://arxiv.org/abs/2608.16319).
+
+TabPFN-Rel users can install `tabpfn-rel[local]` directly or use
+`relarena[tabpfn-rel-local]` for benchmarking. Both install the same model implementation.
 
 ## ⚡ Quickstart
 
@@ -83,9 +86,11 @@ feed the leaderboard (needs the `leaderboard` extra):
 ```python
 import pandas as pd
 
-import relarena.models  # registers the built-in models
+from relarena import discover_models
+
+discover_models()  # registers built-in models and installed plugins
 from relarena.evaluation import compute_leaderboard
-from relarena.registry import registry
+from relarena_core.registry import registry
 from relarena.results import summary_to_dataframe
 from relarena.runner import run_experiment
 from relarena.tasks import list_entity_tasks
@@ -112,10 +117,11 @@ preprocessing cost.
 <summary><b>🧩 Add your own model</b> — the <code>fit</code> / <code>predict</code> contract plus a search space</summary>
 
 We want the set of included baselines to be as representative as possible, so adding a method is
-meant to be cheap. A model is a folder under `src/relarena/models/` implementing the
-`RelArenaModel` contract (`fit` and `predict`) with a `SearchSpace` registered via
-`@register_model(search_space=...)`; an end-to-end procedure implements
-`RelArenaSystem.run` and uses `@register_system`. The registry discovers the folder automatically.
+meant to be cheap. A built-in model is a folder under `packages/relarena/src/relarena/models/` implementing the
+`RelArenaModel` contract (`fit` and `predict`) with a `SearchSpace`; an end-to-end
+procedure implements `RelArenaSystem.run`. Decorate classes with
+`@register_model(search_space=...)` or `@register_system` from `relarena_core`.
+Discovery imports baseline packages automatically; there is no central model list.
 `models/lightgbm/` is the smallest complete example to copy.
 
 The full guide is [docs/adding-a-model.md](docs/adding-a-model.md): the layout, the datatypes
@@ -134,19 +140,25 @@ The **RPI** generalizes the process that generated RelBench v1's entity-level fo
 but replaces custom task-generation code with a declarative interface: the database and the
 prediction task are specified entirely in YAML configuration files, without writing Python,
 turning a collection of CSV or Parquet files into a RelArena-α task. `PredictiveQuery` is the
-Python façade:
+Python façade. Install the model backend first and configure tabpfn-client
+authentication:
+
+```bash
+pip install "relarena[tabpfn-rel-api]"
+```
 
 ```python
 from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-predictions = PredictiveQuery(spec).fit("tabpfn-rel-client").predict()
+predictions = PredictiveQuery(spec).fit("tabpfn-rel-client", n_trials=0).predict()
 ```
 
-Any registered RelArena-α method runs this way, hyperparameter tuning included. See
+The example fits the default model once. Set a positive `n_trials` budget for
+temporal hyperparameter tuning. Compatible registered models use the same interface. See
 [docs/predictive-task.md](docs/predictive-task.md) for the task definition, SQL rules, split
 semantics, and worked examples;
-[`src/relarena/userdb/relbench_v1/`](src/relarena/userdb/relbench_v1) for example specifications
+[`packages/relarena/src/relarena/userdb/relbench_v1/`](packages/relarena/src/relarena/userdb/relbench_v1) for example specifications
 covering all 21 entity-level RelBench v1 tasks; and
 [`examples/olist_seller_churn.py`](examples/olist_seller_churn.py) for the full path on a real
 7-table Kaggle database. That example predicts seller churn, where held-out ROC AUC is 0.50 for
@@ -172,7 +184,7 @@ preprocessing and GPU-bound training have different hardware requirements. RelAr
 permits methods to compute preprocessing artifacts once and cache them on disk before a run.
 
 Caching is not required. RelArena provides an **optional, experimental** helper API in
-[`relarena.cache`](src/relarena/cache.py) for local paths, miss policies, private scratch
+[`relarena_core.cache`](packages/relarena-core/src/relarena_core/cache.py) for local paths, miss policies, private scratch
 computation, and atomic publication. A method may ignore this API and implement caching
 independently. The helper does not bring cache warming into a timed RelArena experiment;
 preprocessing scripts still run separately, so their runtime is not currently included in the
@@ -215,7 +227,7 @@ those nodes. The workflow warms every RelBench v1 task:
 
 ```bash
 RELARENA_CACHE_DIR=~/relarena-cache \
-    uv run --extra rdblearn python workflows/warm_feature_cache.py
+    uv run --all-packages --extra rdblearn python workflows/warm_feature_cache.py
 ```
 
 It invokes `relarena.featurization.warm_cache` for both protocol splits and warms both
@@ -227,7 +239,7 @@ build and no DFS. RelGNN, RelGT, and RT-PluRel expose independent runnable warme
 `relarena.models.relgnn.warm_cache`, `relarena.models.relgt.warm_cache`, and
 `relarena.models.rt.warm_cache`.
 
-**Runnable demo.** [`examples/tabpfn_rel_caching.py`](examples/tabpfn_rel_caching.py) fits one
+**Runnable demo.** [TabPFN-Rel’s caching example](examples/tabpfn_rel_caching.py) fits one
 RelBench task with and without a precomputed cache, reports both timings, and checks the
 outputs are identical. On `rel-f1/driver-dnf` it turns roughly 409s into roughly 12s. Its
 header includes a CPU-only mode (`RELARENA_EXAMPLE_SKIP_TFM=1`) that exercises the DFS and
@@ -316,8 +328,8 @@ checkout for those.
 ```bash
 git clone https://github.com/PriorLabs/relarena.git
 cd relarena
-uv sync                          # the dev group (pytest, ruff, ...) installs by default
-OMP_NUM_THREADS=1 uv run pytest  # the prefix is required on macOS; harmless elsewhere
+uv sync --all-packages                          # the dev group (pytest, ruff, ...) installs by default
+OMP_NUM_THREADS=1 uv run --all-packages pytest  # the prefix is required on macOS; harmless elsewhere
 ```
 
 Add `--group cpu` for the CPU-only torch build instead of the CUDA one, and
@@ -329,18 +341,23 @@ pinned by `uv.lock`).
 <details>
 <summary><b>🛠️ Developer setup</b> — everything, plus pre-commit</summary>
 
+The three installable packages are siblings under `packages/`: `relarena`,
+`relarena-core`, and `tabpfn-rel`. They share this workspace and lockfile.
+TabPFN-Rel depends on core and works without the benchmark package. Wheel
+metadata uses ordinary version requirements.
+
 ```bash
-uv sync --group dev --group cpu --extra leaderboard --extra plots
-uv run pre-commit install
+uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
+uv run --all-packages pre-commit install
 ```
 
 Before opening a pull request:
 
 ```bash
-uv run ruff format --check .
-uv run ruff check .
-OMP_NUM_THREADS=1 uv run pytest
-uv build
+uv run --all-packages ruff format --check .
+uv run --all-packages ruff check .
+OMP_NUM_THREADS=1 uv run --all-packages pytest
+uv build --all-packages
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and, for agent-facing notes, [AGENTS.md](AGENTS.md).
@@ -358,7 +375,7 @@ registering a method works without its extra installed.
 | `lightgbm` | LightGBM | CPU only |
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | GraphReduce configuration search + CatBoost; CPU only |
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
-| `tabpfn-rel-local` | TabPFN-Rel (OSS) | same stack as `rdblearn`, text-free |
+| `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
 | `rt` | RT-PluRel | Linux x86-64 wheel, see below |
@@ -379,7 +396,7 @@ currently supported by RelArena's RT integration, and a GPU is strongly recommen
 fine-tuning runtimes.
 
 ```bash
-uv sync --extra rt                 # from a source checkout
+uv sync --all-packages --extra rt                 # from a source checkout
 pip install "relarena[rt]"         # from a release
 ```
 
@@ -489,8 +506,8 @@ pretrained on PluRel-generated synthetic data and fine-tuned on the given task w
 sequential tuning regime. KurveRSC jointly selects a GraphReduce feature program and downstream
 learner on the inner split, then freezes and replays that exact operation plan in its reporting
 arm. Their protocols and configured values are documented in
-[`models/rt/model.py`](src/relarena/models/rt/model.py) and
-[`models/kurversc/model.py`](src/relarena/models/kurversc/model.py). Each produces one system row
+[`models/rt/model.py`](packages/relarena/src/relarena/models/rt/model.py) and
+[`models/kurversc/model.py`](packages/relarena/src/relarena/models/kurversc/model.py). Each produces one system row
 with real test metrics and complete runtime, without a harness config or validation score.
 
 Everything else per method lives at its source: install caveats in
@@ -576,27 +593,26 @@ from RDBLearn and improves on it in four ways:
 
 ```
 relarena/
-├── src/relarena/          # the package
-│   ├── model.py           # RelArenaModel, the contract every model implements
-│   ├── search_space.py    # SearchSpace, declarative HPO space (ConfigSpace or grid)
-│   ├── registry.py        # string-keyed model registry, binds model to search space
-│   ├── tasks.py           # entity task-type scope + guard
-│   ├── metrics.py         # metric direction map + primary-metric selection
-│   ├── tuner.py           # random search / fixed grids; per-trial timing and predictions
-│   ├── runner.py          # local orchestration for one (model, dataset, task)
-│   ├── results.py         # TrialResult schema + DataFrame export
-│   ├── cache.py           # optional preprocessing-cache helper API
-│   ├── models/            # constant, lightgbm, rdblearn, graphsage, relgnn, relgt,
-│   │                      #   tabpfn-rel, rt wrappers
-│   ├── featurization/     # relational DB to flat feature table (entity-only, for now)
-│   ├── checksums/         # content fingerprints of the RelBench data + recorded baseline
-│   ├── evaluation/        # leaderboard, plots, externally-reported reference baselines
-│   └── userdb/            # RPI, incl. specs for all 21 entity-level RelBench v1 tasks
-├── baseline_results/      # the release snapshot (results + reference numbers + provenance)
-├── docs/                  # adding-a-model, tuning-regime, temporal-validation, predictive-task
-├── examples/              # runnable demos (RPI on your own data, feature caching)
-├── workflows/             # cache warming, checksum recording, distribution/licence audits
-└── tests/                 # smoke + unit tests (no data download)
+├── pyproject.toml         # virtual workspace and shared development tooling
+├── uv.lock                # shared development lockfile
+├── packages/
+│   ├── relarena/          # benchmark CLI, named datasets, baselines, reporting
+│   │   ├── pyproject.toml
+│   │   ├── src/relarena/  # benchmark implementation and public API
+│   │   └── tests/
+│   ├── relarena-core/     # contracts, temporal tuning, RPI, caching, optional DFS
+│   │   ├── pyproject.toml
+│   │   ├── src/relarena_core/
+│   │   └── tests/
+│   └── tabpfn-rel/        # independent model distribution and backend recipes
+│       ├── pyproject.toml
+│       ├── src/tabpfn_rel/
+│       ├── tests/
+│       └── examples/
+├── baseline_results/      # released results and reference numbers
+├── docs/                  # model, tuning, temporal-validation and RPI guides
+├── examples/              # benchmark and user-database demonstrations
+└── workflows/             # cache warming, checksums and distribution/license audits
 ```
 
 </details>

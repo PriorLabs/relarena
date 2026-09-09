@@ -15,7 +15,7 @@ saves; the TabPFN forward pass runs either way and is what needs a GPU.
 
 Run (GPU recommended; the first run downloads the RelBench dataset):
 
-    uv run --extra rdblearn python examples/tabpfn_rel_caching.py
+    uv run --extra local python examples/tabpfn_rel_caching.py
 
 RELARENA_EXAMPLE_SKIP_TFM=1 runs only the DFS featurization + cache and skips the
 TabPFN forward pass, so the caching can be exercised on CPU / locally with no GPU. On
@@ -32,13 +32,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from relarena.cache import CacheConfig
-from relarena.dataset import OuterSplit, RelBenchDatasetTask, concat_tables
-from relarena.featurization import build_dfs_features
-from relarena.featurization import dfs as dfs_mod
-from relarena.featurization.warm_cache import warm_dfs_cache
-from relarena.models._shared.tfm.tfm import default_device
-from relarena.models.tabpfn_rel.model import TABPFN_REL_LOCAL_SPACE, TabPFNRelModel
+from relarena.dataset import RelBenchDatasetTask
+from relarena_core.cache import CacheConfig
+from relarena_core.dataset import OuterSplit, concat_tables
+from relarena_core.featurization import build_dfs_features
+from relarena_core.featurization import dfs as dfs_mod
+from relarena_core.featurization.warm_cache import warm_dfs_cache
+from tabpfn_rel.model import TABPFN_REL_LOCAL_SPACE, TabPFNRelModel
+from tabpfn_rel.tfm import default_device
 
 #: A reasonably sized RelBench entity task: small enough to run, big enough that the
 #: DFS cost is visible. Swap for e.g. ("rel-hm", "user-churn") for a heavier one.
@@ -50,7 +51,7 @@ SEED = 0
 DEBUG_SKIP_TFM = os.environ.get("RELARENA_EXAMPLE_SKIP_TFM", "") == "1"
 
 #: The reference TabPFN-Rel config, minus text embeddings (keeps dependencies to the
-#: `rdblearn` extra; the DFS cache is what this example is about).
+#: `local` extra; the DFS cache is what this example is about).
 CONFIG = {**TABPFN_REL_LOCAL_SPACE.default_overrides}
 
 

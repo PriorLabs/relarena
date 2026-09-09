@@ -18,7 +18,7 @@ algorithm changes need new immutable artifacts.
 Run from the repository root:
 
     RELARENA_CACHE_DIR=~/relarena_features \
-        uv run --extra rdblearn python workflows/warm_feature_cache.py
+        uv run --all-packages --extra rdblearn python workflows/warm_feature_cache.py
 
 CPU is enough; run it ahead of a (GPU) eval pointing at the same store.
 """
@@ -29,10 +29,10 @@ import argparse
 import os
 import sys
 
-from relarena.cache import resolve_cache_config
 from relarena.dataset import RelBenchDatasetTask
-from relarena.featurization.warm_cache import warm_dfs_cache
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
+from relarena_core.cache import resolve_cache_config
+from relarena_core.featurization.warm_cache import warm_dfs_cache
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:

@@ -43,20 +43,24 @@ to copy.
 Keep the contract/tuning core, models, predictive interface, and benchmark
 evaluation layers cleanly separated:
 
-- Import through the public API: external-facing names are re-exported in
-  `relarena/__init__.py` (or a subpackage `__init__.py`), and docs, examples,
-  and tests use those paths. Underscore-prefixed modules are internal and may
-  move without notice.
+- Import through the owning package's public API: shared functionality lives in
+  `relarena_core`, benchmark functionality in `relarena`, and the TabPFN-Rel
+  model in `tabpfn_rel`. Underscore-prefixed helpers are internal to their package.
 - Respect the layering: model packages and `userdb/` import the generic core
   (`model`, `registry`, `search_space`, `tuner`, split types) and the shared
   infrastructure (`featurization/`) — never each other, and never
-  the benchmark-only `evaluation/` subpackage. `models/_shared/` is for code
-  shared between models; nothing outside `models/` imports it.
+  the benchmark-only `evaluation/` subpackage. `models/_shared/` holds helpers
+  for model families, including GNN and GBDT helpers. Keep the LightGBM fitting
+  helper in `_shared/gbdt`; model-specific backend definitions belong with their
+  model. Nothing outside `models/` imports `_shared/`.
 - Keep generic and benchmark-specific code in separate modules: anything
   touching `relbench.datasets`/`relbench.tasks` or data checksums is benchmark
   code and doesn't belong in `model`/`tuner`/`search_space`.
-- Heavy optional deps are lazy-imported inside `fit` behind extras; no
-  import-time side effects beyond explicit `register_model` calls.
+- Heavy optional deps are lazy-imported inside `fit`, `predict` or `run` behind
+  extras. Use core's `@register_model` and `@register_system` decorators; model
+  imports register their own classes in the shared core registry. Baseline
+  discovery imports public model packages automatically. Installed external
+  model packages declare their modules in the `relarena.models` entry-point group.
 
 ## macOS: run tests / CLI with `OMP_NUM_THREADS=1`
 
@@ -70,12 +74,12 @@ macOS-only AutoGluon/LightGBM issue
 locally on macOS, prefix with the env var:
 
 ```bash
-OMP_NUM_THREADS=1 uv run pytest        # otherwise: "Fatal Python error: Segmentation fault" in lightgbm
+OMP_NUM_THREADS=1 uv run --all-packages pytest        # otherwise: "Fatal Python error: Segmentation fault" in lightgbm
 ```
 
 (There's no clean *permanent* local fix under `uv`: symlinking one `libomp` — e.g.
 Homebrew's — over the wheels' bundled copies (`torch/lib`, `sklearn/.dylibs`) **does** stop
-the segfault [verified], but `uv sync` overwrites the symlinks, so it doesn't stick. The
+the segfault [verified], but `uv sync --all-packages` overwrites the symlinks, so it doesn't stick. The
 durable single-`libomp` route is a conda-forge env, which this `uv`-managed repo doesn't
 use. So `OMP_NUM_THREADS=1` is the practical local workflow — see the LightGBM FAQ if you
 want to attempt the symlink route anyway.)

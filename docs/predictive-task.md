@@ -27,19 +27,26 @@ supervised prediction task. Two task types are supported today:
 
 A task is two YAML files: a **task file** (the label SQL, split timestamps, and what
 to predict) and a **database file** (the schema and paths to CSV or Parquet tables)
-that the task references—so one database file can back many tasks. Load and run it:
+that the task references—so one database file can back many tasks. For the hosted
+TabPFN-Rel example, install its extra and configure tabpfn-client authentication:
+
+```bash
+pip install "relarena[tabpfn-rel-api]"
+```
+
+Load and run the task:
 
 ```python
 from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client").predict()
+preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client", n_trials=0).predict()
 ```
 
 `from_yaml` reads the task file, resolves its `database:` reference (a path relative
-to the task file), and loads the database. `fit` builds the dataset, then tunes and
-fits the model on history; `predict` scores the label-less rows at the end of the
-data.
+to the task file), and loads the database. `fit` builds the dataset and fits the
+default configuration when `n_trials=0`; a positive budget enables temporal tuning.
+`predict` scores the label-less rows at the end of the data.
 
 ## Build the task in four steps
 
@@ -72,8 +79,8 @@ data.
    different `val_timestamp` and `test_timestamp` values over the same tables.
 
 The two files' shapes are defined by
-[`database.schema.json`](../src/relarena/userdb/database.schema.json) and
-[`task.schema.json`](../src/relarena/userdb/task.schema.json) — JSON Schemas with a
+[`database.schema.json`](../packages/relarena-core/src/relarena_core/userdb/database.schema.json) and
+[`task.schema.json`](../packages/relarena-core/src/relarena_core/userdb/task.schema.json) — JSON Schemas with a
 description on every field, validated on load, so a malformed file fails fast with a
 pointer to the offending field rather than an opaque error later.
 
@@ -259,7 +266,7 @@ maximum depth up to which fastdfs joins.
 the final fit, and prediction. The first RPI run fills the local store and later
 runs over the same inputs read it back. Nothing is uploaded. Omit `cache_dir` to
 fall back to `RELARENA_CACHE_DIR`, or to compute without persistent caching when
-neither is set. The underlying `relarena.cache` API is optional and experimental;
+neither is set. The underlying `relarena_core.cache` API is optional and experimental;
 models may implement caching independently.
 
 ```python
@@ -318,7 +325,7 @@ for this task as posed" rather than a verdict either way.
 
 ### Worked examples
 
-- **RelBench v1 (21 tasks)** in `src/relarena/userdb/relbench_v1/`
+- **RelBench v1 (21 tasks)** in `packages/relarena/src/relarena/userdb/relbench_v1/`
   - one folder per dataset (a shared `db.yaml` + one file per task), reproducing
   RelBench's splits byte-for-byte. `materialize_relbench("rel-f1", "data/rel-f1")`
   writes the full tables to parquet; `relbench_v1_spec(dataset, task)` loads the

@@ -6,15 +6,14 @@ authoritative — this page only says where things live.
 
 ## Scope
 
-Apache-2.0 covers everything in this repository, including the TabPFN-Rel model
-code (`src/relarena/models/tabpfn_rel/`). Moving released code elsewhere later
-would not change the license under which this version was published.
+Apache-2.0 covers the RelArena code in this repository. The separate `tabpfn-rel`
+package distributes its model code under its own Apache-2.0 `LICENSE` and `NOTICE`.
 
 Two things it does **not** cover:
 
 - **Vendored third-party code.** The RelBench, RelGNN, and RelGT model building
   blocks are MIT and stay MIT. `NOTICE` lists them; the upstream license texts are
-  in `src/relarena/models/VENDORED-LICENSES`.
+  in `packages/relarena/src/relarena/models/VENDORED-LICENSES`.
 - **Datasets.** None are distributed with this package. `relbench` fetches them at
   runtime, and they remain subject to their own upstream terms.
 

@@ -2,40 +2,36 @@ version = 1
 revision = 3
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
+    "python_full_version >= '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
 ]
 conflicts = [[
-    { package = "relarena", group = "cpu" },
-    { package = "relarena", group = "cuda" },
+    { package = "relarena-workspace", group = "cpu" },
+    { package = "relarena-workspace", group = "cuda" },
 ]]
 
 [options]
-exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer = "2026-09-05T15:24:09.903734Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
 graphreduce = false
 relational-transformer = false
 kurversc = false
+
+[manifest]
+members = [
+    "relarena",
+    "relarena-core",
+    "relarena-workspace",
+    "tabpfn-rel",
+]
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -449,7 +445,7 @@ name = "cuda-bindings"
 version = "13.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-pathfinder", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "cuda-pathfinder", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/51/6b/457ca12dad3ee9bfcc9a545cfd6b64b359ba49de40f776f6e028e678f262/cuda_bindings-13.3.1-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c5879712accf6e14bb01aa5e67440eb84998b8d104b509cc7a6dc0b8f656a474", size = 6053539, upload-time = "2026-05-29T23:11:43.19Z" },
@@ -478,43 +474,43 @@ wheels = [
 
 [package.optional-dependencies]
 cublas = [
-    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 cudart = [
-    { name = "nvidia-cuda-runtime", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cuda-runtime", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 cufft = [
-    { name = "nvidia-cufft", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cufft", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 cufile = [
-    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'aarch64' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (platform_machine == 'x86_64' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform != 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'aarch64' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (platform_machine == 'x86_64' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform != 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 cupti = [
-    { name = "nvidia-cuda-cupti", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cuda-cupti", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 curand = [
-    { name = "nvidia-curand", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-curand", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 cusolver = [
-    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-cusolver", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-cusolver", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 cusparse = [
-    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 nvjitlink = [
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 nvrtc = [
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 nvtx = [
-    { name = "nvidia-nvtx", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-8-relarena-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'linux' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "nvidia-nvtx", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra != 'group-18-relarena-workspace-cpu') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'linux' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 
 [[package]]
@@ -534,7 +530,7 @@ dependencies = [
     { name = "click" },
     { name = "cloudpickle" },
     { name = "fsspec" },
-    { name = "importlib-metadata", marker = "python_full_version < '3.12' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "importlib-metadata", marker = "python_full_version < '3.12' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "packaging" },
     { name = "partd" },
     { name = "pyyaml" },
@@ -961,7 +957,7 @@ dependencies = [
     { name = "click" },
     { name = "filelock" },
     { name = "fsspec" },
-    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "httpx" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -1011,7 +1007,7 @@ name = "importlib-metadata"
 version = "9.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp", marker = "python_full_version < '3.12' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "zipp", marker = "python_full_version < '3.12' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a9/01/15bb152d77b21318514a96f43af312635eb2500c96b55398d020c93d86ea/importlib_metadata-9.0.0.tar.gz", hash = "sha256:a4f57ab599e6a2e3016d7595cfd72eb4661a5106e787a95bcc90c7105b831efc", size = 56405, upload-time = "2026-03-20T06:42:56.999Z" }
 wheels = [
@@ -1041,17 +1037,17 @@ name = "ipython"
 version = "9.16.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "ipython-pygments-lexers" },
     { name = "jedi" },
     { name = "matplotlib-inline" },
-    { name = "pexpect", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'win32' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "pexpect", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'win32' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "prompt-toolkit" },
-    { name = "psutil", marker = "(sys_platform != 'cygwin' and sys_platform != 'emscripten') or (sys_platform == 'cygwin' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform == 'emscripten' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "psutil", marker = "(sys_platform != 'cygwin' and sys_platform != 'emscripten') or (sys_platform == 'cygwin' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform == 'emscripten' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "pygments" },
     { name = "stack-data" },
     { name = "traitlets" },
-    { name = "typing-extensions", marker = "python_full_version < '3.12' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/06/96/b150fe7e25a5a29ae9ac1374e71488639605d39a1ea4abb74c9ce33af235/ipython-9.16.1.tar.gz", hash = "sha256:5a3d1f9a47ff216d6cf9cf863124f6a2c1a198d1354c546a4d24a370a283b64c", size = 4515302, upload-time = "2026-08-03T08:36:15.571Z" }
 wheels = [
@@ -1245,8 +1241,8 @@ name = "loguru"
 version = "0.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "win32-setctime", marker = "sys_platform == 'win32' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "win32-setctime", marker = "sys_platform == 'win32' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3a/05/a1dae3dffd1116099471c643b8924f5aa6524411dc6c63fdae648c4f1aca/loguru-0.7.3.tar.gz", hash = "sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6", size = 63559, upload-time = "2024-12-06T11:20:56.608Z" }
 wheels = [
@@ -1373,7 +1369,7 @@ name = "mlx"
 version = "0.32.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "mlx-metal", marker = "sys_platform == 'darwin' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "mlx-metal", marker = "sys_platform == 'darwin' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4e/3c/f56f5de7188b0b5855046244b1ebb6f2055cc298c9f7336b69cc2013ad23/mlx-0.32.2-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:238b50d2ee3917c836e73f9446011518b79ff094940eb0107fa6cd17d02a2eca", size = 625943, upload-time = "2026-08-25T10:31:33.737Z" },
@@ -1537,7 +1533,7 @@ name = "nvidia-cublas"
 version = "13.1.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cuda-nvrtc", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "nvidia-cuda-nvrtc", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/a1/0bd24ee8c8d03adac032fd2909426a00c88f8c57961b1277ded97f91119f/nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:b7a210458267ac818974c53038fbec2e969d5c99f305ab15c72522fa9f001dd5", size = 542848918, upload-time = "2026-04-08T18:46:22.985Z" },
@@ -1580,7 +1576,7 @@ name = "nvidia-cudnn-cu13"
 version = "9.20.0.48"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "nvidia-cublas", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/56/c5/83384d846b2fd17c44bd499b36c75a45ed4f095fbbb2252294e89cea5c5c/nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:e31454ae00094b0c55319d9d15b6fa2fc50a9e1c0f5c8c80fb75258234e731e1", size = 444574296, upload-time = "2026-03-09T19:28:27.751Z" },
@@ -1593,7 +1589,7 @@ name = "nvidia-cufft"
 version = "12.0.0.61"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "nvidia-nvjitlink", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8b/ae/f417a75c0259e85c1d2f83ca4e960289a5f814ed0cea74d18c353d3e989d/nvidia_cufft-12.0.0.61-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:2708c852ef8cd89d1d2068bdbece0aa188813a0c934db3779b9b1faa8442e5f5", size = 214053554, upload-time = "2025-09-04T08:31:38.196Z" },
@@ -1625,9 +1621,9 @@ name = "nvidia-cusolver"
 version = "12.0.4.66"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "nvidia-cusparse", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "nvidia-nvjitlink", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "nvidia-cublas", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "nvidia-cusparse", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "nvidia-nvjitlink", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/c3/b30c9e935fc01e3da443ec0116ed1b2a009bb867f5324d3f2d7e533e776b/nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:02c2457eaa9e39de20f880f4bd8820e6a1cfb9f9a34f820eb12a155aa5bc92d2", size = 223467760, upload-time = "2025-09-04T08:33:04.222Z" },
@@ -1640,7 +1636,7 @@ name = "nvidia-cusparse"
 version = "12.6.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "nvidia-nvjitlink", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/94/5c26f33738ae35276672f12615a64bd008ed5be6d1ebcb23579285d960a9/nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:80bcc4662f23f1054ee334a15c72b8940402975e0eab63178fc7e670aa59472c", size = 162155568, upload-time = "2025-09-04T08:33:42.864Z" },
@@ -2229,7 +2225,7 @@ name = "pytest"
 version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
@@ -2282,9 +2278,9 @@ dependencies = [
     { name = "pandas" },
     { name = "pillow" },
     { name = "pyarrow" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "tqdm" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/22/64/4a4aaa2a90eab208bf9f929a3bcc3b17ceb99bcb9abecf1c2323818f2898/pytorch_frame-0.3.0.tar.gz", hash = "sha256:412b42002e1a21a09fc8b0c6e4f0d048bd4e5ebef2f7139bbbbae82d81040152", size = 104795, upload-time = "2025-11-02T23:22:07.936Z" }
@@ -2398,19 +2394,20 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.0.1"
-source = { editable = "." }
+version = "0.0.3"
+source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
     { name = "jsonschema" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "pyyaml" },
+    { name = "relarena-core" },
     { name = "relbench" },
     { name = "scikit-learn" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 
 [package.optional-dependencies]
@@ -2433,8 +2430,7 @@ plots = [
     { name = "bencheval", extra = ["plot"] },
 ]
 rdblearn = [
-    { name = "fastdfs" },
-    { name = "setuptools" },
+    { name = "relarena-core", extra = ["dfs"] },
     { name = "tabpfn" },
 ]
 rdl = [
@@ -2458,20 +2454,93 @@ rt = [
     { name = "relational-transformer" },
 ]
 tabpfn-rel-api = [
-    { name = "fastdfs" },
-    { name = "setuptools" },
-    { name = "tabpfn-client" },
+    { name = "tabpfn-rel", extra = ["api"] },
 ]
 tabpfn-rel-local = [
+    { name = "tabpfn-rel", extra = ["local"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "autorank", marker = "extra == 'plots'" },
+    { name = "bencheval", marker = "extra == 'leaderboard'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
+    { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
+    { name = "configspace", specifier = ">=1.0" },
+    { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
+    { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
+    { name = "jsonschema", specifier = ">=4.0" },
+    { name = "kurversc", marker = "extra == 'kurversc'", specifier = "==0.1.1" },
+    { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
+    { name = "numpy", specifier = ">=1.24" },
+    { name = "pandas", specifier = ">=2.3.3,<3.0" },
+    { name = "pytorch-frame", marker = "extra == 'rdl'", specifier = ">=0.2.3" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "relarena", extras = ["rdl"], marker = "extra == 'graphsage'", editable = "packages/relarena" },
+    { name = "relarena", extras = ["rdl"], marker = "extra == 'relgnn'", editable = "packages/relarena" },
+    { name = "relarena", extras = ["rdl"], marker = "extra == 'relgt'", editable = "packages/relarena" },
+    { name = "relarena-core", editable = "packages/relarena-core" },
+    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'rdblearn'", editable = "packages/relarena-core" },
+    { name = "relational-transformer", marker = "extra == 'rt'", specifier = "==1.8.0" },
+    { name = "relbench", specifier = "==2.1.2" },
+    { name = "scikit-learn", specifier = ">=1.3" },
+    { name = "sentence-transformers", marker = "extra == 'rdl'" },
+    { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
+    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", editable = "packages/tabpfn-rel" },
+    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", editable = "packages/tabpfn-rel" },
+    { name = "torch" },
+    { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
+]
+provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relgnn", "relgt", "tabpfn-rel-local", "tabpfn-rel-api", "rt", "leaderboard", "plots"]
+
+[[package]]
+name = "relarena-core"
+version = "0.0.1"
+source = { editable = "packages/relarena-core" }
+dependencies = [
+    { name = "configspace" },
+    { name = "duckdb" },
+    { name = "jsonschema" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pyyaml" },
+    { name = "relbench" },
+    { name = "scikit-learn" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+]
+
+[package.optional-dependencies]
+dfs = [
     { name = "fastdfs" },
     { name = "setuptools" },
-    { name = "tabpfn" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "configspace", specifier = ">=1.0" },
+    { name = "duckdb", specifier = ">=1.2.2" },
+    { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.1" },
+    { name = "jsonschema", specifier = ">=4.0" },
+    { name = "numpy", specifier = ">=1.24" },
+    { name = "pandas", specifier = ">=2.3.3,<3.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "relbench", specifier = "==2.1.2" },
+    { name = "scikit-learn", specifier = ">=1.3" },
+    { name = "setuptools", marker = "extra == 'dfs'", specifier = "<82" },
+    { name = "torch" },
+]
+provides-extras = ["dfs"]
+
+[[package]]
+name = "relarena-workspace"
+version = "0.0.0"
+source = { virtual = "." }
 
 [package.dev-dependencies]
 cpu = [
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 dev = [
     { name = "fastdfs" },
@@ -2484,41 +2553,9 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "autorank", marker = "extra == 'plots'" },
-    { name = "bencheval", marker = "extra == 'leaderboard'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
-    { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
-    { name = "configspace", specifier = ">=1.0" },
-    { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
-    { name = "fastdfs", marker = "extra == 'rdblearn'", specifier = ">=1.1" },
-    { name = "fastdfs", marker = "extra == 'tabpfn-rel-api'", specifier = ">=1.1" },
-    { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
-    { name = "jsonschema", specifier = ">=4.0" },
-    { name = "kurversc", marker = "extra == 'kurversc'", specifier = "==0.1.1" },
-    { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
-    { name = "numpy", specifier = ">=1.24" },
-    { name = "pandas", specifier = ">=2.3.3,<3.0" },
-    { name = "pytorch-frame", marker = "extra == 'rdl'", specifier = ">=0.2.3" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "relarena", extras = ["rdblearn"], marker = "extra == 'tabpfn-rel-local'" },
-    { name = "relarena", extras = ["rdl"], marker = "extra == 'graphsage'" },
-    { name = "relarena", extras = ["rdl"], marker = "extra == 'relgnn'" },
-    { name = "relarena", extras = ["rdl"], marker = "extra == 'relgt'" },
-    { name = "relational-transformer", marker = "extra == 'rt'", specifier = "==1.8.0" },
-    { name = "relbench", specifier = "==2.1.2" },
-    { name = "scikit-learn", specifier = ">=1.3" },
-    { name = "sentence-transformers", marker = "extra == 'rdl'" },
-    { name = "setuptools", marker = "extra == 'rdblearn'", specifier = "<82" },
-    { name = "setuptools", marker = "extra == 'tabpfn-rel-api'", specifier = "<82" },
-    { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
-    { name = "tabpfn-client", marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.3.2" },
-    { name = "torch" },
-    { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
-]
-provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relgnn", "relgt", "tabpfn-rel-local", "tabpfn-rel-api", "rt", "leaderboard", "plots"]
 
 [package.metadata.requires-dev]
-cpu = [{ name = "torch", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "relarena", group = "cpu" } }]
+cpu = [{ name = "torch", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "relarena-workspace", group = "cpu" } }]
 cuda = []
 dev = [
     { name = "fastdfs", specifier = ">=1.1" },
@@ -2548,9 +2585,9 @@ dependencies = [
     { name = "safetensors" },
     { name = "scikit-learn" },
     { name = "sentence-transformers" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "wandb" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4f/42/070417ee12df7ed76c86649cff7c5e1de8effc0cf8de00f0beedc841b6a3/relational_transformer-1.8.0.tar.gz", hash = "sha256:e61e72228407551c6c8fe5e118240a0ee36778c49405d7d5c6986f0508786fe2", size = 139563, upload-time = "2026-08-15T18:00:43.207Z" }
@@ -2796,9 +2833,9 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "tokenizers" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "tqdm" },
     { name = "transformers" },
     { name = "typing-extensions" },
@@ -2871,7 +2908,7 @@ name = "sqlalchemy"
 version = "2.0.52"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3b/21/77b4c147963073040dc3c3a5cb7a8c3001a1893c0209432cb77f9df836aa/sqlalchemy-2.0.52.tar.gz", hash = "sha256:5e2d46356ac2ccb7d268ab6c2319ac6a2b42f1b8d5fd8bd3d46855cd82abee97", size = 9945637, upload-time = "2026-08-11T19:07:09.829Z" }
@@ -2982,7 +3019,7 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "joblib" },
     { name = "lightgbm" },
-    { name = "mlx", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine != 'arm64' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda') or (sys_platform != 'darwin' and extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "mlx", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine != 'arm64' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -2990,9 +3027,9 @@ dependencies = [
     { name = "safetensors" },
     { name = "scikit-learn" },
     { name = "scipy" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
@@ -3050,6 +3087,56 @@ wheels = [
 ]
 
 [[package]]
+name = "tabpfn-rel"
+version = "0.0.2"
+source = { editable = "packages/tabpfn-rel" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "relarena-core" },
+    { name = "relbench" },
+]
+
+[package.optional-dependencies]
+api = [
+    { name = "relarena-core", extra = ["dfs"] },
+    { name = "tabpfn-client" },
+]
+local = [
+    { name = "relarena-core", extra = ["dfs"] },
+    { name = "tabpfn" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "relarena-core", extra = ["dfs"] },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy", specifier = ">=1.24" },
+    { name = "pandas", specifier = ">=2.3.3,<3.0" },
+    { name = "relarena-core", editable = "packages/relarena-core" },
+    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'api'", editable = "packages/relarena-core" },
+    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'local'", editable = "packages/relarena-core" },
+    { name = "relbench", specifier = "==2.1.2" },
+    { name = "tabpfn", marker = "extra == 'local'", specifier = ">=8" },
+    { name = "tabpfn-client", marker = "extra == 'api'", specifier = ">=0.3.2" },
+]
+provides-extras = ["local", "api"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pre-commit", specifier = ">=4.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "relarena-core", extras = ["dfs"], editable = "packages/relarena-core" },
+    { name = "ruff", specifier = "==0.15.13" },
+]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3103,13 +3190,13 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "networkx", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "setuptools", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "networkx", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "setuptools", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.13.0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:e76f9bcecc52b8ff711239a2f7547d5353df95878ab232f0773c1d95928b92f8", upload-time = "2026-07-08T12:26:13Z" },
@@ -3121,34 +3208,24 @@ name = "torch"
 version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version >= '3.12' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and extra != 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda'",
-    "python_full_version < '3.12' and extra != 'group-8-relarena-cpu' and extra != 'group-8-relarena-cuda'",
+    "python_full_version >= '3.12'",
+    "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "filelock", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "fsspec", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "jinja2", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "networkx", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "setuptools", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "sympy", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
-    { name = "triton", marker = "(sys_platform == 'linux' and extra != 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "typing-extensions", marker = "extra == 'group-8-relarena-cuda' or extra != 'group-8-relarena-cpu'" },
+    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "filelock", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "fsspec", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "jinja2", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "networkx", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "setuptools", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "sympy", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
+    { name = "triton", marker = "(sys_platform == 'linux' and extra != 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "typing-extensions", marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/fe/cba54dc58523434919b66f13a667e36e436deddd77ca519e96553617d4ec/torch-2.13.0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:e76f9bcecc52b8ff711239a2f7547d5353df95878ab232f0773c1d95928b92f8", size = 111187938, upload-time = "2026-07-08T16:05:17.065Z" },
@@ -3170,13 +3247,13 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "networkx", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "setuptools", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'group-8-relarena-cpu') or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "networkx", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "setuptools", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp311-cp311-linux_s390x.whl", hash = "sha256:6e9817dbdf5ea76789babd46e457eac5bf14ff566cf85f8addbfdff2d56601ce", upload-time = "2026-07-08T19:27:52Z" },
@@ -3216,7 +3293,7 @@ name = "tqdm"
 version = "4.67.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/09/a9/6ba95a270c6f1fbcd8dac228323f2777d886cb206987444e4bce66338dd4/tqdm-4.67.3.tar.gz", hash = "sha256:7d825f03f89244ef73f1d4ce193cb1774a8179fd96f31d7e1dcde62092b960bb", size = 169598, upload-time = "2026-02-03T17:35:53.048Z" }
 wheels = [
@@ -3269,7 +3346,7 @@ version = "0.27.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-8-relarena-cpu' and extra == 'group-8-relarena-cuda')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "rich" },
     { name = "shellingham" },
 ]

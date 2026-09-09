@@ -1,0 +1,16 @@
+RelArena Core
+Copyright 2026 PriorLabs GmbH
+
+Licensed under the Apache License, Version 2.0. See the LICENSE file.
+
+The shared Deep Feature Synthesis and tabular-foundation-model fitting recipe
+is a method adaptation of RDBLearn, licensed under Apache-2.0:
+Copyright (c) HKU Shanghai X-Lab
+https://github.com/HKUSHXLab/rdblearn
+
+The non-stratified train downsampling in src/relarena_core/tfm.py is the closest
+adaptation. The implementation is original code; no RDBLearn source files are
+copied into this distribution.
+
+Datasets and model weights are not distributed with this package. Dependencies,
+downloaded datasets and inference backends retain their own upstream terms.

@@ -8,7 +8,7 @@ feature program and a CatBoost learner. It does not require or use a GPU.
 Sync RelArena's CPU dependency group and the KurveRSC extra:
 
 ```bash
-uv sync --group cpu --extra kurversc
+uv sync --all-packages --group cpu --extra kurversc
 ```
 
 ## Running KurveRSC
@@ -16,7 +16,7 @@ uv sync --group cpu --extra kurversc
 Run one task through the ordinary RelArena CLI:
 
 ```bash
-OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
+OMP_NUM_THREADS=1 uv run --all-packages --group cpu --extra kurversc relarena \
     --model kurversc \
     --datasets rel-stack \
     --tasks user-badge \
@@ -27,7 +27,7 @@ Run all 21 RelBench v1 entity classification and regression tasks by omitting `-
 `--tasks`:
 
 ```bash
-OMP_NUM_THREADS=1 uv run --group cpu --extra kurversc relarena \
+OMP_NUM_THREADS=1 uv run --all-packages --group cpu --extra kurversc relarena \
     --model kurversc \
     --output kurversc_all_tasks.csv
 ```
@@ -52,7 +52,7 @@ The submitted configuration:
 The bounded search explores GraphReduce feature-family combinations, graph depth, and automatic
 annotation. It prunes candidates that exceed the width guard or cannot produce features for the
 task schema. The fixed values live in
-[`src/relarena/models/kurversc/model.py`](../../src/relarena/models/kurversc/model.py), so the
+[`packages/relarena/src/relarena/models/kurversc/model.py`](../../packages/relarena/src/relarena/models/kurversc/model.py), so the
 registered system name denotes one reproducible procedure without hidden configuration fields.
 Use KurveRSC's public API for ablations or alternative frame budgets.
 
