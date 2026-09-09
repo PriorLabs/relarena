@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from relarena.core.tfm import TFMSpec
+from relarena_core.tfm import TFMSpec
 
 
 def _make_tabpfn(

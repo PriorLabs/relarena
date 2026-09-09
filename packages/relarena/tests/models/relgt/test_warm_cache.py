@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from relarena.core.cache import CacheConfig
-from relarena.core.identity import RunIdentity
 from relarena.models.relgt import warm_cache
+from relarena_core.cache import CacheConfig
+from relarena_core.identity import RunIdentity
 
 
 def test__precompute_dataset_task__fills_every_phase_table(

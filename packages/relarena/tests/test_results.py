@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from relarena.core.results import TrialResult, config_id_for
 from relarena.results import trials_to_dataframe
+from relarena_core.results import TrialResult, config_id_for
 
 
 def test_trials_to_dataframe_drops_arrays() -> None:

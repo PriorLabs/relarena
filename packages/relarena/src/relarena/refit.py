@@ -7,11 +7,11 @@ from typing import Any, Type
 
 from relbench.base import EntityTask
 
-from relarena.core.cache import CacheConfig
-from relarena.core.dataset import OuterSplit, concat_tables
-from relarena.core.identity import RunIdentity
-from relarena.core.metrics import evaluate_predictions, primary_metric
-from relarena.core.model import RelArenaModel
+from relarena_core.cache import CacheConfig
+from relarena_core.dataset import OuterSplit, concat_tables
+from relarena_core.identity import RunIdentity
+from relarena_core.metrics import evaluate_predictions, primary_metric
+from relarena_core.model import RelArenaModel
 
 
 def refit_and_evaluate(

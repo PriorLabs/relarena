@@ -17,9 +17,6 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
-from relarena.core.cache import CacheConfig
-from relarena.core.registry import registry
-from relarena.core.tfm import TFMSpec
 from relarena.models import _register_builtin_models as discover_models
 from relarena.models.tabpfn_rel import model as model_mod
 from relarena.models.tabpfn_rel import tfm
@@ -31,6 +28,9 @@ from relarena.models.tabpfn_rel.model import (
     TabPFNRelLocalModel,
     TabPFNRelModel,
 )
+from relarena_core.cache import CacheConfig
+from relarena_core.registry import registry
+from relarena_core.tfm import TFMSpec
 
 _N = 100
 

@@ -46,13 +46,13 @@ from relbench.modeling.graph import get_node_train_table_input
 from torch.utils.data import Dataset
 from torch_geometric.data import HeteroData
 
-from relarena.core.cache import CacheConfig, cache_key, cached_artifact
-from relarena.core.identity import RunIdentity
 from relarena.models.relgt._vendor._sampler import (
     _process_one_seed,
     build_adjacency_hetero,
     init_worker_globals,
 )
+from relarena_core.cache import CacheConfig, cache_key, cached_artifact
+from relarena_core.identity import RunIdentity
 
 #: Hop label of the random-fallback tokens; one past the 2-hop sampler, so the type/hop
 #: embeddings are sized for hops {0 (seed), 1, 2, 3 (fallback)}.

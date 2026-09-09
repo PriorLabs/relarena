@@ -32,14 +32,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from relarena.core.cache import CacheConfig
-from relarena.core.dataset import OuterSplit, concat_tables
-from relarena.core.featurization import build_dfs_features
-from relarena.core.featurization import dfs as dfs_mod
-from relarena.core.featurization.warm_cache import warm_dfs_cache
-from relarena.core.tfm import default_device
 from relarena.dataset import RelBenchDatasetTask
 from relarena.models.tabpfn_rel.model import TABPFN_REL_LOCAL_SPACE, TabPFNRelModel
+from relarena_core.cache import CacheConfig
+from relarena_core.dataset import OuterSplit, concat_tables
+from relarena_core.featurization import build_dfs_features
+from relarena_core.featurization import dfs as dfs_mod
+from relarena_core.featurization.warm_cache import warm_dfs_cache
+from relarena_core.tfm import default_device
 
 #: A reasonably sized RelBench entity task: small enough to run, big enough that the
 #: DFS cost is visible. Swap for e.g. ("rel-hm", "user-churn") for a heavier one.

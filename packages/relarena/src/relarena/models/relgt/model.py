@@ -37,10 +37,10 @@ import torch
 from relbench.base import Database, EntityTask, Table, TaskType
 from torch.utils.data import DataLoader
 
-from relarena.core.metrics import get_metric, primary_metric
-from relarena.core.model import RelArenaModel
-from relarena.core.registry import register_model
-from relarena.core.search_space import SearchSpace, TaskStats
+from relarena_core.metrics import get_metric, primary_metric
+from relarena_core.model import RelArenaModel
+from relarena_core.registry import register_model
+from relarena_core.search_space import SearchSpace, TaskStats
 
 # Architecture constants — fixed across the paper's runs (expts/*.sh), not tuned.
 _CHANNELS = 512
