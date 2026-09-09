@@ -97,3 +97,4 @@ members = ["packages/relarena"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages/relarena/tests"]
+addopts = "--import-mode=importlib"

@@ -31,11 +31,11 @@ import numpy as np
 from ConfigSpace import Categorical, ConfigurationSpace, Constant, Float, Integer
 from relbench.base import Database, EntityTask, Table
 
+from relarena.core.model import RelArenaModel
+from relarena.core.registry import register_model
+from relarena.core.search_space import SearchSpace
 from relarena.featurization import build_entity_features
-from relarena.model import RelArenaModel
 from relarena.models._shared.gbdt.lgb import fit_lgb, predict_lgb
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
 
 
 def _lightgbm_config_space() -> ConfigurationSpace:

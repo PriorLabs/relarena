@@ -25,8 +25,8 @@ from relbench.base import Table, TaskType  # noqa: E402
 from relbench.modeling.graph import get_node_train_table_input  # noqa: E402
 from torch_geometric.data import HeteroData  # noqa: E402
 
-from relarena.cache import CacheConfig  # noqa: E402
-from relarena.identity import RunIdentity  # noqa: E402
+from relarena.core.cache import CacheConfig  # noqa: E402
+from relarena.core.identity import RunIdentity  # noqa: E402
 from relarena.models.relgt.tokenize import (  # noqa: E402
     RelGTTokens,
     _require_persistent_identity,

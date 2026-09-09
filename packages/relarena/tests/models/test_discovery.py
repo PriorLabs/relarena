@@ -1,141 +1,110 @@
-"""Tests for the model auto-discovery in `relarena.models`.
-
-That each model lands in the registry is covered by the per-model tests; these
-cover the scan itself — what it skips, and which import failures it tolerates.
-The `importlib` name is stubbed inside the package namespace rather than patching
-the real module, so nothing else importing during the test is affected.
-"""
+"""Automatic baseline discovery, decorator registration and backend isolation."""
 
 from __future__ import annotations
 
-import json
-import logging
-import pkgutil
 import subprocess
 import sys
-from types import SimpleNamespace
+from pathlib import Path
 
 import pytest
 
-import relarena.models as models_pkg
+_BASELINES = {
+    "tabpfn-rel-local",
+    "tabpfn-rel-client",
+    "constant-global",
+    "constant-per-entity",
+    "graphsage",
+    "kurversc",
+    "lightgbm",
+    "rdblearn",
+    "relgnn",
+    "relgnn-es",
+    "relgt",
+    "rt-plurel",
+}
 
 
-def test__import_models__does_not_import_preprocessing_warmers() -> None:
-    """Model registration must not require any preprocessing-format extra."""
-    code = (
-        "import sys; import relarena.models; "
-        "assert 'relarena.models.relgnn.warm_cache' not in sys.modules; "
-        "assert 'relarena.models.relgt.warm_cache' not in sys.modules"
-    )
+def test_discovery_without_optional_backends() -> None:
+    code = f"""
+import importlib.abc
+import sys
+
+class BlockBackends(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.split('.')[0] in {{
+            'fastdfs', 'tabpfn', 'tabpfn_client', 'torch_geometric',
+            'torch_frame', 'relational_transformer', 'graphreduce', 'lightgbm',
+        }}:
+            raise ModuleNotFoundError(fullname, name=fullname)
+        return None
+
+sys.meta_path.insert(0, BlockBackends())
+from relarena.core.registry import registry
+assert not registry.names()
+import relarena.models
+assert set(registry.names()) == {_BASELINES!r}
+assert registry.kind('kurversc') == registry.kind('rt-plurel') == 'system'
+before = list(registry)
+relarena.models._register_builtin_models()
+assert list(registry) == before
+assert not any(name.endswith('.warm_cache') for name in sys.modules)
+"""
     subprocess.run([sys.executable, "-c", code], check=True)
 
 
-_REGISTRY_NAMES = """
-import json
-import sys
-
-if "--without-dfs-extra" in sys.argv:
-
-    class _Hidden:
-        '''Make `fastdfs` unimportable, as on an install without the DFS extra.'''
-
-        def find_spec(self, name, path=None, target=None):
-            if name == "fastdfs" or name.startswith("fastdfs."):
-                raise ModuleNotFoundError(f"No module named {name!r}", name=name)
-            return None
-
-    sys.meta_path.insert(0, _Hidden())
-
-import relarena.models  # noqa: F401  - importing runs the registration scan
-from relarena import registry
-
-print(json.dumps(sorted(registry.names())))
-"""
-
-
-def _registered_names(*args: str) -> list[str]:
-    """Names in the registry of a fresh interpreter, run with `args`."""
-    result = subprocess.run(
-        [sys.executable, "-c", _REGISTRY_NAMES, *args],
-        check=True,
-        capture_output=True,
-        text=True,
+@pytest.mark.parametrize("as_package", [False, True])
+def test_new_model_is_discovered_without_a_catalogue(
+    tmp_path: Path, as_package: bool
+) -> None:
+    package = tmp_path / "extra_model"
+    if as_package:
+        package.mkdir()
+        module = package / "__init__.py"
+    else:
+        module = package.with_suffix(".py")
+    module.write_text(
+        "from relarena.core.model import RelArenaModel\n"
+        "from relarena.core.registry import register_model\n"
+        "from relarena.core.search_space import SearchSpace\n"
+        "@register_model(search_space=SearchSpace(default_overrides={}))\n"
+        "class ExtraModel(RelArenaModel):\n"
+        "    name = 'extra-model'\n"
     )
-    return json.loads(result.stdout.splitlines()[-1])
+    ignored = tmp_path / "_private_helper"
+    ignored.mkdir()
+    (ignored / "__init__.py").write_text(
+        "raise AssertionError('private package loaded')"
+    )
+    code = f"""
+import relarena.models
+from relarena.core.registry import registry
+relarena.models.__path__.append({str(tmp_path)!r})
+relarena.models._register_builtin_models()
+from relarena.models.extra_model import ExtraModel
+assert registry.get('extra-model') is ExtraModel
+assert registry.search_space('extra-model').default_overrides == {{}}
+relarena.models._register_builtin_models()
+assert registry.get('extra-model') is ExtraModel
+assert len(registry) == 13
+"""
+    subprocess.run([sys.executable, "-c", code], check=True)
 
 
-def test__register_builtin_models__without_the_dfs_extra__same_models() -> None:
-    """Registration is dep-free: an absent extra must not drop a model.
-
-    The dev group installs `fastdfs`, so a module-scope import of it is invisible
-    to the rest of the suite — it surfaces only on an install without the DFS
-    extra, where the scan reads the ImportError as an absent optional dep and the
-    model goes quietly missing.
-    """
-    assert _registered_names("--without-dfs-extra") == _registered_names()
-
-
-def _record_imports(monkeypatch: pytest.MonkeyPatch, fail: dict[str, str]) -> list[str]:
-    """Stub out module importing; return the list of names the scan asks for.
-
-    `fail` maps a model name to the missing-module name its import should raise
-    `ModuleNotFoundError` for.
-    """
-    asked: list[str] = []
-
-    def _import(target: str) -> None:
-        name = target.rsplit(".", 1)[-1]
-        asked.append(name)
-        if name in fail:
-            raise ModuleNotFoundError(
-                f"No module named {fail[name]!r}", name=fail[name]
-            )
-
-    monkeypatch.setattr(models_pkg, "importlib", SimpleNamespace(import_module=_import))
-    return asked
-
-
-def test__register_builtin_models__scans_models_and_skips_private_names(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    asked = _record_imports(monkeypatch, fail={})
-    models_pkg._register_builtin_models()
-
-    # The real package layout is walked, so this pins the actual exclusions:
-    # shared helpers and vendored upstream code must not be imported as models.
-    assert "lightgbm" in asked
-    assert not [name for name in asked if name.startswith("_")]
-    assert "_shared" not in asked
-
-
-def test__register_builtin_models__missing_third_party_dep__skips_that_model(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-) -> None:
-    # An absent per-model extra is a normal install, not a broken one. Fail the
-    # first model the scan reaches and assert a *later* one still gets imported:
-    # asserting on an earlier name would pass even if a skip aborted the loop.
-    scanned = [
-        name
-        for _finder, name, _is_pkg in pkgutil.iter_modules(models_pkg.__path__)
-        if not name.startswith("_")
-    ]
-    first, last = scanned[0], scanned[-1]
-    asked = _record_imports(monkeypatch, fail={first: "a_missing_extra"})
-
-    with caplog.at_level(logging.INFO, logger=models_pkg.__name__):
-        models_pkg._register_builtin_models()
-
-    assert first in asked  # attempted
-    assert last in asked  # and the scan carried on past the failure
-    assert f"Skipping model {first!r}" in caplog.text
-
-
-def test__register_builtin_models__missing_relarena_module__raises(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # A missing internal module is a defect; swallowing it would drop a model
-    # from the registry silently.
-    _record_imports(monkeypatch, fail={"dummy": "relarena.does_not_exist"})
-
-    with pytest.raises(ModuleNotFoundError, match="relarena.does_not_exist"):
-        models_pkg._register_builtin_models()
+@pytest.mark.parametrize("missing", ["optional_backend", "relarena.broken_internal"])
+def test_import_failures_propagate(tmp_path: Path, missing: str) -> None:
+    package = tmp_path / "broken_model"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        f"raise ModuleNotFoundError('broken model import', name={missing!r})\n"
+    )
+    code = f"""
+import relarena.models
+relarena.models.__path__.append({str(tmp_path)!r})
+try:
+    relarena.models._register_builtin_models()
+except ModuleNotFoundError as exc:
+    assert exc.name == {missing!r}
+else:
+    raise AssertionError('Discovery hid a broken model')
+"""
+    subprocess.run([sys.executable, "-c", code], check=True)

@@ -16,7 +16,7 @@ each recovering signal flat-DFS-into-one-TFM-call leaves behind (see
      in-context examples from a recency-weighted pool instead of a uniform sample.
 
 `fit` is the whole story top to bottom: build DFS features for the full train labels
-(cached on a warm run; see `relarena.featurization.cache`), apply the
+(cached on a warm run; see `relarena.core.featurization.cache`), apply the
 enabled feature extras, then fit the TFM — a seeded downsample for the default
 `random` context, or the recency pool for `soft_pool` / `hard_pool`. The expensive
 DFS matrix is content-cached, so the downsample / pool selection happens cheaply
@@ -36,13 +36,14 @@ from typing import Any
 import numpy as np
 from relbench.base import Database, EntityTask, Table
 
-from relarena.featurization import DFS_MAX_DEPTH, build_dfs_features
-from relarena.model import RelArenaModel
-from relarena.models._shared.tfm.tfm import TFM_REGISTRY, predict_tfm
+from relarena.core.featurization import DFS_MAX_DEPTH, build_dfs_features
+from relarena.core.model import RelArenaModel
+from relarena.core.registry import register_model
+from relarena.core.search_space import SearchSpace
+from relarena.core.tfm import predict_tfm
 from relarena.models.tabpfn_rel.context import ContextStrategy
 from relarena.models.tabpfn_rel.features import FeaturePipeline
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
+from relarena.models.tabpfn_rel.tfm import TFM_REGISTRY
 
 #: Depth grid lower bound. Shallower depths yield no DFS features for entity tasks.
 _MIN_DEPTH = 2
@@ -140,7 +141,7 @@ class TabPFNRelModel(RelArenaModel):
         Runs exactly the `build_dfs_features` + feature-pipeline calls `fit` and
         `predict` make (same cache keys), so a later eval reads them instead of
         recomputing. Construct the model with an explicit fill config; needs only CPU.
-        The shared public command is `relarena.featurization.warm_cache`.
+        The shared public command is `relarena.core.featurization.warm_cache`.
         """
         self._tfm = self.config.get("tfm", "tabpfn-v3")
         self._depth = int(self.config.get("max_depth", _MIN_DEPTH))

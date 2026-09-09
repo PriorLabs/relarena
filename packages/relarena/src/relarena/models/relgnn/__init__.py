@@ -1,9 +1,4 @@
-"""`relgnn` — composite message passing over atomic routes.
-
-Importing this package registers `relgnn` and `relgnn-es` (scored at its best-val
-checkpoint instead of a train+val refit). See `model`; `_vendor` holds the
-upstream RelGNN stack.
-"""
+"""RelGNN baselines with full-data and early-stopping refit policies."""
 
 from relarena.models.relgnn.model import (
     RELGNN_SPACE,
@@ -11,8 +6,4 @@ from relarena.models.relgnn.model import (
     RelGNNModel,
 )
 
-__all__ = [
-    "RELGNN_SPACE",
-    "RelGNNEarlyStopModel",
-    "RelGNNModel",
-]
+__all__ = ["RELGNN_SPACE", "RelGNNEarlyStopModel", "RelGNNModel"]

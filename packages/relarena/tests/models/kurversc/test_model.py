@@ -9,9 +9,9 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
-from relarena.identity import RunIdentity
+from relarena.core.identity import RunIdentity
+from relarena.core.registry import registry
 from relarena.models.kurversc import KURVERSC_DEFAULTS, KurveRSCSystem
-from relarena.registry import registry
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
 
 
@@ -31,7 +31,6 @@ def _label_table(*, masked: bool = False) -> Table:
 
 
 def test__kurversc__is_registered_as_a_native_system() -> None:
-    import relarena.models  # noqa: F401
 
     assert registry.get("kurversc") is KurveRSCSystem
     assert registry.kind("kurversc") == "system"

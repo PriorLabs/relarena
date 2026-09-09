@@ -17,6 +17,7 @@ import torch
 from ConfigSpace import Configuration
 from relbench.base import TaskType
 
+from relarena.core.registry import registry
 from relarena.models.graphsage import model as graphsage_mod
 from relarena.models.graphsage.model import (
     _BATCH_SIZE,
@@ -26,7 +27,6 @@ from relarena.models.graphsage.model import (
     _cuda_cleanup,
     _run_with_oom_retry,
 )
-from relarena.registry import registry
 
 _SUPPORTED_TASK_TYPES = frozenset(
     {

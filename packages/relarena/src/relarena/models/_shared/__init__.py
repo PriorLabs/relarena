@@ -1,7 +1,5 @@
-"""Code shared between model wrappers.
+"""Helpers shared between benchmark model implementations.
 
-Not models: the registry walks `models/*` and skips this package. The layout
-encodes who shares what — a family subpackage (`gbdt`, `tfm`, `gnn`) holds code
-shared *within* that family, while a module at this level is shared *across*
-families. Import the submodules directly; these are internals and may move.
+Family subpackages contain code shared within GNN or GBDT models. Modules at
+this level serve multiple families. These helpers are private to RelArena.
 """
