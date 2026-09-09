@@ -7,10 +7,11 @@ from collections.abc import Iterator
 import numpy as np
 import pandas as pd
 import pytest
+from relarena_core.tfm import TFMSpec
 from relbench.base import TaskType
 
-from relarena.models.tabpfn_rel import tfm
-from relarena.models.tabpfn_rel.context import (
+from tabpfn_rel import tfm
+from tabpfn_rel.context import (
     ContextStrategy,
     HardPoolContext,
     RandomContext,
@@ -18,7 +19,6 @@ from relarena.models.tabpfn_rel.context import (
     hard_pool_subsample_indices,
     soft_pool_subsample_indices,
 )
-from relarena_core.tfm import TFMSpec
 
 # -- pool index math ---------------------------------------------------------
 

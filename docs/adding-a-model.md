@@ -3,8 +3,8 @@
 Every decision point in adding a model, the values each can take, and which
 existing model chose what.
 
-A model is a folder under `src/relarena/models/`. Drop it in and the registry
-auto-discovers it; there is no shared file to edit. The harness owns the loop
+A built-in model is a folder under `packages/relarena/src/relarena/models/`.
+Discovery imports public baseline packages automatically. The harness owns the loop
 invocation and evaluation protocol, while the model supplies training code and a
 declarative description of what to tune. `relarena` applies a common tuning
 procedure and uses method-specific trial budgets and runtime constraints to
@@ -17,13 +17,14 @@ budgets, runtime policy, and remaining limitations.
 
 | Variant | Files |
 | --- | --- |
-| Minimum | `mymodel/{__init__,model}.py` + `tests/mymodel/{__init__,test_model}.py` |
+| Minimum | `mymodel/{__init__,model}.py` + `packages/relarena/tests/models/mymodel/{__init__,test_model}.py` |
 | Split out helpers | add e.g. `mymodel/features.py`, `mymodel/context.py` (`tabpfn_rel` does both) |
 | Copied upstream code | add `mymodel/_vendor/` (`relgnn`, `relgt`) |
 | Own glue around vendored code | beside `_vendor/`, not inside it (`relgt/tokenize.py`) |
 
-`__init__.py` re-exports the public names; importing it is what registers the
-model. `models/lightgbm/` is the smallest complete example to copy.
+`__init__.py` exports the model classes from `model.py`. Importing them runs
+the registration decorators. `models/lightgbm/` is the smallest complete
+example to copy.
 
 One folder may register **several** models: `dummy` → `constant-global` +
 `constant-per-entity`, `relgnn` → `relgnn` + `relgnn-es`, `tabpfn_rel` →
@@ -60,6 +61,11 @@ class MyModel(RelArenaModel):
     ) -> np.ndarray: ...  # shape (len(table),)
 ```
 
+Export `MyModel` from `mymodel/__init__.py`; discovery imports that package and
+its decorator registers the class and search space in core's shared registry.
+No central model list needs an edit. Optional backends belong inside `fit`,
+`predict` or `run`, so discovery works without model extras installed.
+
 ## 2. Inputs and outputs — the datatypes
 
 A RelBench entity task is a relational database plus one label table per split.
@@ -84,12 +90,12 @@ points at), `time_col`. Traversing the relational structure means following
 A label table's columns are `[task.time_col, task.entity_col, task.target_col]`;
 `task.timedelta` is the forward window the label was computed over.
 `task.task_type` is `BINARY_CLASSIFICATION` or `REGRESSION` — those are the only
-two in scope (`ENTITY_TASK_TYPES` in [`tasks.py`](../src/relarena/tasks.py); link
+two in scope (`ENTITY_TASK_TYPES` in [`tasks.py`](../packages/relarena-core/src/relarena_core/tasks.py); link
 prediction and multilabel are excluded).
 
 ### Nested temporal validation — the two phases
 
-Each phase is a `Split` ([`dataset.py`](../src/relarena/dataset.py)) bundling a
+Each phase is a `Split` ([`dataset.py`](../packages/relarena-core/src/relarena_core/dataset.py)) bundling a
 censored database with the label tables that phase is allowed to see:
 
 | Phase | Class | `db` censored at | fit on | predict on | scored against |
@@ -108,12 +114,12 @@ Full write-up: [`temporal-validation.md`](temporal-validation.md).
 
 ### The contract — what is fixed
 
-Defined in [`src/relarena/model.py`](../src/relarena/model.py), with the temporal
-split construction in [`dataset.py`](../src/relarena/dataset.py).
+Defined in [`packages/relarena-core/src/relarena_core/model.py`](../packages/relarena-core/src/relarena_core/model.py), with the temporal
+split construction in [`dataset.py`](../packages/relarena-core/src/relarena_core/dataset.py).
 
 | Rule | Why |
 | --- | --- |
-| `predict` returns shape `(len(table),)` | what `EntityTask.evaluate` expects. Regression: the value. Binary: probability of the positive class. Wrapping an sklearn-style estimator → call `predict_to_contract` (`_shared/predict_contract.py`), which also handles the positive-class-absent case |
+| `predict` returns shape `(len(table),)` | what `EntityTask.evaluate` expects. Regression: the value. Binary: probability of the positive class. Wrapping an sklearn-style estimator → call `predict_to_contract` (`relarena_core.predict_contract`), which also handles the positive-class-absent case |
 | `val_table` is `None` on the refit (see [3e](#3e-refit-on-full-data)) | supplied while tuning (early stopping, checkpoint selection); `None` when the selected config is refit on train+val, since there is no held-out split then. Methods have the choice to refit on train+val, but do not have to |
 | `db` is censored at the phase boundary | rows after the validation or test boundary are unavailable, and test labels are withheld. A model may additionally restrict every example to rows at or before its anchor timestamp. Ignoring that finer temporal structure cannot reveal test labels or advance the database beyond the phase boundary |
 | `seed` must make the run reproducible | same seed + same config → same predictions |
@@ -141,7 +147,7 @@ declare a `SearchSpace`.
 import numpy as np
 from relbench.base import EntityTask
 
-from relarena.dataset import InnerSplit, OuterSplit
+from relarena_core.dataset import InnerSplit, OuterSplit
 from relarena_core.registry import register_system
 from relarena_core.system import RelArenaSystem
 
@@ -161,6 +167,7 @@ class MySystem(RelArenaSystem):
     ) -> np.ndarray:
         ...
         return predictions  # aligned with outer_split.eval_table
+
 ```
 
 The harness passes the actual split objects, not a separate system-input
@@ -212,10 +219,10 @@ score can be attributed to the method itself under the harness's controls.
 
 ### How a run works
 
-`run_experiment` ([`runner.py`](../src/relarena/runner.py)) is three phases:
+`run_experiment` ([`runner.py`](../packages/relarena/src/relarena/runner.py)) is three phases:
 
 1. **Tune** — `plan_configs` turns the registered space into an ordered list of
-   `(tag, config)`; `tune` ([`tuner.py`](../src/relarena/tuner.py)) runs one trial
+   `(tag, config)`; `tune` ([`tuner.py`](../packages/relarena-core/src/relarena_core/tuner.py)) runs one trial
    per config on the inner split: instantiate `model_cls(config)`, `fit` on train,
    `predict` on val, score with the task's primary metric. A trial that raises is
    recorded as failed, not fatal to the run.
@@ -247,9 +254,9 @@ baselines, and why making tuning comparable is hard are covered in
 
 ### The choices you make
 
-The space is not a method on the class; `@register_model(search_space=...)` binds
-the two in the registry (mirrors AutoGluon / TabArena). See
-[`src/relarena/search_space.py`](../src/relarena/search_space.py).
+The decorator `@register_model(search_space=MYMODEL_SPACE)` binds the model
+class and its search space in the shared registry. See
+[`packages/relarena-core/src/relarena_core/search_space.py`](../packages/relarena-core/src/relarena_core/search_space.py).
 
 | # | Decision | Options |
 | --- | --- | --- |
@@ -378,23 +385,33 @@ training settings that do not affect it. Content fingerprints and explicit
 preprocessing versions can be used to invalidate artifacts when their inputs or
 meaning change.
 
-See [`relarena_core.cache`](../src/relarena/cache.py) for the API and its design
-notes, and [`tests/fixtures/cached_model.py`](../tests/fixtures/cached_model.py)
+See [`relarena_core.cache`](../packages/relarena-core/src/relarena_core/cache.py) for the API and its design
+notes, and [`tests/fixtures/cached_model.py`](../packages/relarena/tests/fixtures/cached_model.py)
 for a compact end-to-end example.
 
 ## 5. Where code goes
 
 | Kind | Location | Examples |
 | --- | --- | --- |
-| Model-specific | inside the model folder | `tabpfn_rel/features.py` |
-| Shared within a model family | `models/_shared/<family>/` | `_shared/gbdt/lgb.py`, `_shared/tfm/tfm.py`, `_shared/gnn/{graph,training,graph_cache}.py` |
-| Shared across families | `models/_shared/` top level | `predict_contract.py` (serves `constant-global` + the TFM models) |
-| Relational DB → flat feature table | `src/relarena/featurization/` | `entity` (RelBench LightGBM recipe), `dfs` (multi-hop, with depth cache) |
-| Preprocessing cache mechanics | `src/relarena/cache.py` | local atomic publication of caller-owned artifacts |
+| Model-specific | inside the model folder | `rdblearn/tfm.py`, `tabpfn_rel/features.py` |
+| Shared within a model family | `models/_shared/<family>/` | `_shared/gbdt/lgb.py`, `_shared/gnn/{graph,training,graph_cache}.py` |
+| Shared tabular foundation model helpers | `packages/relarena-core/src/relarena_core/tfm.py` | Seeded sampling, fit and predict; backend recipes belong to consuming models |
+| Public prediction-output contract | `packages/relarena-core/src/relarena_core/predict_contract.py` | `predict_to_contract` for `constant-global` and TFM models |
+| Relational DB → flat feature table | `relarena.featurization.entity`, `relarena_core.featurization.dfs` | Benchmark LightGBM recipe in the host; shared DFS and its cache in core |
+| Preprocessing cache mechanics | `packages/relarena-core/src/relarena_core/cache.py` | local atomic publication of caller-owned artifacts |
 
-If two models need the same helper, it moves to `_shared/`; it never stays in
-one model for the other to import from. The layout exists to stop one model
-reaching into another's private code.
+Model-specific backend definitions belong in their model's folder. RelArena's
+GNN and GBDT helper families live in `models/_shared/`; the LightGBM entity-feature
+recipe lives in `relarena.featurization.entity`. Shared runtime functionality
+used by independently installed model packages belongs in public `relarena_core`
+modules. A model must not import another model's private helpers.
+
+`relarena_core.tfm` exposes `TFMSpec`, `FittedTFM`, `fit_tfm`, `predict_tfm`,
+`default_device`, and the estimator protocols `SklearnClassifier` and
+`SklearnRegressor`. Each consumer owns its named backend definitions:
+`relarena.models.rdblearn.tfm` for RDBLearn and `tabpfn_rel.tfm` for TabPFN-Rel.
+Importing core's fitting helpers does not register models. Model registration
+imports no optional inference backends; those load when estimators are built.
 
 ## 6. Optional dependencies
 
@@ -408,15 +425,17 @@ mymodel = ["some-heavy-package>=1.0"]
 
 Importing `relarena.models` imports every wrapper to register it, so a
 module-level heavy import would make the whole registry require your extra.
-Registration must work without it: the discovery scan skips a model whose
-third-party dependency is missing and logs at info, but re-raises anything else.
+Registration must work without it. Discovery propagates import failures; optional
+backend imports belong in the execution path so an unused extra cannot prevent
+other models from registering.
 
 Reuse an existing extra where the stack matches:
 
 | Extra | Contents | Models |
 | --- | --- | --- |
 | `lightgbm` | LightGBM | `lightgbm` |
-| `rdblearn` | DFS deps (TFM is core) | `rdblearn`, `tabpfn-rel-local` |
+| `rdblearn` | DFS + local TabPFN | `rdblearn` |
+| `tabpfn-rel-local` | `tabpfn-rel[local]` plugin | `tabpfn-rel-local` |
 | `tabpfn-rel-api` | DFS + `tabpfn-client` | `tabpfn-rel-client` |
 | `rdl` | shared RDL stack: PyG, PyTorch Frame, text embedder | umbrella, not used directly |
 | `graphsage` / `relgnn` / `relgt` | `relarena[rdl]` (+ `einops`, `h5py` for `relgt`) | the GNN baselines |
@@ -436,7 +455,7 @@ Copied code goes in the model's `_vendor/` and needs all three of:
 2. The path in `.coveragerc`'s `omit` list; vendored code is not ours to test
    and should not count against coverage.
 3. An entry in `NOTICE` describing the upstream revision and modifications, with
-   the upstream license text added to `src/relarena/models/VENDORED-LICENSES`.
+   the upstream license text added to `packages/relarena/src/relarena/models/VENDORED-LICENSES`.
 
 2 and 3 are the ones that get forgotten. Keep `_vendor/` for genuinely copied
 files only.
@@ -454,15 +473,16 @@ config is a valid point in its space, and `predict` returns the contract shape.
 The existing per-model tests are the template.
 
 ```bash
-uv sync --extra mymodel                 # else your tests silently skip
-OMP_NUM_THREADS=1 uv run pytest         # env var required on macOS
+uv sync --all-packages --extra mymodel                 # else your tests silently skip
+OMP_NUM_THREADS=1 uv run --all-packages pytest         # env var required on macOS
 
-uv run pre-commit run --all-files
+uv run --all-packages pre-commit run --all-files
 ```
 
 ## 9. Checklist
 
-- [ ] `models/mymodel/{__init__,model}.py`, registered with a unique `name`
+- [ ] `models/mymodel/{__init__,model}.py`, with a unique `name` and a registration
+      decorator on each exported model or system
 - [ ] `predict` returns `(len(table),)`
 - [ ] `default_overrides` set; for a `fixed_grid`, early enough to survive the cap
 - [ ] Compute knobs (batch size, epochs, steps) fixed outside the space
@@ -472,13 +492,13 @@ uv run pre-commit run --all-files
       (see [Model or system?](#model-or-system))
 - [ ] The complete model or system procedure stays within the shared runtime
       allowance, including separately run preprocessing
-- [ ] Heavy imports inside `fit`, `predict`, or `run`; extra declared in `pyproject.toml`
-- [ ] Shared helpers in `_shared/`, not imported from a sibling model
+- [ ] Heavy imports inside `fit`, `predict`, or `run`; extra declared in `packages/relarena/pyproject.toml`
+- [ ] Shared helpers in `_shared/` or public infrastructure modules, not imported from a sibling model
 - [ ] Vendored code in `_vendor/` with docstring + `.coveragerc` + `NOTICE` + license text
 - [ ] Expensive CPU pre-processing goes through a public, label-free cache-warm
       script
-- [ ] `tests/mymodel/{__init__,test_model}.py`
-- [ ] `uv run pre-commit run --all-files` clean, from the repo root
+- [ ] `packages/relarena/tests/models/mymodel/{__init__,test_model}.py`
+- [ ] `uv run --all-packages pre-commit run --all-files` clean, from the repo root
 - [ ] Pull request opened from a fork owned by a personal account, with
       **Allow edits from maintainers** enabled (see [Submitting](#10-submitting))
 
@@ -531,8 +551,8 @@ Complete these steps on the submission branch before merging:
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `constant-global`, `constant-per-entity` | `dummy/` | neither | `{}` | `True` | all | core | `predict_contract` |
 | `lightgbm` | `lightgbm/` | `space`, 14 params | `{}` | `True` | all | `lightgbm` | `featurization/entity`, `_shared/gbdt/lgb` |
-| `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `featurization/dfs` + cache, `_shared/tfm` |
-| `tabpfn-rel-local`, `tabpfn-rel-client` | `tabpfn_rel/` | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `rdblearn` / `tabpfn-rel-api` | `featurization/dfs` + cache, `_shared/tfm` |
+| `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
+| `tabpfn-rel-local`, `tabpfn-rel-client` | external `tabpfn-rel` package | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `tabpfn-rel-local` / `tabpfn-rel-api` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
 | `graphsage` | `graphsage/` | `space` | explicit | `True` | binary, regression | `graphsage` | `_shared/gnn/{graph,training,_vendor/gnn}` |
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |
@@ -541,3 +561,35 @@ Complete these steps on the submission branch before merging:
 `rt-plurel` is a `RelArenaSystem`, so model search-space and final-fit columns
 do not apply. It supports binary classification and regression and uses the
 `rt` extra.
+
+## External model packages
+
+An installable model package can depend on RelArena Core and register through the
+`relarena.models` entry-point group. It owns its model classes, search spaces,
+backend dependencies, tests and examples. TabPFN-Rel uses this mechanism.
+
+```toml
+[project.entry-points."relarena.models"]
+my_model = "my_model.model"
+```
+
+The entry point names the module containing classes decorated with
+`relarena_core.register_model` or `relarena_core.register_system`. Core loads
+the module; its decorators populate the shared registry. Importing a model
+registers that model without discovering unrelated plugins.
+Shared estimator helpers are public in `relarena_core.tfm` and
+`relarena_core.predict_contract`. The model supplies a `TFMSpec` with its backend
+constructors, sample limits and prediction batch size. Model packages must not
+import `relarena.models._shared`.
+
+`relarena_core.discover_models()` registers installed plugins, including the
+built-in baselines when RelArena is installed. The CLI
+and `PredictiveQuery.fit` call it; direct registry users call it explicitly.
+Successful entry points load once per process. A failed import raises with its
+entry-point name and original exception, and can be retried. Different classes
+cannot register the same model name. Repeated imports reuse the same class objects.
+
+Base RelArena does not require external models. An optional extra may install a
+plugin that depends on core, as `relarena[tabpfn-rel-local]` does. Both consumers
+depend on core; core has no dependency on either consumer. The model does not
+discover plugins during import.

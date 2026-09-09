@@ -2,7 +2,7 @@
 
 Calendar / history-lag are pure-pandas and tested directly. The text path passes
 raw anchor strings through (the estimator handles them; see
-`relarena.models.tabpfn_rel.tfm`), so the text tests exercise column detection, anchor
+`tabpfn_rel.tfm`), so the text tests exercise column detection, anchor
 lookup, the raw pass-through, and the estimator overrides the pipeline emits.
 """
 
@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 from relbench.base import Table
 
-from relarena.models.tabpfn_rel.features import (
+from tabpfn_rel.features import (
     FeaturePipeline,
     RawTextFeaturizer,
     anchor_text_columns,

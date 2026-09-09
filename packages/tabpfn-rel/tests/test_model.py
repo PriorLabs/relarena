@@ -15,22 +15,22 @@ from types import SimpleNamespace
 import numpy as np
 import pandas as pd
 import pytest
+from relarena_core import discover_models
+from relarena_core.cache import CacheConfig
+from relarena_core.registry import registry
+from relarena_core.tfm import TFMSpec
 from relbench.base import Table, TaskType
 
-from relarena.models import _register_builtin_models as discover_models
-from relarena.models.tabpfn_rel import model as model_mod
-from relarena.models.tabpfn_rel import tfm
-from relarena.models.tabpfn_rel.context import hard_pool_subsample_indices
-from relarena.models.tabpfn_rel.model import (
+from tabpfn_rel import model as model_mod
+from tabpfn_rel import tfm
+from tabpfn_rel.context import hard_pool_subsample_indices
+from tabpfn_rel.model import (
     TABPFN_REL_CLIENT_SPACE,
     TABPFN_REL_LOCAL_SPACE,
     TabPFNRelClientModel,
     TabPFNRelLocalModel,
     TabPFNRelModel,
 )
-from relarena_core.cache import CacheConfig
-from relarena_core.registry import registry
-from relarena_core.tfm import TFMSpec
 
 _N = 100
 
