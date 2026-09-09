@@ -59,12 +59,12 @@ from typing import Any
 import numpy as np
 from relbench.base import Database, EntityTask, Table, TaskType
 
-from relarena.dataset import InnerSplit, OuterSplit, concat_tables
-from relarena.identity import RunIdentity
+from relarena.core.dataset import InnerSplit, OuterSplit, concat_tables
+from relarena.core.identity import RunIdentity
+from relarena.core.registry import register_system
+from relarena.core.system import RelArenaSystem
 from relarena.models.rt import config as cfg
 from relarena.models.rt.export import TASK_DIR, preprocessed_dir, target_stats
-from relarena.registry import register_system
-from relarena.system import RelArenaSystem
 
 logger = logging.getLogger(__name__)
 
@@ -357,7 +357,7 @@ class RTPluRelSystem(RelArenaSystem):
         from rt.data import get_tasks
         from rt.eval import build_evaluator
 
-        from relarena.metrics import is_better, primary_metric
+        from relarena.core.metrics import is_better, primary_metric
 
         metric = primary_metric(task)
         truth = val_table.df[task.target_col].to_numpy()

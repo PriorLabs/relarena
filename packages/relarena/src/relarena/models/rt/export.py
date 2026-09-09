@@ -85,9 +85,9 @@ import pandas as pd
 import yaml
 from relbench.base import Database, EntityTask, Table, TaskType
 
-from relarena.cache import CacheConfig, CacheMiss, cache_key
-from relarena.checksums import database_checksum, table_checksum
-from relarena.identity import RunIdentity
+from relarena.core.cache import CacheConfig, CacheMiss, cache_key
+from relarena.core.fingerprints import database_checksum, table_checksum
+from relarena.core.identity import RunIdentity
 from relarena.models.rt.config import preprocess_args
 
 logger = logging.getLogger(__name__)
@@ -307,7 +307,7 @@ def _publish_directory(
 ) -> Path:
     """Build/publish one directory artifact and return the **path** it lives at.
 
-    `relarena.cache.cached_artifact` is the shared layer for this, and it does
+    `relarena.core.cache.cached_artifact` is the shared layer for this, and it does
     not fit: it returns a *value* that `load` materialized in memory, and builds
     a miss inside a `TemporaryDirectory` that is deleted before it returns. Both
     are right for a feature matrix and wrong for this artifact, whose consumer

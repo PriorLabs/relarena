@@ -42,8 +42,11 @@ import torch
 from ConfigSpace import Categorical, ConfigurationSpace, Float
 from relbench.base import Database, EntityTask, Table
 
-from relarena.metrics import get_metric, primary_metric
-from relarena.model import RelArenaModel
+from relarena.core.metrics import get_metric, primary_metric
+from relarena.core.model import RelArenaModel
+from relarena.core.registry import register_model
+from relarena.core.search_space import SearchSpace
+from relarena.core.tasks import ENTITY_TASK_TYPES
 from relarena.models._shared.gnn.training import (
     default_device,
     infer,
@@ -51,9 +54,6 @@ from relarena.models._shared.gnn.training import (
     train_epoch,
 )
 from relarena.models.relgnn.preprocessing import load_graph
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
-from relarena.tasks import ENTITY_TASK_TYPES
 
 # Fixed budget / infra constants (never tuned; not part of any hyperparameter config).
 _BATCH_SIZE = 512

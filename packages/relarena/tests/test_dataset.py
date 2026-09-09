@@ -18,12 +18,8 @@ from types import SimpleNamespace
 import pandas as pd
 from relbench.base import Database, Dataset, Table
 
-from relarena.dataset import (
-    InnerSplit,
-    OuterSplit,
-    RelBenchDatasetTask,
-    drop_noncanonical_columns,
-)
+from relarena.core.dataset import InnerSplit, OuterSplit
+from relarena.dataset import RelBenchDatasetTask, drop_noncanonical_columns
 
 #: Five monthly event timestamps; cut the inner split after the 3rd, the outer
 #: (test) split after the 5th — so censoring at val should drop the last two rows.

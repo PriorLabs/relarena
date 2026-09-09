@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from relbench.base import TaskType
 
+from relarena.core.registry import registry
 from relarena.models.dummy import DummyBaseline, DummyPerEntityBaseline
 
 
@@ -65,8 +66,6 @@ def test_binary_predicts_positive_rate() -> None:
 
 
 def test_registered_under_name_constant_global() -> None:
-    import relarena.models  # noqa: F401  (triggers registration)
-    from relarena.registry import registry
 
     assert "constant-global" in registry
     assert registry.get("constant-global") is DummyBaseline
@@ -104,8 +103,6 @@ def test_per_entity_unseen_entity_falls_back_to_global() -> None:
 
 
 def test_per_entity_registered_under_name_constant_per_entity() -> None:
-    import relarena.models  # noqa: F401  (triggers registration)
-    from relarena.registry import registry
 
     assert "constant-per-entity" in registry
     assert registry.get("constant-per-entity") is DummyPerEntityBaseline
