@@ -9,8 +9,8 @@ from pathlib import Path
 
 def main() -> None:
     """Check the wheel and sdist under ``dist/``."""
-    wheel = next(Path("dist").glob("*.whl"))
-    sdist = next(Path("dist").glob("*.tar.gz"))
+    wheel = next(Path("dist").glob("relarena-*.whl"))
+    sdist = next(Path("dist").glob("relarena-*.tar.gz"))
     spec_root = Path("src/relarena/userdb/relbench_v1")
     required = {
         "relarena/models/VENDORED-LICENSES",

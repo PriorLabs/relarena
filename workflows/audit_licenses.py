@@ -378,7 +378,7 @@ def audit() -> list[dict]:
     def resolve(pkg: dict) -> dict:
         name, version = pkg["name"], pkg["version"]
         kind = source_kind(pkg)
-        if name == ROOT_PACKAGE:
+        if name in {ROOT_PACKAGE, "tabpfn-rel"}:
             display, full_text = "Apache-2.0", "Apache-2.0"
         else:
             display, full_text = (

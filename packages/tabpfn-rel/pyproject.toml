@@ -1,0 +1,28 @@
+[build-system]
+requires = ["uv_build>=0.11.15"]
+build-backend = "uv_build"
+
+[project]
+name = "tabpfn-rel"
+version = "0.0.1"
+description = "TabPFN for relational prediction."
+authors = [{ name = "Prior Labs" }]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "relarena>=0.0.2,<0.1",
+    "relbench==2.1.2",
+    "numpy>=1.24",
+    "pandas>=2.3.3,<3.0",
+]
+
+[project.optional-dependencies]
+local = ["tabpfn>=8", "fastdfs>=1.1", "setuptools<82"]
+api = ["tabpfn-client>=0.3.2", "fastdfs>=1.1", "setuptools<82"]
+
+[project.entry-points."relarena.models"]
+tabpfn_rel = "tabpfn_rel.model"
+
+[tool.uv.sources]
+relarena = { workspace = true }

@@ -7,7 +7,7 @@ authoritative — this page only says where things live.
 ## Scope
 
 Apache-2.0 covers everything in this repository, including the TabPFN-Rel model
-code (`src/relarena/models/tabpfn_rel/`). Moving released code elsewhere later
+code (`packages/tabpfn-rel/src/tabpfn_rel/`). Moving released code elsewhere later
 would not change the license under which this version was published.
 
 Two things it does **not** cover:

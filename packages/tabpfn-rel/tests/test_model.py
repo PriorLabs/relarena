@@ -16,18 +16,18 @@ import numpy as np
 import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
-
-from relarena import tfm
-from relarena.cache import CacheConfig
-from relarena.models.tabpfn_rel import model as model_mod
-from relarena.models.tabpfn_rel.context import hard_pool_subsample_indices
-from relarena.models.tabpfn_rel.model import (
+from tabpfn_rel import model as model_mod
+from tabpfn_rel.context import hard_pool_subsample_indices
+from tabpfn_rel.model import (
     TABPFN_REL_CLIENT_SPACE,
     TABPFN_REL_LOCAL_SPACE,
     TabPFNRelClientModel,
     TabPFNRelLocalModel,
     TabPFNRelModel,
 )
+
+from relarena import tfm
+from relarena.cache import CacheConfig
 from relarena.registry import registry
 
 _N = 100

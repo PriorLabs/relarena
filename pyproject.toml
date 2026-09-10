@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena"
-version = "0.0.1"
+version = "0.0.2"
 authors = [{ name = "Prior Labs" }]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
@@ -93,8 +93,8 @@ relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # rdblearn, exposed under the model's own name. tabpfn-rel-api covers
 # tabpfn-rel-client (the tabpfn-v3-api TFM): DFS locally, fit/predict server-side,
 # text embedded natively by the API — no GPU and no local tabpfn needed.
-tabpfn-rel-local = ["relarena[rdblearn]"]
-tabpfn-rel-api = ["fastdfs>=1.1", "setuptools<82", "tabpfn-client>=0.3.2"]
+tabpfn-rel-local = ["tabpfn-rel[local]>=0.0.1,<0.1"]
+tabpfn-rel-api = ["tabpfn-rel[api]>=0.0.1,<0.1"]
 # RelArena supports RT execution on Linux x86_64, for which relational-transformer
 # publishes a stable-ABI (abi3-py311) wheel. GPU strongly recommended -- a
 # fine-tune on CPU is not a practical run.
@@ -111,6 +111,7 @@ plots = ["bencheval[plot]", "autorank"]
 
 [dependency-groups]
 dev = [
+    "tabpfn-rel",
     "pytest>=9.1.1",
     "pre-commit>=4.0",
     "ruff==0.15.13",
@@ -140,7 +141,14 @@ conflicts = [
     [{ group = "cuda" }, { group = "cpu" }],
 ]
 
+[tool.uv.workspace]
+members = ["packages/tabpfn-rel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "packages/tabpfn-rel/tests"]
+
 [tool.uv.sources]
+tabpfn-rel = { workspace = true }
 # bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
 # The resolved commit is pinned in uv.lock for reproducibility.
 bencheval = { git = "https://github.com/autogluon/tabarena.git", subdirectory = "packages/bencheval", rev = "9f3878b882439cb885003b5f978676961b059b6d" }

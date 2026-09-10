@@ -56,7 +56,7 @@ cache only changes speed, never results. On that task it turns a roughly 409s
 fit-and-predict into roughly 12s.
 
 ```bash
-uv run --extra rdblearn python examples/tabpfn_rel_caching.py
+uv run --extra tabpfn-rel-local python examples/tabpfn_rel_caching.py
 ```
 
 The expensive step being cached is Deep Feature Synthesis, which runs on CPU. To
@@ -64,7 +64,7 @@ exercise the cache path without a GPU, skip the TabPFN forward pass:
 
 ```bash
 RELARENA_EXAMPLE_SKIP_TFM=1 OMP_NUM_THREADS=1 \
-    uv run --extra rdblearn python examples/tabpfn_rel_caching.py
+    uv run --extra tabpfn-rel-local python examples/tabpfn_rel_caching.py
 ```
 
 See the feature-cache section of the [package README](../README.md) for how to

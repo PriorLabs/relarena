@@ -3,10 +3,10 @@
 A config-driven extension of the `rdblearn` recipe (DFS features -> a TFM) adding
 calendar / history-lag / text features and recency-aware in-context sampling.
 Importing this module registers the `tabpfn-rel-local` and `tabpfn-rel-client`
-models. See `relarena.models.tabpfn_rel.model`.
+models. See `tabpfn_rel.model`.
 """
 
-from relarena.models.tabpfn_rel.model import (
+from tabpfn_rel.model import (
     TabPFNRelClientModel,
     TabPFNRelLocalModel,
 )

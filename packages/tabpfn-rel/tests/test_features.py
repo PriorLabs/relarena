@@ -14,8 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from relbench.base import Table
-
-from relarena.models.tabpfn_rel.features import (
+from tabpfn_rel.features import (
     FeaturePipeline,
     RawTextFeaturizer,
     anchor_text_columns,

@@ -532,7 +532,7 @@ Complete these steps on the submission branch before merging:
 | `constant-global`, `constant-per-entity` | `dummy/` | neither | `{}` | `True` | all | core | `predict_contract` |
 | `lightgbm` | `lightgbm/` | `space`, 14 params | `{}` | `True` | all | `lightgbm` | `featurization/entity`, `_shared/gbdt/lgb` |
 | `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `featurization/dfs` + cache, `relarena.tfm` |
-| `tabpfn-rel-local`, `tabpfn-rel-client` | `tabpfn_rel/` | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `rdblearn` / `tabpfn-rel-api` | `featurization/dfs` + cache, `relarena.tfm` |
+| `tabpfn-rel-local`, `tabpfn-rel-client` | `packages/tabpfn-rel/src/tabpfn_rel/` | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `tabpfn-rel-local` / `tabpfn-rel-api` | `featurization/dfs` + cache, `relarena.tfm` |
 | `graphsage` | `graphsage/` | `space` | explicit | `True` | binary, regression | `graphsage` | `_shared/gnn/{graph,training,_vendor/gnn}` |
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |

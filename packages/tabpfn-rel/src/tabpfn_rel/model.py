@@ -5,8 +5,8 @@ synthesis (DFS) — aggregating the linked tables into one flat row per (entity,
 — and feeding that table to a TabPFN foundation model that predicts the test rows by
 in-context learning over the train rows. On top of that it adds four opt-in knobs,
 each recovering signal flat-DFS-into-one-TFM-call leaves behind (see
-`relarena.models.tabpfn_rel.features` and
-`relarena.models.tabpfn_rel.context`):
+`tabpfn_rel.features` and
+`tabpfn_rel.context`):
 
   1. **Calendar features** — cyclic sin/cos of the cutoff timestamp.
   2. **History lags** — per-entity lags of the target's own past values.
@@ -38,11 +38,11 @@ from relbench.base import Database, EntityTask, Table
 
 from relarena.featurization import DFS_MAX_DEPTH, build_dfs_features
 from relarena.model import RelArenaModel
-from relarena.models.tabpfn_rel.context import ContextStrategy
-from relarena.models.tabpfn_rel.features import FeaturePipeline
 from relarena.registry import register_model
 from relarena.search_space import SearchSpace
 from relarena.tfm import TFM_REGISTRY, predict_tfm
+from tabpfn_rel.context import ContextStrategy
+from tabpfn_rel.features import FeaturePipeline
 
 #: Depth grid lower bound. Shallower depths yield no DFS features for entity tasks.
 _MIN_DEPTH = 2
