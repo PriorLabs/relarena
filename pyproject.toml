@@ -71,8 +71,8 @@ lightgbm = ["lightgbm>=4.0,<4.7"]
 # native system entry because selection happens inside its end-to-end run.
 kurversc = ["kurversc==0.1.1"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
-# (tabpfn>=8 for the create_default_for_version API, lazily imported in models/_tfm.py)
-# plus the DFS featurization deps; `tabpfn-rel-local` uses this same extra.
+# (tabpfn>=8 for the create_default_for_version API, lazily imported in relarena/tfm.py)
+# plus the DFS featurization deps.
 # setuptools<82 because featuretools -> woodwork imports pkg_resources at import
 # time, and setuptools 82 removed it (81 still ships it).
 rdblearn = ["tabpfn>=8", "fastdfs>=1.1", "setuptools<82"]
