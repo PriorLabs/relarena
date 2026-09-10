@@ -17,8 +17,8 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
+from relarena import tfm
 from relarena.cache import CacheConfig
-from relarena.models._shared.tfm import tfm
 from relarena.models.tabpfn_rel import model as model_mod
 from relarena.models.tabpfn_rel.context import hard_pool_subsample_indices
 from relarena.models.tabpfn_rel.model import (

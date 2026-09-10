@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from relbench.base import TaskType
 
-from relarena.models._shared.tfm import tfm
+from relarena import tfm
 from relarena.models.tabpfn_rel.context import (
     ContextStrategy,
     HardPoolContext,

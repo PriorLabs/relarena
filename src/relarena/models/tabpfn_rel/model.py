@@ -38,11 +38,11 @@ from relbench.base import Database, EntityTask, Table
 
 from relarena.featurization import DFS_MAX_DEPTH, build_dfs_features
 from relarena.model import RelArenaModel
-from relarena.models._shared.tfm.tfm import TFM_REGISTRY, predict_tfm
 from relarena.models.tabpfn_rel.context import ContextStrategy
 from relarena.models.tabpfn_rel.features import FeaturePipeline
 from relarena.registry import register_model
 from relarena.search_space import SearchSpace
+from relarena.tfm import TFM_REGISTRY, predict_tfm
 
 #: Depth grid lower bound. Shallower depths yield no DFS features for entity tasks.
 _MIN_DEPTH = 2

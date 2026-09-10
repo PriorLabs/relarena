@@ -34,7 +34,7 @@ import pandas as pd
 import torch
 from relbench.base import TaskType
 
-from relarena.models._shared.predict_contract import predict_to_contract
+from relarena.predict_contract import predict_to_contract
 
 
 class SklearnClassifier(Protocol):
@@ -42,15 +42,25 @@ class SklearnClassifier(Protocol):
 
     classes_: np.ndarray
 
-    def fit(self, X: pd.DataFrame, y: np.ndarray) -> Any: ...
-    def predict_proba(self, X: pd.DataFrame) -> np.ndarray: ...
+    def fit(self, X: pd.DataFrame, y: np.ndarray) -> Any:
+        """Fit the estimator to labeled rows."""
+        ...
+
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        """Return one probability column per class."""
+        ...
 
 
 class SklearnRegressor(Protocol):
     """Minimal sklearn-regressor surface relarena uses (TabPFNRegressor-like)."""
 
-    def fit(self, X: pd.DataFrame, y: np.ndarray) -> Any: ...
-    def predict(self, X: pd.DataFrame) -> np.ndarray: ...
+    def fit(self, X: pd.DataFrame, y: np.ndarray) -> Any:
+        """Fit the estimator to labeled rows."""
+        ...
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Return a prediction for each row."""
+        ...
 
 
 # -- TFM registry ------------------------------------------------------------
@@ -323,7 +333,7 @@ def predict_tfm(fitted: FittedTFM, df: pd.DataFrame) -> np.ndarray:
 
     Reindexes to the training column order (so the TFM sees the same schema), then
     delegates the sklearn-output -> evaluate-contract reshaping to
-    `relarena.models._shared.predict_contract.predict_to_contract`.
+    `relarena.predict_contract.predict_to_contract`.
 
     Regression requests `output_type="median"` when the estimator supports it —
     an explicit output_type parameter, or a **kwargs passthrough: the primary

@@ -15,8 +15,8 @@ import pandas as pd
 import pytest
 from relbench.base import TaskType
 
-from relarena.models._shared.tfm import tfm
-from relarena.models._shared.tfm.tfm import (
+from relarena import tfm
+from relarena.tfm import (
     _downsample_indices,
     fit_tfm,
     predict_tfm,

@@ -32,7 +32,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 
 from relarena.metrics import primary_metric
 from relarena.model import RelArenaModel
-from relarena.models._shared.predict_contract import predict_to_contract
+from relarena.predict_contract import predict_to_contract
 from relarena.registry import register_model
 from relarena.search_space import SearchSpace
 

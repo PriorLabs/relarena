@@ -387,8 +387,8 @@ for a compact end-to-end example.
 | Kind | Location | Examples |
 | --- | --- | --- |
 | Model-specific | inside the model folder | `tabpfn_rel/features.py` |
-| Shared within a model family | `models/_shared/<family>/` | `_shared/gbdt/lgb.py`, `_shared/tfm/tfm.py`, `_shared/gnn/{graph,training,graph_cache}.py` |
-| Shared across families | `models/_shared/` top level | `predict_contract.py` (serves `constant-global` + the TFM models) |
+| Shared within a model family | `models/_shared/<family>/` | `_shared/gbdt/lgb.py`, `_shared/gnn/{graph,training,graph_cache}.py` |
+| Shared model interfaces | `src/relarena/` | `tfm.py`, `predict_contract.py` |
 | Relational DB → flat feature table | `src/relarena/featurization/` | `entity` (RelBench LightGBM recipe), `dfs` (multi-hop, with depth cache) |
 | Preprocessing cache mechanics | `src/relarena/cache.py` | local atomic publication of caller-owned artifacts |
 
@@ -531,8 +531,8 @@ Complete these steps on the submission branch before merging:
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `constant-global`, `constant-per-entity` | `dummy/` | neither | `{}` | `True` | all | core | `predict_contract` |
 | `lightgbm` | `lightgbm/` | `space`, 14 params | `{}` | `True` | all | `lightgbm` | `featurization/entity`, `_shared/gbdt/lgb` |
-| `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `featurization/dfs` + cache, `_shared/tfm` |
-| `tabpfn-rel-local`, `tabpfn-rel-client` | `tabpfn_rel/` | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `rdblearn` / `tabpfn-rel-api` | `featurization/dfs` + cache, `_shared/tfm` |
+| `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `featurization/dfs` + cache, `relarena.tfm` |
+| `tabpfn-rel-local`, `tabpfn-rel-client` | `tabpfn_rel/` | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `rdblearn` / `tabpfn-rel-api` | `featurization/dfs` + cache, `relarena.tfm` |
 | `graphsage` | `graphsage/` | `space` | explicit | `True` | binary, regression | `graphsage` | `_shared/gnn/{graph,training,_vendor/gnn}` |
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |

@@ -12,8 +12,8 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
+from relarena import tfm
 from relarena.cache import CacheConfig
-from relarena.models._shared.tfm import tfm
 from relarena.models.rdblearn import RDBLEARN_SPACE, RDBLearnModel
 from relarena.models.rdblearn import model as rdblearn
 from relarena.registry import registry

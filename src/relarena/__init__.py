@@ -18,6 +18,7 @@ from relarena.checksums import (
     table_checksum,
 )
 from relarena.dataset import InnerSplit, OuterSplit, RelBenchDatasetTask, Split
+from relarena.discovery import discover_models
 from relarena.identity import RunIdentity
 from relarena.model import RelArenaModel
 from relarena.registry import (
@@ -56,6 +57,7 @@ __all__ = [
     "TaskSpec",
     "TrialResult",
     "SystemResult",
+    "discover_models",
     "cache_key",
     "cached_artifact",
     "list_entity_tasks",

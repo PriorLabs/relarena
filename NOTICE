@@ -30,7 +30,7 @@ copied into this package:
   * RDBLearn (method adaptation), licensed under Apache-2.0
     Copyright (c) HKU Shanghai X-Lab
     https://github.com/HKUSHXLab/rdblearn
-    src/relarena/models/rdblearn/model.py, src/relarena/models/_shared/tfm/tfm.py,
+    src/relarena/models/rdblearn/model.py, src/relarena/tfm.py,
     src/relarena/featurization/dfs.py
 
   * Relational Transformer (RT) (dependency)
@@ -67,5 +67,5 @@ RelArena adapter code, not vendored files.
 RDBLearn is a method adaptation rather than a file copy. RelArena reimplements
 the Deep Feature Synthesis to tabular-foundation-model recipe from
 https://github.com/HKUSHXLab/rdblearn. The closest adaptation is the
-non-stratified train downsampling in `models/_shared/tfm/tfm.py`; RelArena's DFS
+non-stratified train downsampling in `relarena/tfm.py`; RelArena's DFS
 cache and TabPFN-Rel extensions are original work.

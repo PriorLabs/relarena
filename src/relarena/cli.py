@@ -22,7 +22,7 @@ import sys
 
 import pandas as pd
 
-import relarena.models  # noqa: F401  (registers built-in models)
+from relarena.discovery import discover_models
 from relarena.registry import registry
 from relarena.results import summary_to_dataframe
 from relarena.runner import SystemExperimentSummary, run_experiment
@@ -88,6 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Nothing to run.", file=sys.stderr)
         return 1
 
+    discover_models()
     model_cls = registry.get(args.model)
     frames: list[pd.DataFrame] = []
     for s in specs:

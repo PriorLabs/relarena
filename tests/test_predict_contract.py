@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 from relbench.base import TaskType
 
-from relarena.models._shared.predict_contract import predict_to_contract
+from relarena.predict_contract import predict_to_contract
 
 
 class _StubClassifier:

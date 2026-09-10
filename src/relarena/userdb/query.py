@@ -24,6 +24,7 @@ from relbench.base import EntityTask
 
 from relarena.cache import CacheConfig, resolve_cache_config
 from relarena.dataset import RelBenchDatasetTask, concat_tables
+from relarena.discovery import discover_models
 from relarena.identity import (
     RunIdentity,
     database_schema_fingerprint,
@@ -114,10 +115,7 @@ class PredictiveQuery:
         custom database. Omit it to fall back to `RELARENA_CACHE_DIR`, or to use
         no persistent cache when that variable is unset. See `relarena.cache`.
         """
-        # Local import: importing the model package runs every built-in model's
-        # registration, pulling in heavy/optional deps (torch via tabpfn, lightgbm)
-        # at import time; kept out of `import relarena.userdb`, needed only here.
-        import relarena.models  # noqa: F401
+        discover_models()
 
         cache = resolve_cache_config(cache_dir, on_miss="fill")
         self._warn_schema_only_cache(cache)

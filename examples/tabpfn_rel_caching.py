@@ -37,8 +37,8 @@ from relarena.dataset import OuterSplit, RelBenchDatasetTask, concat_tables
 from relarena.featurization import build_dfs_features
 from relarena.featurization import dfs as dfs_mod
 from relarena.featurization.warm_cache import warm_dfs_cache
-from relarena.models._shared.tfm.tfm import default_device
 from relarena.models.tabpfn_rel.model import TABPFN_REL_LOCAL_SPACE, TabPFNRelModel
+from relarena.tfm import default_device
 
 #: A reasonably sized RelBench entity task: small enough to run, big enough that the
 #: DFS cost is visible. Swap for e.g. ("rel-hm", "user-churn") for a heavier one.

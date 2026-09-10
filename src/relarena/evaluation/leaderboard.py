@@ -20,8 +20,10 @@ import logging
 
 import pandas as pd
 
+from relarena.discovery import discover_models
 from relarena.evaluation.subsets import TaskMask, apply_subset
 from relarena.metrics import to_metric_error
+from relarena.registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -113,12 +115,7 @@ def method_kind(model: str) -> str:
     package rather than isolating one model (see `RelArenaSystem`).
     Unregistered names (reference baselines, retired methods) rank as models.
     """
-    # Built-ins register on this import, which a leaderboard-only caller (load
-    # a results CSV, rank it) has no other reason to have made. Without it the
-    # registry is empty, every lookup falls through to "model", and a system
-    # silently joins the models-only board.
-    import relarena.models  # noqa: F401
-    from relarena.registry import registry
+    discover_models()
 
     try:
         return registry.kind(model)

@@ -2,7 +2,7 @@
 
 Calendar / history-lag are pure-pandas and tested directly. The text path passes
 raw anchor strings through (the estimator handles them; see
-`models/_shared/tfm/tfm.py`), so the text tests exercise column detection, anchor
+`relarena/tfm.py`), so the text tests exercise column detection, anchor
 lookup, the raw pass-through, and the estimator overrides the pipeline emits.
 """
 

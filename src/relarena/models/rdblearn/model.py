@@ -12,7 +12,7 @@ Combines:
     dimension.
 
 The estimator is a tabular foundation model (TabPFN v2 / v2.5); see
-`_shared/tfm/tfm.py` for the TFM registry and the downsample -> fit/predict core
+`relarena/tfm.py` for the TFM registry and the downsample -> fit/predict core
 (the TFM handles categoricals natively). This is RDBLearn proper
 (https://github.com/HKUSHXLab/rdblearn) — DFS features + a foundation model.
 
@@ -25,7 +25,7 @@ included (at the cost of additional runtime).
 One deliberate deviation from upstream RDBLearn's preprocessing: it label-encodes
 categoricals and then runs AutoGluon's `AutoMLPipelineFeatureGenerator` over the
 result, whereas here the feature frame reaches the TFM as-is, so TabPFN does its own
-categorical detection and NaN handling (`_shared/tfm/tfm.py` has the why — upstream
+categorical detection and NaN handling (`relarena/tfm.py` has the why — upstream
 encodes because its backends take numpy arrays, a constraint a TabPFN-only grid does
 not have). The generator's datetime expansion is covered natively: the anchor cutoff
 gets the same year / month / day / dayofweek decomposition plus an epoch value, and
@@ -42,12 +42,12 @@ from relbench.base import Database, EntityTask, Table
 
 from relarena.featurization import DFS_MAX_DEPTH, build_dfs_features
 from relarena.model import RelArenaModel
-from relarena.models._shared.tfm.tfm import (
+from relarena.registry import register_model
+from relarena.search_space import SearchSpace
+from relarena.tfm import (
     fit_tfm,
     predict_tfm,
 )
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
 
 _MIN_DEPTH = 2
 
