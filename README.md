@@ -8,7 +8,7 @@
 
 ---
 
-| 📂 [Examples](examples) | 📊 [Baseline Results](baseline_results) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 [Model Report](https://arxiv.org/abs/2608.16319) |
+| 📂 [Examples](examples) | 📊 [Leaderboards](#-leaderboards) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 [Model Report](https://arxiv.org/abs/2608.16319) |
 |:---:|:---:|:---:|:---:|:---:|
 
 ---
@@ -41,6 +41,80 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). This repository also
 > baselines, API, and tuning regime will evolve with community feedback. Research code, not
 > production-ready. The model report covering RelArena-α, TabPFN-Rel, and the RPI is available
 > at [arXiv:2608.16319](https://arxiv.org/abs/2608.16319).
+
+## 📊 Leaderboards
+
+This live leaderboard is updated with every merged model submission.
+Results cover **21 RelBench v1 tasks, 7 databases, seed 0**; see the
+[checked-in results](baseline_results/results.csv).
+
+Both views rank by **Elo (higher is better)**, anchored to the global constant predictor
+at 1000. Intervals show the 2.5th–97.5th percentiles from 100 task bootstrap samples;
+they do not measure variation across training seeds. The plots and tables show the same values.
+
+<!-- BEGIN GENERATED LEADERBOARDS -->
+
+![Models and models + systems: Elo ratings with 95% bootstrap intervals](docs/leaderboards.png)
+
+**Models** (solid bars) use RelArena's standardized tuning regime. **Systems** (hatched bars) follow the same data states and evaluation protocol but bring their own tuning procedure. The left panel compares models; the right includes both models and systems. Each panel computes Elo separately, so the same method can have different ratings in the two panels. See [models and systems](docs/adding-a-model.md#model-or-system) for the submission contracts.
+
+<details>
+<summary><b>Models leaderboard table</b></summary>
+
+| Rank | Method | Kind | Elo | 95% bootstrap interval |
+|---:|---|---|---:|---:|
+| 1 | tabpfn-rel-client | Model | 1821.4 | 1749.9–1927.4 |
+| 2 | tabpfn-rel-local | Model | 1706.1 | 1626.4–1824.3 |
+| 3 | graphsage | Model | 1658.3 | 1574.7–1742.7 |
+| 4 | relgt | Model | 1575.3 | 1470.1–1706.2 |
+| 5 | rdblearn | Model | 1548.2 | 1458.7–1643.0 |
+| 6 | relgnn-es | Model | 1506.0 | 1432.4–1583.9 |
+| 7 | lightgbm | Model | 1355.5 | 1233.1–1444.4 |
+| 8 | constant-per-entity | Model | 1256.1 | 1113.8–1381.5 |
+| 9 | constant-global | Model | 1000.0 | 861.4–1077.9 |
+
+</details>
+
+<details>
+<summary><b>Models + systems leaderboard table</b></summary>
+
+| Rank | Method | Kind | Elo | 95% bootstrap interval |
+|---:|---|---|---:|---:|
+| 1 | rt-plurel | System | 1859.7 | 1756.5–1951.5 |
+| 2 | tabpfn-rel-client | Model | 1829.7 | 1761.0–1928.7 |
+| 3 | kurversc | System | 1783.0 | 1703.6–1861.7 |
+| 4 | tabpfn-rel-local | Model | 1730.5 | 1645.5–1820.1 |
+| 5 | graphsage | Model | 1663.6 | 1588.1–1747.4 |
+| 6 | relgt | Model | 1579.1 | 1472.1–1703.0 |
+| 7 | rdblearn | Model | 1560.2 | 1459.0–1653.4 |
+| 8 | relgnn-es | Model | 1528.3 | 1450.1–1618.5 |
+| 9 | lightgbm | Model | 1359.9 | 1233.3–1443.2 |
+| 10 | constant-per-entity | Model | 1259.5 | 1112.4–1383.1 |
+| 11 | constant-global | Model | 1000.0 | 861.0–1074.3 |
+
+</details>
+
+<!-- END GENERATED LEADERBOARDS -->
+
+Only methods with results on every task enter a board. Self-reported reference numbers
+(`_MR`) and exploratory runs are excluded; see [baseline results](baseline_results)
+for the source files and provenance.
+
+<details>
+<summary><b>Regenerate the leaderboards</b></summary>
+
+From a source checkout with the reporting extras installed:
+
+```bash
+uv sync --locked --group cpu --extra leaderboard --extra plots
+OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py
+OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py --check
+```
+
+The script regenerates both tables and the joint plot from `baseline_results/results.csv`.
+`--check` reports stale generated content without changing files.
+
+</details>
 
 ## ⚡ Quickstart
 
@@ -498,50 +572,6 @@ Everything else per method lives at its source: install caveats in
 need platform-specific PyG sampling wheels beyond their extras), excluded backends and cache
 warmers in each model's docstring, and the complete implementation choices in the
 [adding-a-model appendix](docs/adding-a-model.md#appendix--what-every-existing-model-chose).
-
-</details>
-
-<details>
-<summary><b>📈 Release results</b> — Elo over the 21 RelArena-α tasks</summary>
-
-Elo ratings of the release snapshot at a single seed, computed with `bencheval` by fitting
-pairwise task outcomes under the Bradley-Terry model.
-Ratings are anchored to the global constant predictor at 1000 points, where a 400-point gap
-implies a win probability of about 91%. Ratings are relative, so the same method scores slightly
-differently in each board.
-
-| Rank | Method | Elo | Bootstrap -/+ |
-|---:|---|---:|---:|
-| 1 | RT-PluRel | 1859.7 | -103.2/+91.8 |
-| 2 | TabPFN-Rel API | 1829.7 | -68.7/+99.0 |
-| 3 | KurveRSC | 1783.0 | -79.4/+78.7 |
-| 4 | TabPFN-Rel Local | 1730.5 | -85.0/+89.6 |
-| 5 | GraphSAGE | 1663.6 | -75.5/+83.8 |
-| 6 | RelGT | 1579.1 | -107.0/+123.9 |
-| 7 | RDBLearn | 1560.2 | -101.2/+93.2 |
-| 8 | RelGNN-ES | 1528.3 | -78.2/+90.2 |
-| 9 | LightGBM | 1359.9 | -126.6/+83.3 |
-| 10 | Constant per entity | 1259.5 | -147.1/+123.6 |
-| 11 | Constant global | 1000.0 | -139.0/+74.3 |
-
-TabPFN-Rel ranks first among models sharing the standardized tuning regime; the system
-submission RT-PluRel achieves the highest end-to-end predictive performance. Three further
-observations, discussed in full in the forthcoming model report:
-
-- Tabular models are highly competitive. Contrary to prevailing beliefs in the relational
-  learning community, the TabPFN-Rel variants and RDBLearn hold up against relational deep
-  learning baselines, adding to the evidence that flattening a database into a table is a strong
-  strategy.
-- Constant predictors are not trivially beaten. `constant-per-entity` uses no features and no
-  model, yet beats RelGNN and RelGT on 4 tasks each; only TabPFN-Rel and RT-PluRel exceed it on
-  all 21.
-- All methods are expensive to run. The single-seed leaderboard took hundreds of hours of
-  wall-clock time, and on the more expensive databases some methods are prohibitively slow for
-  real-world use.
-
-The trivial entity-only LightGBM baseline enters the rank and Elo computation but is omitted from
-the table above. Per-task scores for everything live in
-[`baseline_results/results.csv`](baseline_results/results.csv).
 
 </details>
 

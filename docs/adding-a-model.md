@@ -498,6 +498,33 @@ by an organization; a pull request from an organization fork forces the results
 through a separate pull request against your fork and a manual merge on your
 side.
 
+### Maintainer checklist
+
+Complete these steps on the submission branch before merging:
+
+- [ ] Review the implementation, tests, and registration as a model or system.
+- [ ] Rerun the submission on the benchmark hardware under the documented
+      [tuning regime](tuning-regime.md). Verify test scores, runtime fields,
+      and task coverage. The default leaderboard requires results on all
+      21 tasks at seed 0.
+- [ ] Add the verified rows to `baseline_results/results.csv`, using the
+      registered method name and preserving other methods' results. Check
+      that each `(model, dataset, task, seed)` has one selected test result.
+- [ ] Regenerate the joint plot and both README tables from the repository root:
+
+  ```bash
+  uv sync --locked --group dev --group cpu --extra leaderboard --extra plots
+  OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py
+  OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py --check
+  ```
+
+- [ ] Inspect `docs/leaderboards.png` and the README diff. Confirm the submission
+      appears in the correct panels and tables, with readable labels and intervals.
+      `lightgbm` stays in the Elo computation and tables but is hidden in the plot.
+- [ ] Run the tests and pre-commit checks from [Tests](#8-tests).
+- [ ] Include the results CSV, README, and joint plot in the submission PR.
+      Get the submitter's confirmation of the numbers before merging them together.
+
 ## Appendix — what every existing model chose
 
 | Model | Folder | Space form | `default_overrides` | `refit_on_full_data` | Task types | Extra | Shared code used |

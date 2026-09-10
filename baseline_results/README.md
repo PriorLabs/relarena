@@ -9,9 +9,9 @@ A snapshot of RelArena baseline runs over the RelBench-v1 entity-task grid
   and no config, validation, or trial-budget fields. Filter on `selected` for
   one reportable row per job. The `device` column records the
   hardware each job ran on (`cpu` / `rtx-pro-6000`), for reading the wall-clock
-  time columns in context. This is the single persisted
-  artifact: the TabArena-style leaderboard is a cheap, on-demand view of it
-  (`relarena.evaluation.compute_leaderboard`).
+  time columns in context. This is the source data for the
+  [leaderboard tables and plots](../README.md#-leaderboards), generated with
+  `relarena.evaluation.compute_leaderboard`.
 
 Models: `constant-global`, `constant-per-entity`, `lightgbm`, `graphsage`, `rdblearn`,
 `tabpfn-rel-local`, `tabpfn-rel-client`, `relgnn-es`, `relgt`, `rt-plurel`.
