@@ -17,9 +17,12 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
-from relarena.cache import CacheConfig
-from relarena.models._shared.tfm import tfm
+from relarena.core.cache import CacheConfig
+from relarena.core.registry import registry
+from relarena.core.tfm import TFMSpec
+from relarena.models import _register_builtin_models as discover_models
 from relarena.models.tabpfn_rel import model as model_mod
+from relarena.models.tabpfn_rel import tfm
 from relarena.models.tabpfn_rel.context import hard_pool_subsample_indices
 from relarena.models.tabpfn_rel.model import (
     TABPFN_REL_CLIENT_SPACE,
@@ -28,7 +31,6 @@ from relarena.models.tabpfn_rel.model import (
     TabPFNRelLocalModel,
     TabPFNRelModel,
 )
-from relarena.registry import registry
 
 _N = 100
 
@@ -37,6 +39,7 @@ _N = 100
 
 
 def test__local_space__default_is_the_validated_config() -> None:
+    discover_models()
     assert registry.get("tabpfn-rel-local") is TabPFNRelLocalModel
     assert registry.search_space("tabpfn-rel-local") is TABPFN_REL_LOCAL_SPACE
     default = TABPFN_REL_LOCAL_SPACE.default_overrides
@@ -59,6 +62,7 @@ def test__local_space__default_is_the_validated_config() -> None:
 
 
 def test__client_model__registered_with_client_tfm_and_text() -> None:
+    discover_models()
     assert registry.get("tabpfn-rel-client") is TabPFNRelClientModel
     assert registry.search_space("tabpfn-rel-client") is TABPFN_REL_CLIENT_SPACE
     default = TABPFN_REL_CLIENT_SPACE.default_overrides
@@ -98,6 +102,7 @@ def test__knobs__assemble_calendar_history_text() -> None:
 class _StubClassifier:
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> "_StubClassifier":
         self.classes_ = np.unique(y)
+        self.y_ = y.copy()
         self.n_train_ = len(X)
         self.cols_ = list(X.columns)
         self.X_ = X.reset_index(drop=True)
@@ -117,7 +122,7 @@ def capture(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, object]]:
         captured.update(kw)
         return _StubClassifier()
 
-    tfm.TFM_REGISTRY["capture"] = tfm.TFMSpec(
+    tfm.TFM_REGISTRY["capture"] = TFMSpec(
         make_classifier=_make,
         make_regressor=_make,
         max_train_samples=10,
@@ -193,7 +198,7 @@ def test__random_strategy__caps_via_base_fit_tfm(capture: dict[str, object]) -> 
     assert "inference_config" not in capture  # no pool overrides
 
 
-def test__random_strategy__fits_the_rows_fit_tfm_downsamples_to(
+def test__random_strategy__fits_aligned_features_and_labels(
     capture: dict[str, object],
 ) -> None:
     table = _train_table()
@@ -201,15 +206,13 @@ def test__random_strategy__fits_the_rows_fit_tfm_downsamples_to(
     model.fit(_task(), db=None, train_table=table, val_table=None, seed=7)
 
     full_feat, _ = _dfs_stub(None, None, table)
-    idx = tfm._downsample_indices(
-        table.df["label"].to_numpy(),
-        TaskType.BINARY_CLASSIFICATION,
-        10,
-        np.random.default_rng(7),
-    )
+    estimator = model._fitted.estimator
+    idx = (estimator.X_["num"].to_numpy() / 2).astype(int)
+    assert len(idx) == 10 and len(set(idx)) == 10
     pd.testing.assert_frame_equal(
-        model._fitted.estimator.X_, full_feat.iloc[idx].reset_index(drop=True)
+        estimator.X_, full_feat.iloc[idx].reset_index(drop=True)
     )
+    np.testing.assert_array_equal(estimator.y_, table.df.iloc[idx]["label"])
 
 
 def test__hard_pool__forwards_indices_and_fits_the_context_union(

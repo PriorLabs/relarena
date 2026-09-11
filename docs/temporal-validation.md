@@ -81,9 +81,14 @@ database as available to every anchor. Doing so cannot reveal test labels or
 post-boundary data, and it does not recreate the alternative evaluation regime
 that advances the database to each test entity's timestamp.
 
-The implementation lives in [`dataset.py`](../src/relarena/dataset.py). The
-orchestration is in [`runner.py`](../src/relarena/runner.py) and
-[`tuner.py`](../src/relarena/tuner.py).
+Shared split construction lives in core's
+[`dataset.py`](../packages/relarena-core/src/relarena.core/dataset.py), with named
+benchmark loading in RelArena's
+[`dataset.py`](../packages/relarena/src/relarena/dataset.py). Tuning lives in core's
+[`tuner.py`](../packages/relarena-core/src/relarena.core/tuner.py); benchmark
+orchestration and final test scoring live in
+[`runner.py`](../packages/relarena/src/relarena/runner.py) and
+[`refit.py`](../packages/relarena/src/relarena/refit.py).
 
 ## Final-fit regimes
 

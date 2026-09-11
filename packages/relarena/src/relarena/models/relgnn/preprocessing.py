@@ -8,9 +8,9 @@ from typing import Any
 
 from relbench.base import Database
 
-from relarena.cache import CacheConfig, cache_key, cached_artifact
-from relarena.checksums import database_checksum
-from relarena.identity import RunIdentity
+from relarena.core.cache import CacheConfig, cache_key, cached_artifact
+from relarena.core.fingerprints import database_checksum
+from relarena.core.identity import RunIdentity
 from relarena.models._shared.gnn.graph_cache import DBGraphCache
 
 _GRAPH_CACHE_VERSION = 2

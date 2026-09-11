@@ -6,7 +6,7 @@ import argparse
 from collections.abc import Callable
 from pathlib import Path
 
-from relarena.cache import resolve_cache_config
+from relarena.core.cache import resolve_cache_config
 from relarena.dataset import RelBenchDatasetTask
 from relarena.models._shared.gnn.graph import build_graph
 

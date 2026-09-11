@@ -159,7 +159,7 @@ import pandas as pd
 
 import relarena.models  # registers the built-in models
 from relarena.evaluation import compute_leaderboard
-from relarena.registry import registry
+from relarena.core.registry import registry
 from relarena.results import summary_to_dataframe
 from relarena.runner import run_experiment
 from relarena.tasks import list_entity_tasks
@@ -246,7 +246,7 @@ preprocessing and GPU-bound training have different hardware requirements. RelAr
 permits methods to compute preprocessing artifacts once and cache them on disk before a run.
 
 Caching is not required. RelArena provides an **optional, experimental** helper API in
-[`relarena.cache`](packages/relarena/src/relarena/cache.py) for local paths, miss policies, private scratch
+[`relarena.core.cache`](packages/relarena/src/relarena/cache.py) for local paths, miss policies, private scratch
 computation, and atomic publication. A method may ignore this API and implement caching
 independently. The helper does not bring cache warming into a timed RelArena experiment;
 preprocessing scripts still run separately, so their runtime is not currently included in the

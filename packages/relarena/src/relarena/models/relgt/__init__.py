@@ -1,8 +1,4 @@
-"""`relgt` — the Relational Graph Transformer.
-
-Importing this package registers the `relgt` model. See `model`; `tokenize` is the
-relarena driver for the sampler, and `_vendor` holds the upstream RelGT stack.
-"""
+"""Relational Graph Transformer baseline."""
 
 from relarena.models.relgt.model import (
     RelGTModel,

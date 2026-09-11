@@ -24,7 +24,7 @@ from pathlib import Path
 
 from relbench.datasets import get_dataset
 
-from relarena.userdb.query import PredictiveQuerySpec
+from relarena.core.userdb.query import PredictiveQuerySpec
 
 _SPEC_DIR = files(__name__)
 

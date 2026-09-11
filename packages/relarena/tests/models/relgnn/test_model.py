@@ -18,8 +18,9 @@ from ConfigSpace import Configuration
 from relbench.base import TaskType
 
 import relarena.models.relgnn.preprocessing as preprocessing
-from relarena.cache import CacheConfig
-from relarena.identity import RunIdentity
+from relarena.core.cache import CacheConfig
+from relarena.core.identity import RunIdentity
+from relarena.core.registry import registry
 from relarena.models._shared.gnn.graph_cache import DBGraphCache
 from relarena.models.relgnn._vendor.atomic_routes import get_atomic_routes
 from relarena.models.relgnn.model import (
@@ -34,7 +35,6 @@ from relarena.models.relgnn.preprocessing import (
     graph_cache_key,
     load_graph,
 )
-from relarena.registry import registry
 
 # -- atomic routes (pure topology; no heavy deps) ---------------------------
 

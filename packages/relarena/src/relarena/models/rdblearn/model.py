@@ -2,7 +2,7 @@
 
 Combines:
   * **featurization** — multi-hop Deep Feature Synthesis over the foreign-key graph
-    (`relarena.featurization.build_dfs_features`, with the depth cache),
+    (`relarena.core.featurization.build_dfs_features`, with the depth cache),
     plus target-history augmentation (past-label aggregates), temporal-diff
     features, and the anchor columns (entity key + cutoff-time calendar features);
   * **search space** — an explicit grid over **(which tabular foundation model) ×
@@ -12,7 +12,8 @@ Combines:
     dimension.
 
 The estimator is a tabular foundation model (TabPFN v2 / v2.5); see
-`_shared/tfm/tfm.py` for the TFM registry and the downsample -> fit/predict core
+`relarena.models.rdblearn.tfm` for the backend definitions and
+`relarena.core.tfm` for shared fitting
 (the TFM handles categoricals natively). This is RDBLearn proper
 (https://github.com/HKUSHXLab/rdblearn) — DFS features + a foundation model.
 
@@ -25,7 +26,8 @@ included (at the cost of additional runtime).
 One deliberate deviation from upstream RDBLearn's preprocessing: it label-encodes
 categoricals and then runs AutoGluon's `AutoMLPipelineFeatureGenerator` over the
 result, whereas here the feature frame reaches the TFM as-is, so TabPFN does its own
-categorical detection and NaN handling (`_shared/tfm/tfm.py` has the why — upstream
+categorical detection and NaN handling (`relarena.models.rdblearn.tfm` has the why —
+upstream
 encodes because its backends take numpy arrays, a constraint a TabPFN-only grid does
 not have). The generator's datetime expansion is covered natively: the anchor cutoff
 gets the same year / month / day / dayofweek decomposition plus an epoch value, and
@@ -40,19 +42,17 @@ import os
 import numpy as np
 from relbench.base import Database, EntityTask, Table
 
-from relarena.featurization import DFS_MAX_DEPTH, build_dfs_features
-from relarena.model import RelArenaModel
-from relarena.models._shared.tfm.tfm import (
-    fit_tfm,
-    predict_tfm,
-)
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
+from relarena.core.featurization.dfs import DFS_MAX_DEPTH, build_dfs_features
+from relarena.core.model import RelArenaModel
+from relarena.core.registry import register_model
+from relarena.core.search_space import SearchSpace
+from relarena.core.tfm import fit_tfm, predict_tfm
+from relarena.models.rdblearn.tfm import TFM_REGISTRY
 
 _MIN_DEPTH = 2
 
-#: Tabular foundation models to sweep (names in the shared `TFM_REGISTRY`); both
-#: ship in the `tabpfn` package (a core dependency) and run under the RDBLearn
+#: Tabular foundation models to sweep (names in RDBLearn's `TFM_REGISTRY`); both
+#: ship in the `tabpfn` package (the `rdblearn` extra) and run under the RDBLearn
 #: paper's 10k fit limit. The paper (arXiv:2602.18495) sweeps exactly TabPFN
 #: v2 / v2.5 (and LimiX, which
 #: has no pip package — it / TabPFN-v3 plug in here once registered).
@@ -147,7 +147,7 @@ class RDBLearnModel(RelArenaModel):
             df,
             train_table.df[task.target_col],
             task.task_type,
-            tfm=self._tfm,
+            spec=TFM_REGISTRY[self._tfm],
             seed=seed,
             max_predict_samples=(
                 _configure_prediction_batching() if self._tfm in _TFMS else None

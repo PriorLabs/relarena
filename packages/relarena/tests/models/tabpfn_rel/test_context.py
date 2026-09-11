@@ -9,7 +9,8 @@ import pandas as pd
 import pytest
 from relbench.base import TaskType
 
-from relarena.models._shared.tfm import tfm
+from relarena.core.tfm import TFMSpec
+from relarena.models.tabpfn_rel import tfm
 from relarena.models.tabpfn_rel.context import (
     ContextStrategy,
     HardPoolContext,
@@ -113,7 +114,7 @@ def capture() -> Iterator[dict[str, object]]:
         captured.update(kw)
         return _StubClassifier()
 
-    tfm.TFM_REGISTRY["capture"] = tfm.TFMSpec(
+    tfm.TFM_REGISTRY["capture"] = TFMSpec(
         make_classifier=_make, make_regressor=_make, max_train_samples=10
     )
     try:

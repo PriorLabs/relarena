@@ -17,7 +17,8 @@ import pytest
 from relbench.base import TaskType
 
 from relarena import cli
-from relarena.results import SystemResult, TrialResult, summary_to_dataframe
+from relarena.core.results import SystemResult, TrialResult
+from relarena.results import summary_to_dataframe
 from relarena.runner import ExperimentSummary, SystemExperimentSummary
 from relarena.tasks import TaskSpec
 

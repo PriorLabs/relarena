@@ -18,6 +18,8 @@ import pandas as pd
 import pytest
 from relbench.base import TaskType
 
+from relarena.core.registry import registry
+from relarena.core.search_space import TaskStats
 from relarena.models.relgt.model import (
     _DEFAULT_CONFIG,
     _LARGE_NODE_THRESHOLD,
@@ -27,8 +29,6 @@ from relarena.models.relgt.model import (
     _schedule,
     relgt_search_space,
 )
-from relarena.registry import registry
-from relarena.search_space import TaskStats
 
 _GRID_COMBOS = {(ly, dr) for ly in (1, 4, 8) for dr in (0.3, 0.4, 0.5)}
 
@@ -37,7 +37,6 @@ _GRID_COMBOS = {(ly, dr) for ly in (1, 4, 8) for dr in (0.3, 0.4, 0.5)}
 
 
 def test__registry__relgt_registered_with_factory() -> None:
-    import relarena.models  # noqa: F401  (triggers registration)
     from relarena.models.relgt import RelGTModel
 
     assert "relgt" in registry

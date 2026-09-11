@@ -30,11 +30,11 @@ import numpy as np
 from relbench.base import Database, EntityTask, Table, TaskType
 from sklearn.dummy import DummyClassifier, DummyRegressor
 
-from relarena.metrics import primary_metric
-from relarena.model import RelArenaModel
-from relarena.models._shared.predict_contract import predict_to_contract
-from relarena.registry import register_model
-from relarena.search_space import SearchSpace
+from relarena.core.metrics import primary_metric
+from relarena.core.model import RelArenaModel
+from relarena.core.predict_contract import predict_to_contract
+from relarena.core.registry import register_model
+from relarena.core.search_space import SearchSpace
 
 #: Metrics minimized by the median; everything else (MSE/RMSE/R²) by the mean.
 _MEDIAN_METRICS = {"mae"}

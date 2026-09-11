@@ -9,45 +9,27 @@ orchestration is out of scope.
 from __future__ import annotations
 
 import logging
-import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Type
+from typing import Type
 
 import numpy as np
 from relbench.base import TaskType
 
-from relarena.cache import resolve_cache_config
+from relarena.core.cache import resolve_cache_config
+from relarena.core.model import RelArenaModel
+from relarena.core.registry import registry
+from relarena.core.results import SystemResult, TrialResult
+from relarena.core.search_space import SearchSpaceProvider
+from relarena.core.selection import select_best
+from relarena.core.system import RelArenaSystem
+from relarena.core.tasks import ENTITY_TASK_TYPES
+from relarena.core.tuner import tune
 from relarena.dataset import RelBenchDatasetTask
-from relarena.metrics import is_better
-from relarena.model import RelArenaModel
-from relarena.registry import registry
-from relarena.results import SystemResult, TrialResult
-from relarena.search_space import SearchSpaceProvider
-from relarena.system import RelArenaSystem
-from relarena.tasks import ENTITY_TASK_TYPES
-from relarena.tuner import refit_and_evaluate, tune
+from relarena.refit import refit_and_evaluate
 
 logger = logging.getLogger(__name__)
-
-
-def select_best(trials: list[TrialResult], metric: Callable[..., float]) -> TrialResult:
-    """Pick the trial with the best validation score under `metric`'s direction."""
-    valid = [
-        t
-        for t in trials
-        if t.ok and t.val_score is not None and math.isfinite(t.val_score)
-    ]
-    if not valid:
-        raise RuntimeError(
-            "No successful trials with a finite validation score to select from."
-        )
-    best = valid[0]
-    for t in valid[1:]:
-        if is_better(t.val_score, best.val_score, metric):
-            best = t
-    return best
 
 
 @dataclass
@@ -178,8 +160,8 @@ def run_model_experiment(
 ) -> ExperimentSummary:
     """Tune one model on a RelBench entity task and summarize its trials.
 
-    `search_space` defaults to the one registered for `model_cls` (via
-    `@register_model`); pass it explicitly to override.
+    `search_space` defaults to the one registered for `model_cls`;
+    pass it explicitly to override.
 
     Protocol (nested temporal validation; see docs/temporal-validation.md):
       1. **Tune** — fit each config on `train`, score on `val`, using the DB

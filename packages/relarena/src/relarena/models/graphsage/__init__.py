@@ -1,8 +1,4 @@
-"""`graphsage` — RelBench`s heterogeneous, temporal GraphSAGE GNN.
-
-Importing this package registers the `graphsage` model. See `model`; the vendored
-GNN building blocks it drives live in `models/_shared/gnn/_vendor`.
-"""
+"""Temporal GraphSAGE baseline."""
 
 from relarena.models.graphsage.model import GRAPHSAGE_SPACE, GraphSAGEModel
 
