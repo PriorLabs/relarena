@@ -8,7 +8,6 @@ from typing import Any, Callable, Protocol
 
 import numpy as np
 import pandas as pd
-import torch
 from relbench.base import TaskType
 
 from relarena.core.predict_contract import predict_to_contract
@@ -60,7 +59,12 @@ class TFMSpec:
 
 
 def default_device() -> str:
-    """Return `"cuda"` if a GPU is visible to torch, else `"cpu"`."""
+    """Return `"cuda"` if a GPU is visible to torch, else `"cpu"`.
+
+    torch is imported here so that core does not depend on it.
+    """
+    import torch
+
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 

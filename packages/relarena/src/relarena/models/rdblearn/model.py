@@ -46,8 +46,8 @@ from relarena.core.featurization.dfs import DFS_MAX_DEPTH, build_dfs_features
 from relarena.core.model import RelArenaModel
 from relarena.core.registry import register_model
 from relarena.core.search_space import SearchSpace
-from relarena.core.tfm import predict_tfm
-from relarena.models.rdblearn.tfm import fit_tfm
+from relarena.core.tfm import fit_tfm, predict_tfm
+from relarena.models.rdblearn.tfm import TFM_REGISTRY
 
 _MIN_DEPTH = 2
 
@@ -147,7 +147,7 @@ class RDBLearnModel(RelArenaModel):
             df,
             train_table.df[task.target_col],
             task.task_type,
-            tfm=self._tfm,
+            spec=TFM_REGISTRY[self._tfm],
             seed=seed,
             max_predict_samples=(
                 _configure_prediction_batching() if self._tfm in _TFMS else None

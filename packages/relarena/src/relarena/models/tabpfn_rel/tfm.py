@@ -1,19 +1,12 @@
-"""TabPFN backend recipes and named fitting helpers."""
+"""TabPFN backend recipes."""
 
 from __future__ import annotations
 
 from typing import Any
 
 import numpy as np
-import pandas as pd
-from relbench.base import TaskType
 
-from relarena.core.tfm import (
-    FittedTFM,
-    TFMSpec,
-    default_device,
-)
-from relarena.core.tfm import fit_tfm as _fit_spec
+from relarena.core.tfm import TFMSpec
 
 
 def _make_tabpfn(
@@ -123,42 +116,4 @@ TFM_REGISTRY: dict[str, TFMSpec] = {
 }
 
 
-def fit_tfm(
-    df: pd.DataFrame,
-    y: pd.Series,
-    task_type: TaskType,
-    *,
-    tfm: str,
-    seed: int,
-    device: Any = None,
-    max_train_samples: int | None = None,
-    max_predict_samples: int | None = None,
-    overrides: dict[str, Any] | None = None,
-) -> FittedTFM:
-    """Downsample `df` and fit the named TFM on it.
-
-    `df` is the already-typed feature frame from `build_dfs_features` (numeric
-    floats + object categoricals); TabPFN auto-detects categoricals from it (see the
-    module docstring) — we do not pass `categorical_features_indices`. The training
-    rows are capped (seeded) at `max_train_samples` if given, else the TFM's own
-    context cap (`spec.max_train_samples`); `overrides` are additional
-    estimator-constructor arguments. `max_predict_samples` is an explicit
-    caller-owned cap on rows per estimator prediction call; ordinary TFM callers
-    leave it unset.
-    """
-    if device is None:
-        device = default_device()
-    return _fit_spec(
-        df,
-        y,
-        task_type,
-        spec=TFM_REGISTRY[tfm],
-        seed=seed,
-        device=device,
-        max_train_samples=max_train_samples,
-        max_predict_samples=max_predict_samples,
-        overrides=overrides,
-    )
-
-
-__all__ = ["TFM_REGISTRY", "fit_tfm"]
+__all__ = ["TFM_REGISTRY"]
