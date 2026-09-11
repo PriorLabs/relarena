@@ -17,12 +17,12 @@ from email.parser import BytesParser
 from pathlib import Path
 
 CASES = (
-    ("core", "uv", "relarena-core", None),
-    ("base", "uv", "relarena", None),
-    ("host-local", "pip", "relarena[tabpfn-rel-local]", "tabpfn"),
-    ("host-api", "pip", "relarena[tabpfn-rel-api]", "tabpfn-client"),
-    ("direct-local", "uv", "tabpfn-rel[local]", "tabpfn"),
-    ("direct-api", "uv", "tabpfn-rel[api]", "tabpfn-client"),
+    ("core", "relarena-core", None),
+    ("base", "relarena", None),
+    ("host-local", "relarena[tabpfn-rel-local]", "tabpfn"),
+    ("host-api", "relarena[tabpfn-rel-api]", "tabpfn-client"),
+    ("direct-local", "tabpfn-rel[local]", "tabpfn"),
+    ("direct-api", "tabpfn-rel[api]", "tabpfn-client"),
 )
 
 
@@ -114,7 +114,6 @@ def main() -> None:
         **os.environ,
         "OMP_NUM_THREADS": "1",
         "UV_CACHE_DIR": os.environ.get("UV_CACHE_DIR", str(output / "uv-cache")),
-        "PIP_CACHE_DIR": os.environ.get("PIP_CACHE_DIR", str(output / "pip-cache")),
     }
     env.pop("PYTHONPATH", None)
     for source in (
@@ -141,9 +140,9 @@ def main() -> None:
             log,
         )
     results = []
-    for name, installer, requirement, backend in CASES:
+    for name, requirement, backend in CASES:
         directory = output / name
-        print(f"Testing {name} with {installer}", flush=True)
+        print(f"Testing {name}", flush=True)
         run(
             ["uv", "venv", "--seed", "--python", args.python, str(directory)],
             output,
@@ -151,11 +150,7 @@ def main() -> None:
             log,
         )
         python = str(directory / "bin/python")
-        install = (
-            [python, "-m", "pip", "install"]
-            if installer == "pip"
-            else ["uv", "pip", "install", "--python", python]
-        )
+        install = ["uv", "pip", "install", "--python", python]
         run(
             [
                 *install,
@@ -237,7 +232,7 @@ print('Verified', sys.executable, sorted(installed))
                 env,
                 log,
             )
-        results.append({"case": name, "installer": installer, "passed": True})
+        results.append({"case": name, "passed": True})
         (output / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     print(
         f"All {len(results)} installation paths passed. Results: {output / 'results.json'}"
