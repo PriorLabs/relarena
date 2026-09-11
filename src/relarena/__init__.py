@@ -20,6 +20,11 @@ from relarena.checksums import (
 from relarena.dataset import InnerSplit, OuterSplit, RelBenchDatasetTask, Split
 from relarena.identity import RunIdentity
 from relarena.model import RelArenaModel
+from relarena.predictions import (
+    load_prediction_labels,
+    load_predictions,
+    prediction_context,
+)
 from relarena.registry import (
     MethodRegistry,
     ModelRegistry,
@@ -59,6 +64,9 @@ __all__ = [
     "cache_key",
     "cached_artifact",
     "list_entity_tasks",
+    "load_predictions",
+    "load_prediction_labels",
+    "prediction_context",
     "run_experiment",
     "run_model_experiment",
     "run_system_experiment",
