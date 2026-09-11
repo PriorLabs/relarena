@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from relarena.core.tfm import TFMSpec
+from relarena_core.tfm import TFMSpec
 
 
 def _make_tabpfn(

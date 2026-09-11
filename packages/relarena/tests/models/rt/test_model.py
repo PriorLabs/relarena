@@ -18,10 +18,10 @@ import pytest
 import yaml
 from relbench.base import Table, TaskType
 
-from relarena.core.registry import registry
 from relarena.models.rt import RTPluRelSystem
 from relarena.models.rt import config as cfg
 from relarena.models.rt.export import TASK_DIR, _write_dataset_dir, target_stats
+from relarena_core.registry import registry
 
 
 def test__registry__rt_plurel__is_registered_as_a_system() -> None:
@@ -568,8 +568,8 @@ def test__embed__identical_text_is_embedded_once_and_linked(
     import sys
     from types import ModuleType
 
-    from relarena.core.cache import CacheConfig
     from relarena.models.rt import export
+    from relarena_core.cache import CacheConfig
 
     calls = []
 
@@ -623,8 +623,8 @@ def test__embed__different_text_is_not_shared(
     import sys
     from types import ModuleType
 
-    from relarena.core.cache import CacheConfig
     from relarena.models.rt import export
+    from relarena_core.cache import CacheConfig
 
     calls = []
 

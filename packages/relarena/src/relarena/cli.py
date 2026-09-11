@@ -19,14 +19,14 @@ from __future__ import annotations
 
 import argparse
 import sys
-from importlib import import_module
 
 import pandas as pd
 
-from relarena.core.registry import registry
 from relarena.results import summary_to_dataframe
 from relarena.runner import SystemExperimentSummary, run_experiment
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
+from relarena_core.discovery import discover_models
+from relarena_core.registry import registry
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Nothing to run.", file=sys.stderr)
         return 1
 
-    import_module("relarena.models")
+    discover_models()
     try:
         model_cls = registry.get(args.model)
     except KeyError as exc:

@@ -16,20 +16,6 @@ from relarena.checksums import (
     split_checksums,
     table_checksum,
 )
-from relarena.core.cache import CacheConfig, CacheMiss, cache_key, cached_artifact
-from relarena.core.dataset import InnerSplit, OuterSplit, Split
-from relarena.core.identity import RunIdentity
-from relarena.core.model import RelArenaModel
-from relarena.core.registry import (
-    MethodRegistry,
-    ModelRegistry,
-    register_model,
-    register_system,
-    registry,
-)
-from relarena.core.results import SystemResult, TrialResult
-from relarena.core.system import RelArenaSystem
-from relarena.core.tuner import tune
 from relarena.dataset import RelBenchDatasetTask
 from relarena.results import summary_to_dataframe
 from relarena.runner import (
@@ -38,6 +24,21 @@ from relarena.runner import (
     run_system_experiment,
 )
 from relarena.tasks import RELBENCH_V1_DATASETS, TaskSpec, list_entity_tasks
+from relarena_core.cache import CacheConfig, CacheMiss, cache_key, cached_artifact
+from relarena_core.dataset import InnerSplit, OuterSplit, Split
+from relarena_core.discovery import discover_models
+from relarena_core.identity import RunIdentity
+from relarena_core.model import RelArenaModel
+from relarena_core.registry import (
+    MethodRegistry,
+    ModelRegistry,
+    register_model,
+    register_system,
+    registry,
+)
+from relarena_core.results import SystemResult, TrialResult
+from relarena_core.system import RelArenaSystem
+from relarena_core.tuner import tune
 
 __all__ = [
     "RELBENCH_V1_DATASETS",
@@ -58,6 +59,7 @@ __all__ = [
     "TaskSpec",
     "TrialResult",
     "SystemResult",
+    "discover_models",
     "cache_key",
     "cached_artifact",
     "list_entity_tasks",
@@ -70,4 +72,4 @@ __all__ = [
     "database_checksum",
     "split_checksums",
 ]
-__version__ = "0.0.1"
+__version__ = "0.0.2"

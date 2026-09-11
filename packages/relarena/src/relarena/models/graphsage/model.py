@@ -57,10 +57,6 @@ import torch
 from ConfigSpace import Categorical, ConfigurationSpace, Float
 from relbench.base import Database, EntityTask, Table, TaskType
 
-from relarena.core.metrics import get_metric, primary_metric
-from relarena.core.model import RelArenaModel
-from relarena.core.registry import register_model
-from relarena.core.search_space import SearchSpace
 from relarena.models._shared.gnn.graph import GRAPH_CACHE, build_graph
 from relarena.models._shared.gnn.training import (
     default_device,
@@ -68,6 +64,10 @@ from relarena.models._shared.gnn.training import (
     task_setup,
     train_epoch,
 )
+from relarena_core.metrics import get_metric, primary_metric
+from relarena_core.model import RelArenaModel
+from relarena_core.registry import register_model
+from relarena_core.search_space import SearchSpace
 
 logger = logging.getLogger(__name__)
 

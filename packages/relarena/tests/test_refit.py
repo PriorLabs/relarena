@@ -10,11 +10,11 @@ import numpy as np
 import pandas as pd
 from relbench.base import Table, TaskType
 
-from relarena.core.cache import CacheConfig
-from relarena.core.dataset import OuterSplit
-from relarena.core.identity import RunIdentity
-from relarena.core.model import RelArenaModel
 from relarena.refit import refit_and_evaluate
+from relarena_core.cache import CacheConfig
+from relarena_core.dataset import OuterSplit
+from relarena_core.identity import RunIdentity
+from relarena_core.model import RelArenaModel
 
 
 def _outer_table(entities: list[int], times: list[int], ys: list[float]) -> Table:

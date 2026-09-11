@@ -12,11 +12,11 @@ dev = [
     "kurversc==0.1.1",
     "lightgbm>=4.0,<4.7",
     "fastdfs>=1.1",
-    # Same woodwork/pkg_resources cap as the DFS extras above.
+    # Match the woodwork/pkg_resources cap in the core DFS extra.
     "setuptools<82",
 ]
 # The "cuda" and "cpu" groups switch between the cuda and CPU-only versions of torch.
-# With no group, torch comes from "dependencies" above via pypi, which is the cuda
+# With no group, torch comes from package dependencies via pypi, which is the cuda
 # build. The "cuda" group is a dummy, required for the "conflicts" option below.
 cuda = []
 # The CPU-only build avoids downloading CUDA when not required.
@@ -37,6 +37,7 @@ conflicts = [
 
 [tool.uv.sources]
 relarena = { workspace = true }
+relarena-core = { workspace = true }
 # bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
 # The resolved commit is pinned in uv.lock for reproducibility.
 bencheval = { git = "https://github.com/autogluon/tabarena.git", subdirectory = "packages/bencheval", rev = "9f3878b882439cb885003b5f978676961b059b6d" }
@@ -50,7 +51,7 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.ruff]
-src = ["packages/relarena/src"]
+src = ["packages/relarena/src", "packages/relarena-core/src"]
 required-version = "==0.15.13"
 force-exclude = true
 line-length = 88
@@ -93,8 +94,8 @@ ignore-decorators = ["typing.override", "typing_extensions.override"]
 ]
 
 [tool.uv.workspace]
-members = ["packages/relarena"]
+members = ["packages/relarena", "packages/relarena-core"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/relarena/tests"]
+testpaths = ["packages/relarena/tests", "packages/relarena-core/tests"]
 addopts = "--import-mode=importlib"

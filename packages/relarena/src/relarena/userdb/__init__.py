@@ -13,14 +13,14 @@ windows when the source data cover their label horizon. The 21 RelBench-v1 entit
 tasks ship as reference specs (`relbench_v1_spec`).
 """
 
-from relarena.core.userdb.ingest import DatabaseSpec
-from relarena.core.userdb.query import PredictiveQuery, PredictiveQuerySpec
-from relarena.core.userdb.spec import PredictiveTaskSpec
 from relarena.userdb.relbench_v1 import (
     materialize_relbench,
     relbench_v1_spec,
     relbench_v1_tasks,
 )
+from relarena_core.userdb.ingest import DatabaseSpec
+from relarena_core.userdb.query import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb.spec import PredictiveTaskSpec
 
 __all__ = [
     "DatabaseSpec",

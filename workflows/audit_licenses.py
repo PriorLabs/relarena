@@ -160,6 +160,8 @@ ACCEPTED_PREFIXES: tuple[tuple[str, str], ...] = (
 #: Licenses for packages whose published metadata declares none, read by hand at the
 #: locked version from the artifact or the upstream repository.
 MANUAL_LICENSES: dict[str, str] = {
+    # packages/relarena-core/pyproject.toml declares Apache-2.0.
+    "relarena-core": "Apache-2.0",
     # autogluon/tabarena @ 221c38d: packages/bencheval/pyproject.toml declares
     # Apache-2.0, matching this repository's LICENSE (no per-package file).
     "bencheval": "Apache-2.0",

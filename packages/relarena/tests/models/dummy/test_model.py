@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 from relbench.base import TaskType
 
-from relarena.core.registry import registry
 from relarena.models.dummy import DummyBaseline, DummyPerEntityBaseline
+from relarena_core.registry import registry
 
 
 def _task(

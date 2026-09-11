@@ -28,9 +28,9 @@ from typing import Any, Final
 import numpy as np
 from relbench.base import Database, EntityTask, Table
 
-from relarena.core.dataset import InnerSplit, OuterSplit
-from relarena.core.registry import register_system
-from relarena.core.system import RelArenaSystem
+from relarena_core.dataset import InnerSplit, OuterSplit
+from relarena_core.registry import register_system
+from relarena_core.system import RelArenaSystem
 
 logger = logging.getLogger(__name__)
 

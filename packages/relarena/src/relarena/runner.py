@@ -17,17 +17,17 @@ from typing import Type
 import numpy as np
 from relbench.base import TaskType
 
-from relarena.core.cache import resolve_cache_config
-from relarena.core.model import RelArenaModel
-from relarena.core.registry import registry
-from relarena.core.results import SystemResult, TrialResult
-from relarena.core.search_space import SearchSpaceProvider
-from relarena.core.selection import select_best
-from relarena.core.system import RelArenaSystem
-from relarena.core.tasks import ENTITY_TASK_TYPES
-from relarena.core.tuner import tune
 from relarena.dataset import RelBenchDatasetTask
 from relarena.refit import refit_and_evaluate
+from relarena_core.cache import resolve_cache_config
+from relarena_core.model import RelArenaModel
+from relarena_core.registry import registry
+from relarena_core.results import SystemResult, TrialResult
+from relarena_core.search_space import SearchSpaceProvider
+from relarena_core.selection import select_best
+from relarena_core.system import RelArenaSystem
+from relarena_core.tasks import ENTITY_TASK_TYPES
+from relarena_core.tuner import tune
 
 logger = logging.getLogger(__name__)
 

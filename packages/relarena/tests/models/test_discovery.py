@@ -39,7 +39,7 @@ class BlockBackends(importlib.abc.MetaPathFinder):
         return None
 
 sys.meta_path.insert(0, BlockBackends())
-from relarena.core.registry import registry
+from relarena_core.registry import registry
 assert not registry.names()
 import relarena.models
 assert set(registry.names()) == {_BASELINES!r}
@@ -63,9 +63,9 @@ def test_new_model_is_discovered_without_a_catalogue(
     else:
         module = package.with_suffix(".py")
     module.write_text(
-        "from relarena.core.model import RelArenaModel\n"
-        "from relarena.core.registry import register_model\n"
-        "from relarena.core.search_space import SearchSpace\n"
+        "from relarena_core.model import RelArenaModel\n"
+        "from relarena_core.registry import register_model\n"
+        "from relarena_core.search_space import SearchSpace\n"
         "@register_model(search_space=SearchSpace(default_overrides={}))\n"
         "class ExtraModel(RelArenaModel):\n"
         "    name = 'extra-model'\n"
@@ -77,7 +77,7 @@ def test_new_model_is_discovered_without_a_catalogue(
     )
     code = f"""
 import relarena.models
-from relarena.core.registry import registry
+from relarena_core.registry import registry
 relarena.models.__path__.append({str(tmp_path)!r})
 relarena.models._register_builtin_models()
 from relarena.models.extra_model import ExtraModel

@@ -79,8 +79,8 @@ default configuration when `n_trials=0`; a positive budget enables temporal tuni
    different `val_timestamp` and `test_timestamp` values over the same tables.
 
 The two files' shapes are defined by
-[`database.schema.json`](../packages/relarena-core/src/relarena.core/userdb/database.schema.json) and
-[`task.schema.json`](../packages/relarena-core/src/relarena.core/userdb/task.schema.json) — JSON Schemas with a
+[`database.schema.json`](../packages/relarena-core/src/relarena_core/userdb/database.schema.json) and
+[`task.schema.json`](../packages/relarena-core/src/relarena_core/userdb/task.schema.json) — JSON Schemas with a
 description on every field, validated on load, so a malformed file fails fast with a
 pointer to the offending field rather than an opaque error later.
 
@@ -266,7 +266,7 @@ maximum depth up to which fastdfs joins.
 the final fit, and prediction. The first RPI run fills the local store and later
 runs over the same inputs read it back. Nothing is uploaded. Omit `cache_dir` to
 fall back to `RELARENA_CACHE_DIR`, or to compute without persistent caching when
-neither is set. The underlying `relarena.core.cache` API is optional and experimental;
+neither is set. The underlying `relarena_core.cache` API is optional and experimental;
 models may implement caching independently.
 
 ```python

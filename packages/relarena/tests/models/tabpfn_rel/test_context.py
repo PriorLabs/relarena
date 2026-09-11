@@ -9,7 +9,6 @@ import pandas as pd
 import pytest
 from relbench.base import TaskType
 
-from relarena.core.tfm import TFMSpec
 from relarena.models.tabpfn_rel import tfm
 from relarena.models.tabpfn_rel.context import (
     ContextStrategy,
@@ -19,6 +18,7 @@ from relarena.models.tabpfn_rel.context import (
     hard_pool_subsample_indices,
     soft_pool_subsample_indices,
 )
+from relarena_core.tfm import TFMSpec
 
 # -- pool index math ---------------------------------------------------------
 

@@ -16,10 +16,10 @@ from relbench.base import TaskType
 from relbench.metrics import roc_auc
 
 from relarena import runner
-from relarena.core.cache import CacheConfig
-from relarena.core.identity import RunIdentity
-from relarena.core.results import TrialResult
-from relarena.core.system import RelArenaSystem
+from relarena_core.cache import CacheConfig
+from relarena_core.identity import RunIdentity
+from relarena_core.results import TrialResult
+from relarena_core.system import RelArenaSystem
 
 _MODEL = SimpleNamespace(
     name="stub", supported_task_types=frozenset({TaskType.BINARY_CLASSIFICATION})

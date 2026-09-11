@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena"
-version = "0.0.1"
+version = "0.0.2"
 authors = [{ name = "Prior Labs" }]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
@@ -27,6 +27,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
+    "relarena-core==0.0.1",
     # Pinned exactly: RelBench ships the dataset/task SHA256 checksums in the package
     # itself (relbench/datasets/hashes.json, relbench/tasks/hashes.json, wired into the
     # pooch registries in relbench/datasets/__init__.py and relbench/tasks/__init__.py),
@@ -71,11 +72,11 @@ lightgbm = ["lightgbm>=4.0,<4.7"]
 # native system entry because selection happens inside its end-to-end run.
 kurversc = ["kurversc==0.1.1"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
-# (tabpfn>=8 for the create_default_for_version API, lazily imported in models/_tfm.py)
-# plus the DFS featurization deps; `tabpfn-rel-local` uses this same extra.
+# (tabpfn>=8 for the create_default_for_version API, lazily imported in relarena.models.rdblearn.tfm)
+# plus the DFS featurization deps.
 # setuptools<82 because featuretools -> woodwork imports pkg_resources at import
 # time, and setuptools 82 removed it (81 still ships it).
-rdblearn = ["tabpfn>=8", "fastdfs>=1.1", "setuptools<82"]
+rdblearn = ["tabpfn>=8", "relarena-core[dfs]==0.0.1"]
 # rdl: the shared Relational Deep Learning stack for the GNN baselines — PyG + PyTorch
 # Frame + a text embedder, which relbench.modeling.* needs (all lazy-imported inside
 # fit()). GPU recommended. NOTE: PyG neighbor sampling needs `pyg-lib` or `torch-sparse`
@@ -89,10 +90,7 @@ rdl = ["torch-geometric>=2.5", "pytorch-frame>=0.2.3", "sentence-transformers"]
 graphsage = ["relarena[rdl]"]
 relgnn = ["relarena[rdl]"]
 relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
-# tabpfn-rel-local runs the local TabPFN v3 over DFS features — the same stack as
-# rdblearn, exposed under the model's own name. tabpfn-rel-api covers
-# tabpfn-rel-client (the tabpfn-v3-api TFM): DFS locally, fit/predict server-side,
-# text embedded natively by the API — no GPU and no local tabpfn needed.
+# TabPFN-Rel backends are optional; the model registers with the built-in models.
 tabpfn-rel-local = ["relarena[rdblearn]"]
 tabpfn-rel-api = ["fastdfs>=1.1", "setuptools<82", "tabpfn-client>=0.3.2"]
 # RelArena supports RT execution on Linux x86_64, for which relational-transformer
@@ -108,3 +106,7 @@ leaderboard = ["bencheval"]
 # matplotlib/seaborn/plotly stack and the CD plot; `autorank` runs the Demšar
 # significance test.
 plots = ["bencheval[plot]", "autorank"]
+
+
+[project.entry-points."relarena.models"]
+relarena = "relarena.models"

@@ -1,11 +1,11 @@
-"""A novel model-owned cache with formats unknown to relarena.core.cache."""
+"""A novel model-owned cache with formats unknown to relarena_core.cache."""
 
 from __future__ import annotations
 
 import hashlib
 from pathlib import Path
 
-from relarena.core.cache import CacheConfig, cache_key, cached_artifact
+from relarena_core.cache import CacheConfig, cache_key, cached_artifact
 
 _VERSION = 7
 
