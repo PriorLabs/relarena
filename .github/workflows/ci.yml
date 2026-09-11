@@ -29,21 +29,21 @@ jobs:
         with:
           enable-cache: true
       - name: Install test dependencies
-        run: uv sync --locked --group dev --group cpu --extra leaderboard --extra plots --extra rt
+        run: uv sync --all-packages --locked --group dev --group cpu --extra leaderboard --extra plots --extra rt
       - name: Verify test interpreter
         env:
           EXPECTED_PYTHON: ${{ matrix.python-version }}
         run: |
-          uv run python -c 'import os, sys; actual = f"{sys.version_info.major}.{sys.version_info.minor}"; expected = os.environ["EXPECTED_PYTHON"]; assert actual == expected, f"Expected Python {expected}, got {actual}"'
+          uv run --no-sync python -c 'import os, sys; actual = f"{sys.version_info.major}.{sys.version_info.minor}"; expected = os.environ["EXPECTED_PYTHON"]; assert actual == expected, f"Expected Python {expected}, got {actual}"'
       - name: Check formatting and lint
         run: |
-          uv run ruff format --check .
-          uv run ruff check .
+          uv run --no-sync ruff format --check .
+          uv run --no-sync ruff check .
       - name: Run tests
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest
+        run: uv run --no-sync pytest
       - name: Build distributions
-        run: uv build
+        run: uv build --all-packages
       - name: Verify required package data
         run: python workflows/verify_distributions.py

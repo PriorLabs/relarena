@@ -16,7 +16,7 @@ from relarena.identity import RunIdentity
 from relarena.userdb import relbench_v1_spec, relbench_v1_tasks
 from relarena.userdb.query import PredictiveQuery, PredictiveQuerySpec
 
-_EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
+_EXAMPLES = Path(__file__).resolve().parents[4] / "examples"
 _DB_YAML = "drivers:\n  pkey: driverId\n"
 _TASK_YAML = (
     "database: db.yaml\n"
