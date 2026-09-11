@@ -61,10 +61,13 @@ class TFMSpec:
 def default_device() -> str:
     """Return `"cuda"` if a GPU is visible to torch, else `"cpu"`.
 
-    torch is imported here so that core does not depend on it.
+    torch is not a core dependency: local estimators bring it, hosted ones do not,
+    so an environment without torch has no GPU to offer.
     """
-    import torch
-
+    try:
+        import torch
+    except ModuleNotFoundError:
+        return "cpu"
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
