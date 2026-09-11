@@ -21,6 +21,7 @@ def isolated(monkeypatch: pytest.MonkeyPatch) -> MethodRegistry:
     registry = MethodRegistry()
     monkeypatch.setattr(registry_module, "registry", registry)
     monkeypatch.setattr(discovery, "_loaded", set())
+    monkeypatch.setattr(discovery, "_complete", False)
     return registry
 
 

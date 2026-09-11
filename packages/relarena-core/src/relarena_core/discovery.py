@@ -6,6 +6,7 @@ from importlib.metadata import entry_points
 from threading import RLock
 
 _loaded: set[tuple[str, str]] = set()
+_complete = False
 _lock = RLock()
 
 
@@ -13,10 +14,14 @@ def discover_models() -> None:
     """Import model modules declared in the relarena.models entry-point group.
 
     Module imports execute registration decorators against the shared registry.
-    Successful entries load once per process; failed imports remain retryable
-    and raise an error naming the plugin. Importing core does not run discovery.
+    After one pass without failures the call returns immediately, so callers can
+    invoke it per lookup. A failed import raises an error naming the plugin and
+    leaves discovery retryable. Importing core does not run discovery.
     """
+    global _complete
     with _lock:
+        if _complete:
+            return
         for entry in sorted(
             entry_points(group="relarena.models"), key=lambda e: (e.name, e.value)
         ):
@@ -31,6 +36,7 @@ def discover_models() -> None:
                     f"({entry.value}). Check its installation and dependencies."
                 ) from exc
             _loaded.add(key)
+        _complete = True
 
 
 __all__ = ["discover_models"]
