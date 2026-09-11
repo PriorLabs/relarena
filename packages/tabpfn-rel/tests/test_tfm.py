@@ -9,7 +9,7 @@ from types import ModuleType
 import numpy as np
 import pytest
 
-from relarena.models.tabpfn_rel import tfm
+from tabpfn_rel import tfm
 
 
 def test_tabpfn_v3_spec_has_no_text_support() -> None:

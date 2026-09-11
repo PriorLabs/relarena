@@ -5,7 +5,12 @@ improvements, new model integrations, and reproducibility fixes are welcome.
 
 ## Development setup
 
-RelArena requires Python 3.11 and uses [uv](https://docs.astral.sh/uv/):
+RelArena supports Python 3.11 and 3.12 and uses [uv](https://docs.astral.sh/uv/).
+The workspace contains three sibling distributions under `packages/`: `relarena`,
+`relarena-core`, and `tabpfn-rel`. Each has its own source tree and tests; the root
+owns shared development tooling and the lockfile. Install all workspace members
+for the combined test suite. To install only one member with pip, use its directory,
+for example `pip install ./packages/relarena` after its dependency wheels are available.
 
 ```bash
 uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots

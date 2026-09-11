@@ -18,7 +18,7 @@ import sys
 from relarena.models.rdblearn import RDBLearnModel, tfm
 from relarena_core.registry import registry
 
-prefixes = ('tabpfn', 'tabpfn_client', 'fastdfs')
+prefixes = ('tabpfn_rel', 'tabpfn', 'tabpfn_client', 'fastdfs')
 loaded = [name for name in sys.modules
           if any(name == p or name.startswith(p + '.') for p in prefixes)]
 assert not loaded, loaded

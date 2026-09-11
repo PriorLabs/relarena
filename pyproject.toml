@@ -38,6 +38,7 @@ conflicts = [
 [tool.uv.sources]
 relarena = { workspace = true }
 relarena-core = { workspace = true }
+tabpfn-rel = { workspace = true }
 # bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
 # The resolved commit is pinned in uv.lock for reproducibility.
 bencheval = { git = "https://github.com/autogluon/tabarena.git", subdirectory = "packages/bencheval", rev = "9f3878b882439cb885003b5f978676961b059b6d" }
@@ -51,7 +52,7 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.ruff]
-src = ["packages/relarena/src", "packages/relarena-core/src"]
+src = ["packages/relarena/src", "packages/relarena-core/src", "packages/tabpfn-rel/src"]
 required-version = "==0.15.13"
 force-exclude = true
 line-length = 88
@@ -94,8 +95,9 @@ ignore-decorators = ["typing.override", "typing_extensions.override"]
 ]
 
 [tool.uv.workspace]
-members = ["packages/relarena", "packages/relarena-core"]
+members = ["packages/relarena", "packages/relarena-core", "packages/tabpfn-rel"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/relarena/tests", "packages/relarena-core/tests"]
+pythonpath = ["packages/tabpfn-rel"]
+testpaths = ["packages/relarena/tests", "packages/relarena-core/tests", "packages/tabpfn-rel/tests"]
 addopts = "--import-mode=importlib"
