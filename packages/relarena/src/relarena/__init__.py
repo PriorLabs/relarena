@@ -72,4 +72,4 @@ __all__ = [
     "database_checksum",
     "split_checksums",
 ]
-__version__ = "0.0.3"
+__version__ = "0.0.2"

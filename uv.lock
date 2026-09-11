@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-06T14:33:43.976773Z"
+exclude-newer = "2026-09-08T14:22:38.664869Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2393,7 +2393,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.0.3"
+version = "0.0.2"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
@@ -2509,9 +2509,6 @@ dependencies = [
     { name = "pyyaml" },
     { name = "relbench" },
     { name = "scikit-learn" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu'" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 
 [package.optional-dependencies]
@@ -2532,7 +2529,6 @@ requires-dist = [
     { name = "relbench", specifier = "==2.1.2" },
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "setuptools", marker = "extra == 'dfs'", specifier = "<82" },
-    { name = "torch" },
 ]
 provides-extras = ["dfs"]
 
