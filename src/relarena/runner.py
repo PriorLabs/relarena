@@ -12,6 +12,7 @@ import logging
 import math
 import time
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Callable, Type
 
@@ -22,6 +23,7 @@ from relarena.cache import resolve_cache_config
 from relarena.dataset import RelBenchDatasetTask
 from relarena.metrics import is_better
 from relarena.model import RelArenaModel
+from relarena.predictions import PredictionArtifactWriter
 from relarena.registry import registry
 from relarena.results import SystemResult, TrialResult
 from relarena.search_space import SearchSpaceProvider
@@ -175,11 +177,17 @@ def run_model_experiment(
     cache_dir: str | Path | None = None,
     evaluate_test: bool = True,
     require_all_trials: bool = True,
+    predictions_dir: str | Path | None = None,
+    refit_all_configs: bool = False,
 ) -> ExperimentSummary:
     """Tune one model on a RelBench entity task and summarize its trials.
 
     `search_space` defaults to the one registered for `model_cls` (via
     `@register_model`); pass it explicitly to override.
+
+    With predictions_dir, save validation and final-fit predictions locally.
+    refit_all_configs also evaluates other successful configs, recording their
+    extra fit/predict times only in the artifacts.
 
     Protocol (nested temporal validation; see docs/temporal-validation.md):
       1. **Tune** — fit each config on `train`, score on `val`, using the DB
@@ -198,6 +206,12 @@ def run_model_experiment(
     only). Returns an `ExperimentSummary` with the default and best-tuned
     trials (the latter carrying the refit test score) plus the full trial list.
     """
+    if refit_all_configs and (predictions_dir is None or not evaluate_test):
+        raise ValueError(
+            "All-config refits require predictions_dir and test evaluation."
+        )
+    if predictions_dir is not None and not cache_predictions:
+        raise ValueError("Prediction artifacts require cache_predictions=True.")
     source = RelBenchDatasetTask(dataset_name, task_name, download=download)
     task = source.task
     cache = resolve_cache_config(cache_dir, on_miss="raise")
@@ -223,11 +237,12 @@ def run_model_experiment(
     # Phase 1+2: tune on the inner split (train→val, DB censored at val_timestamp so
     # validation features are frozen at the val cutoff — see the protocol note above
     # and docs/temporal-validation.md), then select the best config by val score.
+    inner = source.inner_split()
     trials = tune(
         model_cls,
         search_space,
         task,
-        source.inner_split(),
+        inner,
         n_trials=n_trials,
         seed=seed,
         time_limit_per_trial=time_limit_per_trial,
@@ -249,6 +264,17 @@ def run_model_experiment(
             f"{failed[0].error}"
         )
 
+    artifacts = None
+    if predictions_dir is not None:
+        artifacts = PredictionArtifactWriter(
+            Path(predictions_dir),
+            source,
+            model_cls.name,
+            seed,
+            model_cls.refit_on_full_data,
+        )
+        artifacts.save_validation(trials, inner)
+
     default = next((t for t in trials if t.config_tag == "default"), None)
     tuned = select_best(trials, metric) if any(t.ok for t in trials) else None
 
@@ -256,21 +282,29 @@ def run_model_experiment(
     # outer split (DB censored at test_timestamp) to get the test score.
     if evaluate_test and tuned is not None:
         outer = source.outer_split()
-        to_refit = [tuned]
+        benchmark_trials = [tuned]
         if default is not None and default.ok and default.config_id != tuned.config_id:
-            to_refit.append(default)
-        for trial in to_refit:
+            benchmark_trials.append(default)
+        benchmark_configs = {trial.config_id for trial in benchmark_trials}
+        extra_trials = (
+            [t for t in trials if t.ok and t.config_id not in benchmark_configs]
+            if refit_all_configs
+            else []
+        )
+        refit_trial = partial(
+            refit_and_evaluate,
+            model_cls,
+            task=task,
+            split=outer,
+            seed=seed,
+            time_limit=time_limit_per_trial,
+            cache=cache,
+            run_identity=source.run_identity("outer"),
+        )
+
+        for trial in benchmark_trials:
             try:
-                refit = refit_and_evaluate(
-                    model_cls,
-                    trial.config,
-                    task,
-                    outer,
-                    seed=seed,
-                    time_limit=time_limit_per_trial,
-                    cache=cache,
-                    run_identity=source.run_identity("outer"),
-                )
+                refit = refit_trial(trial.config)
                 trial.test_score = refit["test_score"]
                 trial.test_metrics = refit["test_metrics"]
                 trial.test_pred = refit["test_pred"] if cache_predictions else None
@@ -284,6 +318,15 @@ def run_model_experiment(
                     task_name,
                     trial.config_id,
                 )
+                if artifacts is not None:
+                    raise
+                continue
+            if artifacts is not None:
+                artifacts.save_test(trial, refit, outer, additional=False)
+
+        for trial in extra_trials:
+            refit = refit_trial(trial.config)
+            artifacts.save_test(trial, refit, outer, additional=True)
 
     return ExperimentSummary(
         model_name=model_cls.name,
@@ -314,6 +357,8 @@ def run_experiment(
     cache_dir: str | Path | None = None,
     evaluate_test: bool = True,
     require_all_trials: bool = True,
+    predictions_dir: str | Path | None = None,
+    refit_all_configs: bool = False,
 ) -> ExperimentSummary | SystemExperimentSummary:
     """Dispatch one experiment to the model or system runner.
 
@@ -323,6 +368,8 @@ def run_experiment(
     `time_limit_per_trial` becomes its single soft time limit.
     """
     if isinstance(method_cls, type) and issubclass(method_cls, RelArenaSystem):
+        if predictions_dir is not None or refit_all_configs:
+            raise TypeError("Prediction artifacts currently require a model.")
         if search_space is not None:
             raise TypeError("A RelArenaSystem does not have a harness search space.")
         return run_system_experiment(
@@ -350,4 +397,6 @@ def run_experiment(
         cache_dir=cache_dir,
         evaluate_test=evaluate_test,
         require_all_trials=require_all_trials,
+        predictions_dir=predictions_dir,
+        refit_all_configs=refit_all_configs,
     )
