@@ -19,4 +19,4 @@ __all__ = [
     "TabPFNRelLocalModel",
     "TabPFNRelModel",
 ]
-__version__ = "0.0.2"
+__version__ = "0.0.1"

@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-08T14:24:14.826048Z"
+exclude-newer = "2026-09-08T14:24:39.111916Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -3084,7 +3084,7 @@ wheels = [
 
 [[package]]
 name = "tabpfn-rel"
-version = "0.0.2"
+version = "0.0.1"
 source = { editable = "packages/tabpfn-rel" }
 dependencies = [
     { name = "numpy" },
