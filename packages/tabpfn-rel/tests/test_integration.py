@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib.util
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -9,7 +11,6 @@ import pandas as pd
 import pytest
 from relarena_core.tfm import TFMSpec
 
-from examples.tiny_database import write_database
 from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec, tfm
 
 
@@ -33,9 +34,25 @@ def _make_estimator(**kwargs: object) -> _Estimator:
     return _Estimator()
 
 
+_EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "tiny_database.py"
+
+
+@pytest.fixture(scope="session")
+def write_database() -> Callable[..., Path]:
+    """The generated-database writer from the example script, loaded by path."""
+    spec = importlib.util.spec_from_file_location("tiny_database", _EXAMPLE)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.write_database
+
+
 @pytest.fixture
 def query(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    request: pytest.FixtureRequest,
+    write_database: Callable[..., Path],
 ) -> PredictiveQuery:
     for name in ("tabpfn-v3", "tabpfn-v3-api"):
         monkeypatch.setitem(
