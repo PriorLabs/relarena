@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "tabpfn-rel"
-version = "0.0.2"
+version = "0.0.1"
 description = "TabPFN for relational prediction with deep feature synthesis and recency-aware contexts."
 readme = "README.md"
 authors = [{ name = "Prior Labs" }]
