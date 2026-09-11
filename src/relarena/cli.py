@@ -60,6 +60,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--output", default=None, help="write a results CSV to this path")
     p.add_argument("--cache-dir", default=None, help="local preprocessing cache")
+    p.add_argument("--predictions-dir", help="write local prediction artifacts")
+    p.add_argument(
+        "--refit-all-configs",
+        action="store_true",
+        help="also refit nonselected configs for test artifacts",
+    )
     return p
 
 
@@ -104,6 +110,8 @@ def main(argv: list[str] | None = None) -> int:
                 n_trials=args.n_trials,
                 cache_dir=args.cache_dir,
                 evaluate_test=not args.no_test,
+                predictions_dir=args.predictions_dir,
+                refit_all_configs=args.refit_all_configs,
             )
         except Exception as exc:  # one bad dataset shouldn't abort the sweep
             print(f"    ERROR: {exc!r}", file=sys.stderr)
