@@ -1,0 +1,79 @@
+[build-system]
+requires = ["uv_build>=0.11.15"]
+build-backend = "uv_build"
+
+[project]
+name = "tabpfn-rel"
+version = "0.0.1"
+description = "TabPFN for relational prediction with deep feature synthesis and recency-aware contexts."
+readme = "README.md"
+authors = [{ name = "Prior Labs" }]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.11,<3.13"
+keywords = ["tabpfn", "relational-learning", "machine-learning", "tabular-data"]
+dependencies = [
+    "relarena-core>=0.0.1,<0.1",
+    "numpy>=1.24",
+    "pandas>=2.3.3,<3.0",
+    "relbench==2.1.2",
+]
+
+[project.urls]
+Repository = "https://github.com/PriorLabs/relarena/tree/main/packages/tabpfn-rel"
+Issues = "https://github.com/PriorLabs/relarena/issues"
+
+[project.optional-dependencies]
+local = ["tabpfn>=8", "relarena-core[dfs]>=0.0.1,<0.1"]
+api = ["tabpfn-client>=0.3.2", "relarena-core[dfs]>=0.0.1,<0.1"]
+
+[project.entry-points."relarena.models"]
+tabpfn_rel = "tabpfn_rel.model"
+
+[dependency-groups]
+dev = ["pytest>=9.1.1", "ruff==0.15.13", "pre-commit>=4.0", "relarena-core[dfs]>=0.0.1,<0.1"]
+
+[tool.uv.sources]
+relarena-core = { workspace = true }
+
+[tool.ruff]
+required-version = "==0.15.13"
+force-exclude = true
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "ANN",
+    "D",
+    "E",
+    "F",
+    "I",
+    "W",
+]
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN204",
+    "ANN401",
+    "S101",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+ignore-decorators = ["typing.override", "typing_extensions.override"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/workflows/**/*.py" = [
+    "E501",
+]
+"**/tests/**/*.py" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D105",
+    "D106",
+    "D107",
+    "S101",
+]

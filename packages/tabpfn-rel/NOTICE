@@ -1,0 +1,5 @@
+TabPFN-Rel
+Copyright 2026 PriorLabs GmbH
+
+The DFS plus tabular foundation model recipe builds on the RDBLearn method.
+Shared DFS and estimator infrastructure is provided by RelArena Core.
