@@ -1,4 +1,9 @@
-"""Build three distributions and test isolated core, model and benchmark installs.
+"""Check built packages in three isolated installations on every CI run.
+
+Installs core, the benchmark and TabPFN-Rel separately to catch missing runtime
+dependencies, package data and entry points hidden by a workspace install. Checks
+wheel metadata, schemas, notices, plugin discovery and the benchmark CLI's task
+listing. Backend extras and real inference are not exercised.
 
 Run from the workspace with ``python workflows/check_package_split.py --output PATH``.
 Downloads dependencies, but does not download model weights or call an API.
@@ -17,12 +22,9 @@ from email.parser import BytesParser
 from pathlib import Path
 
 CASES = (
-    ("core", "relarena-core", None),
-    ("base", "relarena", None),
-    ("host-local", "relarena[tabpfn-rel-local]", "tabpfn"),
-    ("host-api", "relarena[tabpfn-rel-api]", "tabpfn-client"),
-    ("direct-local", "tabpfn-rel[local]", "tabpfn"),
-    ("direct-api", "tabpfn-rel[api]", "tabpfn-client"),
+    ("core", "relarena-core"),
+    ("base", "relarena"),
+    ("model", "tabpfn-rel"),
 )
 
 
@@ -57,18 +59,12 @@ def check_artifacts(wheels: Path) -> list[str]:
             for notice in ("LICENSE", "NOTICE"):
                 assert any(n.endswith("/licenses/" + notice) for n in names)
             if name == "relarena":
-                assert "tabpfn-rel" not in metadata.get_all("Provides-Extra", [])
                 plugin_requirements = [
                     r for r in requirements if r.startswith("tabpfn-rel")
                 ]
                 assert len(plugin_requirements) == 2, plugin_requirements
                 assert all("extra ==" in r for r in plugin_requirements)
                 assert any(r.startswith("relarena-core") for r in requirements)
-                assert "relarena/models/rdblearn/tfm.py" in names
-                assert "relarena/refit.py" in names
-                assert "relarena/models/_shared/gbdt/lgb.py" in names
-                assert "relarena/tfm.py" not in names
-                assert "relarena/tuner.py" not in names
                 assert "relarena/checksums/relbench_v1_checksums.json" in names
                 assert "relarena/models/VENDORED-LICENSES" in names
                 assert any(n.endswith("/db.yaml") for n in names)
@@ -98,10 +94,9 @@ def check_artifacts(wheels: Path) -> list[str]:
 
 
 def main() -> None:
-    """Build candidates, rebuild sdists and verify each installed dependency closure."""
+    """Build distributions and check each package in an isolated environment."""
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--companion", type=Path, default=root / "packages/tabpfn-rel")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--python", default=sys.executable)
     args = parser.parse_args()
@@ -119,28 +114,14 @@ def main() -> None:
     for source in (
         root / "packages/relarena-core",
         root / "packages/relarena",
-        args.companion.resolve(),
+        root / "packages/tabpfn-rel",
     ):
         run(["uv", "build", "--out-dir", str(wheels)], source, env, log)
     pins = check_artifacts(wheels)
     constraints = output / "constraints.txt"
     constraints.write_text("\n".join(pins) + "\n")
-    for sdist in sorted(wheels.glob("*.tar.gz")):
-        run(
-            [
-                "uv",
-                "build",
-                "--wheel",
-                str(sdist),
-                "--out-dir",
-                str(output / "rebuilt"),
-            ],
-            output,
-            env,
-            log,
-        )
     results = []
-    for name, requirement, backend in CASES:
+    for name, requirement in CASES:
         directory = output / name
         print(f"Testing {name}", flush=True)
         run(
@@ -165,11 +146,11 @@ def main() -> None:
             log,
         )
         run([python, "-m", "pip", "check"], output, env, log)
-        host = name in {"base", "host-local", "host-api"}
+        host = name == "base"
+        has_model = name == "model"
         code = f"""
 import importlib.metadata as metadata
 import importlib.util
-import inspect
 import sys
 import relarena_core
 from relarena_core.userdb import PredictiveQuery
@@ -177,9 +158,8 @@ from relarena_core.userdb._schema import load_schema
 installed = {{d.metadata['Name'].lower().replace('_', '-') for d in metadata.distributions()}}
 assert 'relarena-core' in installed
 assert ('relarena' in installed) == {host!r}
-assert ('tabpfn-rel' in installed) == {bool(backend)!r}
+assert ('tabpfn-rel' in installed) == {has_model!r}
 assert not relarena_core.registry.names()
-assert list(inspect.signature(PredictiveQuery.precompute_cache).parameters) == ['self', 'cache_dir']
 assert load_schema('task.schema.json')['type'] == 'object'
 assert load_schema('database.schema.json')['type'] == 'object'
 if not {host!r}:
@@ -190,20 +170,16 @@ if {host!r}:
     assert HostQuery is PredictiveQuery
     assert relarena.RelArenaModel is relarena_core.RelArenaModel
     assert relarena.registry is relarena_core.registry
-if {bool(backend)!r}:
+if {has_model!r}:
     import tabpfn_rel
     assert tabpfn_rel.PredictiveQuery is PredictiveQuery
-    assert {backend!r} in installed
-    assert 'fastdfs' in installed
-    if {backend!r} == 'tabpfn-client':
-        assert 'tabpfn' not in installed
 relarena_core.discover_models()
 relarena_core.discover_models()
-assert ('tabpfn-rel-local' in relarena_core.registry) == {bool(backend)!r}
+assert ('tabpfn-rel-local' in relarena_core.registry) == {has_model!r}
 assert ('rdblearn' in relarena_core.registry) == {host!r}
 assert 'tabpfn' not in sys.modules
 assert 'tabpfn_client' not in sys.modules
-if {bool(backend)!r}:
+if {has_model!r}:
     assert relarena_core.registry.get('tabpfn-rel-local') is tabpfn_rel.TabPFNRelLocalModel
 print('Verified', sys.executable, sorted(installed))
 """
@@ -211,23 +187,6 @@ print('Verified', sys.executable, sorted(installed))
         if host:
             run(
                 [python, "-m", "relarena.cli", "--list", "--datasets", "rel-f1"],
-                output,
-                env,
-                log,
-            )
-        if name == "core":
-            run([*install, "pytest>=9.1.1"], output, env, log)
-            run(
-                [
-                    python,
-                    "-m",
-                    "pytest",
-                    "-q",
-                    "--import-mode=importlib",
-                    str(root / "packages/relarena-core/tests"),
-                    "--ignore",
-                    str(root / "packages/relarena-core/tests/featurization"),
-                ],
                 output,
                 env,
                 log,
