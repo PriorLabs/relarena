@@ -1,4 +1,16 @@
-"""Verify trusted RelArena result pickles with an installed TabArena result reader."""
+"""Manually check exported predictions against TabArena's result reader.
+
+Run after changing the prediction artifact format; CI does not run this check.
+Use a Python environment with TabArena, AutoGluon core and NumPy installed.
+These optional verification dependencies are not installed by this script.
+
+From the repository root, run:
+    python workflows/verify_tabarena_predictions.py /path/to/artifacts
+
+The verify(directory) entrypoint reads completed results.pkl files recursively
+and checks metrics and simulation inputs. Only use trusted artifact directories:
+loading pickle files can execute code.
+"""
 
 from __future__ import annotations
 
