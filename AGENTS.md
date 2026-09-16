@@ -70,7 +70,7 @@ macOS-only AutoGluon/LightGBM issue
 locally on macOS, prefix with the env var:
 
 ```bash
-OMP_NUM_THREADS=1 uv run pytest        # otherwise: "Fatal Python error: Segmentation fault" in lightgbm
+OMP_NUM_THREADS=1 uv run --all-packages pytest        # otherwise: "Fatal Python error: Segmentation fault" in lightgbm
 ```
 
 (There's no clean *permanent* local fix under `uv`: symlinking one `libomp` — e.g.

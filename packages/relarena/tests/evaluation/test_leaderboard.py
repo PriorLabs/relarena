@@ -13,7 +13,7 @@ from relarena.evaluation import (
     to_bencheval_frame,
 )
 
-_BASELINE_DIR = Path(__file__).resolve().parents[2] / "baseline_results"
+_BASELINE_DIR = Path(__file__).resolve().parents[4] / "baseline_results"
 _REFERENCE_CSV = _BASELINE_DIR / "reference_results.csv"
 
 
