@@ -5,7 +5,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from relarena.cache import CacheConfig
+from relarena.core.cache import CacheConfig
 from tests.fixtures.cached_model import novel_binary, novel_directory, warm_cache
 
 

@@ -1,4 +1,4 @@
-"""`kurversc` — validation-guided GraphReduce system."""
+"""Validation-guided GraphReduce system."""
 
 from relarena.models.kurversc.model import KURVERSC_DEFAULTS, KurveRSCSystem
 

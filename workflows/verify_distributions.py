@@ -15,8 +15,8 @@ def main() -> None:
     required = {
         "relarena/models/VENDORED-LICENSES",
         "relarena/checksums/relbench_v1_checksums.json",
-        "relarena/userdb/database.schema.json",
-        "relarena/userdb/task.schema.json",
+        "relarena/core/userdb/database.schema.json",
+        "relarena/core/userdb/task.schema.json",
         *(
             str(path.relative_to("packages/relarena/src"))
             for path in spec_root.glob("*/*.yaml")

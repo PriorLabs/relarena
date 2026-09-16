@@ -24,7 +24,7 @@ Setup (needs a Kaggle account + ~/.kaggle/kaggle.json), from the repository root
 
 The default uses the hosted TabPFN API. To run the model locally instead:
 
-    uv sync --extra rdblearn
+    uv sync --extra tabpfn-rel-local
     OMP_NUM_THREADS=1 uv run --no-sync python examples/olist_seller_churn.py \
         --backend local
 """

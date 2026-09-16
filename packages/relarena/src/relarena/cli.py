@@ -19,11 +19,11 @@ from __future__ import annotations
 
 import argparse
 import sys
+from importlib import import_module
 
 import pandas as pd
 
-import relarena.models  # noqa: F401  (registers built-in models)
-from relarena.registry import registry
+from relarena.core.registry import registry
 from relarena.results import summary_to_dataframe
 from relarena.runner import SystemExperimentSummary, run_experiment
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
@@ -88,7 +88,11 @@ def main(argv: list[str] | None = None) -> int:
         print("Nothing to run.", file=sys.stderr)
         return 1
 
-    model_cls = registry.get(args.model)
+    import_module("relarena.models")
+    try:
+        model_cls = registry.get(args.model)
+    except KeyError as exc:
+        parser.error(str(exc))
     frames: list[pd.DataFrame] = []
     for s in specs:
         print(

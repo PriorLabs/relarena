@@ -7,7 +7,7 @@ from pathlib import Path
 
 import torch
 
-from relarena.cache import resolve_cache_config
+from relarena.core.cache import resolve_cache_config
 from relarena.dataset import RelBenchDatasetTask
 from relarena.models.relgnn.preprocessing import load_graph
 

@@ -1,7 +1,7 @@
 # RelArena examples
 
-Two runnable examples, answering two different questions. Both are run from the
-repository root.
+Run these examples from the RelArena repository root. A standalone generated-data
+example is in [`packages/tabpfn-rel`](../packages/tabpfn-rel/examples/tiny_database.py).
 
 | Example | Question it answers | Needs |
 |---|---|---|
@@ -28,13 +28,13 @@ Three files belong to this example:
 
 ```bash
 uvx kaggle datasets download -d olistbr/brazilian-ecommerce -p data/olist --unzip
-uv sync --extra tabpfn-rel-api
-uv run python -c "from tabpfn_client import init; init()"
+uv sync --all-packages --extra tabpfn-rel-api
+uv run --all-packages python -c "from tabpfn_client import init; init()"
 OMP_NUM_THREADS=1 uv run --no-sync python examples/olist_seller_churn.py
 ```
 
 That default runs through the hosted TabPFN API, so it needs no GPU. To run the
-model locally instead (needs `uv sync --extra rdblearn`, GPU recommended):
+model locally instead (needs `uv sync --all-packages --extra tabpfn-rel-local`, GPU recommended):
 
 ```bash
 OMP_NUM_THREADS=1 uv run --no-sync python examples/olist_seller_churn.py --backend local
@@ -53,10 +53,10 @@ split timestamps, and avoid leakage — see
 Fits one RelBench task (rel-f1 / driver-dnf) twice, once with no cache and once
 against a store warmed up front, and checks the predictions are identical — the
 cache only changes speed, never results. On that task it turns a roughly 409s
-fit-and-predict into roughly 12s.
+fit-and-predict into roughly 12s. Run the following commands from the repository root:
 
 ```bash
-uv run --extra rdblearn python examples/tabpfn_rel_caching.py
+uv run --all-packages --extra tabpfn-rel-local python examples/tabpfn_rel_caching.py
 ```
 
 The expensive step being cached is Deep Feature Synthesis, which runs on CPU. To
@@ -64,7 +64,7 @@ exercise the cache path without a GPU, skip the TabPFN forward pass:
 
 ```bash
 RELARENA_EXAMPLE_SKIP_TFM=1 OMP_NUM_THREADS=1 \
-    uv run --extra rdblearn python examples/tabpfn_rel_caching.py
+    uv run --all-packages --extra tabpfn-rel-local python examples/tabpfn_rel_caching.py
 ```
 
 See the feature-cache section of the [package README](../README.md) for how to

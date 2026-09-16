@@ -215,7 +215,7 @@ class RawTextFeaturizer:
     """Anchor-text columns passed through as raw strings.
 
     The TFM's estimator handles them (see
-    `relarena.models._shared.tfm.tfm`). Columns are
+    `relarena.models.tabpfn_rel.tfm`). Columns are
     suffixed `__raw_text` so a low-cardinality anchor column DFS kept as a
     categorical cannot collide. Stateless beyond the column list and uncached
     (the lookup is a cheap merge).

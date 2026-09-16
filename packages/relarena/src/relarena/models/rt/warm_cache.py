@@ -18,8 +18,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from relarena.cache import resolve_cache_config
-from relarena.dataset import RelBenchDatasetTask, concat_tables
+from relarena.core.cache import resolve_cache_config
+from relarena.core.dataset import concat_tables
+from relarena.dataset import RelBenchDatasetTask
 from relarena.models.rt.export import preprocessed_dir
 from relarena.models.rt.model import DB_NAME
 

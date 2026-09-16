@@ -28,7 +28,8 @@ import numpy as np
 import pandas as pd
 from relbench.base import TaskType
 
-from relarena.models._shared.tfm.tfm import FittedTFM, fit_tfm
+from relarena.core.tfm import FittedTFM, fit_tfm
+from relarena.models.tabpfn_rel.tfm import TFM_REGISTRY
 
 #: Default ensemble size for the pool strategies when the config pins none.
 DEFAULT_POOL_N_ESTIMATORS = 8
@@ -159,7 +160,7 @@ class RandomContext(ContextStrategy):
         context_time: np.ndarray | None = None,
     ) -> FittedTFM:
         """Defer to the base `fit_tfm` (it caps rows itself); recency unused."""
-        return fit_tfm(df, y, task_type, tfm=tfm, seed=seed)
+        return fit_tfm(df, y, task_type, spec=TFM_REGISTRY[tfm], seed=seed)
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "RandomContext":
@@ -224,7 +225,7 @@ class _PoolContext(ContextStrategy):
             df,
             y,
             task_type,
-            tfm=tfm,
+            spec=TFM_REGISTRY[tfm],
             seed=seed,
             max_train_samples=len(df),
             overrides=overrides,

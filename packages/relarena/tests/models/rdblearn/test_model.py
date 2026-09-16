@@ -12,11 +12,11 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
-from relarena.cache import CacheConfig
-from relarena.models._shared.tfm import tfm
-from relarena.models.rdblearn import RDBLEARN_SPACE, RDBLearnModel
+from relarena.core.cache import CacheConfig
+from relarena.core.registry import registry
+from relarena.core.tfm import TFMSpec
+from relarena.models.rdblearn import RDBLEARN_SPACE, RDBLearnModel, tfm
 from relarena.models.rdblearn import model as rdblearn
-from relarena.registry import registry
 
 
 def test_registered_under_name_rdblearn() -> None:
@@ -121,7 +121,7 @@ def test__fit__train_above_cap__featurizes_full_table_then_caps_aligned_rows(
     monkeypatch.setitem(
         tfm.TFM_REGISTRY,
         "capture",
-        tfm.TFMSpec(
+        TFMSpec(
             make_classifier=lambda **kwargs: _CaptureRegressor(),
             make_regressor=lambda **kwargs: _CaptureRegressor(),
             max_train_samples=cap,
@@ -137,12 +137,8 @@ def test__fit__train_above_cap__featurizes_full_table_then_caps_aligned_rows(
     assert seen["history_table"] is train
     assert seen["keep_anchor_columns"] is True
     assert seen["cache"] == CacheConfig(tmp_path, "raise")
-    idx = tfm._downsample_indices(
-        train.df["y"].to_numpy(),
-        TaskType.REGRESSION,
-        cap,
-        np.random.default_rng(seed),
-    )
     estimator = model._fitted.estimator
-    assert estimator.X["f"].tolist() == (train.df.iloc[idx]["y"] * 2).tolist()
-    assert estimator.y.tolist() == train.df.iloc[idx]["y"].tolist()
+    assert len(estimator.X) == cap
+    assert len(set(estimator.y)) == cap
+    assert set(estimator.y) <= set(train.df["y"])
+    assert estimator.X["f"].tolist() == (estimator.y * 2).tolist()
