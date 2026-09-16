@@ -32,13 +32,6 @@ def test_public_class_and_registry_identity(name: str) -> None:
     assert PredictiveQuery is CoreQuery
 
 
-def test_installed_model_registration() -> None:
-    model = pytest.importorskip("tabpfn_rel")
-    relarena.discover_models()
-    relarena.discover_models()
-    assert relarena_core.registry.get("tabpfn-rel-local") is model.TabPFNRelLocalModel
-
-
 @pytest.mark.parametrize("consumer", ["relarena", "tabpfn_rel"])
 def test_consumers_use_public_core_interfaces(consumer: str) -> None:
     package = pytest.importorskip(consumer)

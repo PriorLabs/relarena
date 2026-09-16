@@ -98,6 +98,5 @@ ignore-decorators = ["typing.override", "typing_extensions.override"]
 members = ["packages/relarena", "packages/relarena-core", "packages/tabpfn-rel"]
 
 [tool.pytest.ini_options]
-pythonpath = ["packages/tabpfn-rel"]
 testpaths = ["packages/relarena/tests", "packages/relarena-core/tests", "packages/tabpfn-rel/tests"]
 addopts = "--import-mode=importlib"
