@@ -21,10 +21,9 @@ from typing import Any, Literal
 import numpy as np
 from relbench.base import EntityTask, Table, TaskType
 
-from relarena.dataset import InnerSplit, OuterSplit, RelBenchDatasetTask, Split
-from relarena.identity import RunIdentity
-from relarena.metrics import get_metric
-from relarena.results import TrialResult
+from relarena.dataset import RelBenchDatasetTask
+from relarena_core import InnerSplit, OuterSplit, RunIdentity, Split, TrialResult
+from relarena_core.metrics import get_metric
 
 
 def prediction_context(
@@ -59,10 +58,14 @@ def _array_digest(values: np.ndarray) -> str:
 def _save_result(path: Path, result: dict[str, Any]) -> None:
     """Serialize a result dictionary as a pickle for TabArena's result reader."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with NamedTemporaryFile(dir=path.parent) as stream:
-        pickle.dump(result, stream, protocol=4)
-        stream.flush()
-        os.link(stream.name, path)
+    with NamedTemporaryFile(dir=path.parent, delete=False) as stream:
+        temporary = Path(stream.name)
+    try:
+        with temporary.open("wb") as stream:
+            pickle.dump(result, stream, protocol=4)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def load_predictions(

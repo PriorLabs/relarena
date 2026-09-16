@@ -15,10 +15,6 @@ from relbench.base import Database, EntityTask, Table, TaskType
 from relbench.metrics import mae, roc_auc
 
 from relarena import (
-    InnerSplit,
-    OuterSplit,
-    RelArenaModel,
-    RunIdentity,
     load_prediction_labels,
     load_predictions,
     prediction_context,
@@ -26,7 +22,8 @@ from relarena import (
 )
 from relarena.models.dummy import DummyBaseline
 from relarena.predictions import PredictionArtifactWriter
-from relarena.search_space import SearchSpace
+from relarena_core import InnerSplit, OuterSplit, RelArenaModel, RunIdentity
+from relarena_core.search_space import SearchSpace
 
 
 def _table(targets: list[float], date: str) -> Table:
@@ -40,16 +37,7 @@ def _table(targets: list[float], date: str) -> Table:
     )
 
 
-@pytest.mark.parametrize("binary", [False, True])
-@pytest.mark.parametrize("all_configs", [False, True])
-@pytest.mark.parametrize("refit_full", [False, True])
-def test_artifact_roundtrip(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    all_configs: bool,
-    refit_full: bool,
-    binary: bool,
-) -> None:
+def _source(binary: bool) -> SimpleNamespace:
     train = _table([0.0, 1.0] if binary else [0.0, 2.0], "2020-01-01")
     val = _table([0.0, 1.0] if binary else [1.0, 1.0], "2020-02-01")
     test = _table([0.0, 1.0] if binary else [0.5, 1.5], "2020-03-01")
@@ -72,7 +60,7 @@ def test_artifact_roundtrip(
     inner = InnerSplit(db, pd.Timestamp("2020-02-01"), train, val, val)
     outer = OuterSplit(db, pd.Timestamp("2020-03-01"), train, masked, val)
     identity = RunIdentity("small", "db", "target", "task")
-    source = SimpleNamespace(
+    return SimpleNamespace(
         task=task,
         dataset_name="small",
         task_name="target",
@@ -81,6 +69,23 @@ def test_artifact_roundtrip(
         outer_split=lambda: outer,
         run_identity=identity.for_phase,
     )
+
+
+@pytest.mark.parametrize("binary", [False, True])
+@pytest.mark.parametrize("all_configs", [False, True])
+@pytest.mark.parametrize("refit_full", [False, True])
+def test_artifact_roundtrip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    all_configs: bool,
+    refit_full: bool,
+    binary: bool,
+) -> None:
+    source = _source(binary)
+    task = source.task
+    inner, outer = source.inner_split(), source.outer_split()
+    val, test = inner.eval_target, task.get_table("test")
+    identity = source.run_identity("inner")
     monkeypatch.setattr(runner, "RelBenchDatasetTask", lambda *a, **k: source)
     fits: list[tuple[int, bool]] = []
 
@@ -247,3 +252,118 @@ def test_artifacts_reject_unsupported_task_types(
     ):
         writer.save_validation([], split)
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("failure", ["refit", "save"])
+def test_extra_artifact_failure_propagates(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure: str,
+) -> None:
+    source = _source(False)
+    monkeypatch.setattr(runner, "RelBenchDatasetTask", lambda *a, **k: source)
+    original_refit = runner.refit_and_evaluate
+    original_save = PredictionArtifactWriter.save_test
+    refits = []
+
+    def refit(model: Any, config: dict, **kwargs: Any) -> dict:
+        refits.append(config["candidate"])
+        if failure == "refit" and config["candidate"] == 1:
+            raise RuntimeError("extra refit failed")
+        return original_refit(model, config, **kwargs)
+
+    def save(
+        writer: PredictionArtifactWriter, trial: Any, *args: Any, **kwargs: Any
+    ) -> None:
+        if failure == "save" and trial.config["candidate"] == 1:
+            raise OSError("extra export failed")
+        original_save(writer, trial, *args, **kwargs)
+
+    monkeypatch.setattr(runner, "refit_and_evaluate", refit)
+    monkeypatch.setattr(PredictionArtifactWriter, "save_test", save)
+    grid = [{"candidate": i} for i in (0, 1, 2)]
+    error = RuntimeError if failure == "refit" else OSError
+    with pytest.raises(error, match="extra .* failed"):
+        runner.run_model_experiment(
+            DummyBaseline,
+            "small",
+            "target",
+            predictions_dir=tmp_path,
+            search_space=SearchSpace(fixed_grid=grid, default_overrides=grid[0]),
+            n_trials=3,
+            refit_all_configs=True,
+        )
+    assert refits == [0, 1]
+    assert len(list(tmp_path.rglob("results.pkl"))) == 1
+    assert len(list(tmp_path.rglob("validation.partial"))) == 2
+
+
+def test_validation_export_replaces_partial_but_preserves_completed_results(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = _source(False)
+    monkeypatch.setattr(runner, "RelBenchDatasetTask", lambda *a, **k: source)
+    for _ in range(2):
+        runner.run_model_experiment(
+            DummyBaseline,
+            "small",
+            "target",
+            predictions_dir=tmp_path,
+            evaluate_test=False,
+        )
+    partial = next(tmp_path.rglob("validation.partial"))
+    partial.write_bytes(b"interrupted write")
+    runner.run_model_experiment(
+        DummyBaseline,
+        "small",
+        "target",
+        predictions_dir=tmp_path,
+    )
+    assert not partial.exists()
+    complete = next(tmp_path.rglob("results.pkl"))
+    with complete.open("rb") as stream:
+        artifact = pickle.load(stream)
+    assert "pred_test" in artifact["simulation_artifacts"]
+    before = complete.read_bytes()
+    with pytest.raises(FileExistsError):
+        runner.run_model_experiment(
+            DummyBaseline,
+            "small",
+            "target",
+            predictions_dir=tmp_path,
+        )
+    assert complete.read_bytes() == before
+
+
+def test_failed_partial_write_preserves_previous_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = _source(False)
+    monkeypatch.setattr(runner, "RelBenchDatasetTask", lambda *a, **k: source)
+    runner.run_model_experiment(
+        DummyBaseline,
+        "small",
+        "target",
+        predictions_dir=tmp_path,
+        evaluate_test=False,
+    )
+    partial = next(tmp_path.rglob("validation.partial"))
+    before = partial.read_bytes()
+
+    def fail_dump(obj: Any, stream: Any, **kwargs: Any) -> None:
+        stream.write(b"incomplete pickle")
+        raise OSError("disk full")
+
+    monkeypatch.setattr(pickle, "dump", fail_dump)
+    with pytest.raises(OSError, match="disk full"):
+        runner.run_model_experiment(
+            DummyBaseline,
+            "small",
+            "target",
+            predictions_dir=tmp_path,
+            evaluate_test=False,
+        )
+    assert partial.read_bytes() == before
+    assert list(partial.parent.iterdir()) == [partial]
