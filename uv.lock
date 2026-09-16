@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-08T14:22:38.664869Z"
+exclude-newer = "2026-09-13T12:12:18.406738Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2393,7 +2393,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.0.2"
+version = "0.1.0"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
