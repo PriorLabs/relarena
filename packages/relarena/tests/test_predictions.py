@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pickle
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
@@ -24,6 +25,7 @@ from relarena import (
     runner,
 )
 from relarena.models.dummy import DummyBaseline
+from relarena.predictions import PredictionArtifactWriter
 from relarena.search_space import SearchSpace
 
 
@@ -122,18 +124,27 @@ def test_artifact_roundtrip(
     assert fits[:3] == [(2, False)] * 3
     assert fits[3:] == ([(4, True)] if refit_full else [(2, False)]) * (len(fits) - 3)
     for trial in summary.trials:
-        root = tmp_path / Constant.name / "small" / "target" / "0" / trial.config_id
+        root = (
+            tmp_path
+            / "data"
+            / f"{Constant.name}_{trial.config_id}"
+            / "small__target"
+            / "0_0"
+        )
         for split, split_object, target in [("val", inner, val), ("test", outer, test)]:
-            path = root / f"{split}.npz"
             additional = trial.config["constant"] == 2
-            if split == "test" and additional and not all_configs:
-                assert not path.exists()
+            complete = all_configs or not additional
+            path = root / ("results.pkl" if complete else "validation.partial")
+            if split == "test" and not complete:
+                assert not (root / "results.pkl").exists()
                 continue
             context = prediction_context(
                 task, split_object, identity.for_phase(split_object.name)
             )
-            predictions, metadata = load_predictions(path, expected_context=context)
-            labels = load_prediction_labels(path)
+            predictions, metadata = load_predictions(
+                path, split=split, expected_context=context
+            )
+            labels = load_prediction_labels(path, split=split)
             np.testing.assert_array_equal(labels, target.df["y"].to_numpy())
             assert {
                 m.__name__: m(labels, predictions) for m in task.metrics
@@ -149,7 +160,7 @@ def test_artifact_roundtrip(
                 mismatched = deepcopy(context)
                 mismatched[field] = value
                 with pytest.raises(ValueError, match="differ"):
-                    load_predictions(path, expected_context=mismatched)
+                    load_predictions(path, split=split, expected_context=mismatched)
         if trial.config["constant"] == 2:
             assert trial.test_pred is None
             assert trial.test_score is None
@@ -164,27 +175,75 @@ def test_artifact_roundtrip(
     for split, split_object, target in [("val", inner, val), ("test", outer, test)]:
         path = (
             tmp_path
-            / DummyBaseline.name
-            / "small"
-            / "target"
-            / "0"
-            / builtin.default.config_id
-            / f"{split}.npz"
+            / "data"
+            / f"{DummyBaseline.name}_{builtin.default.config_id}"
+            / "small__target"
+            / "0_0"
+            / "results.pkl"
         )
         predictions, metadata = load_predictions(
             path,
+            split=split,
             expected_context=prediction_context(
                 task, split_object, identity.for_phase(split_object.name)
             ),
         )
         assert task.evaluate(predictions, target) == pytest.approx(metadata["metrics"])
 
-    assert len(list((tmp_path / "labels").glob("*.npz"))) == 2
-    label_file = path.parent / metadata["labels_path"]
-    with np.load(label_file, allow_pickle=False) as artifact:
-        labels = artifact["labels"].copy()
-        context_array = artifact["context"]
-    labels[0] += 1
-    np.savez_compressed(label_file, labels=labels, context=context_array)
-    with pytest.raises(ValueError, match="content or row identities"):
-        load_prediction_labels(path)
+    with path.open("rb") as stream:
+        artifact = pickle.load(stream)
+    assert artifact["framework"] == f"{DummyBaseline.name}_{builtin.default.config_id}"
+    assert artifact["problem_type"] == ("binary" if binary else "regression")
+    assert artifact["task_metadata"] == {
+        "name": "small__target",
+        "fold": 0,
+        "repeat": 0,
+        "sample": 0,
+        "split_idx": 0,
+    }
+    assert artifact["relarena"]["validation_protocol"] == "temporal_holdout"
+    assert artifact["metric_error"] == pytest.approx(
+        1 - builtin.default.test_score if binary else builtin.default.test_score
+    )
+    assert artifact["metric_error_val"] == pytest.approx(
+        1 - builtin.default.val_score if binary else builtin.default.val_score
+    )
+    assert artifact["time_train_s"] == pytest.approx(
+        builtin.default.fit_time_tuning + builtin.default.fit_time_refit
+    )
+    assert artifact["time_infer_s"] == builtin.default.predict_time_refit
+    assert (
+        artifact["method_metadata"]["model_hyperparameters"] == builtin.default.config
+    )
+    for split in ("val", "test"):
+        sim = artifact["simulation_artifacts"]
+        np.testing.assert_array_equal(sim[f"y_{split}_idx"], np.arange(2))
+        assert sim[f"pred_{split}"].shape == sim[f"y_{split}"].shape == (2,)
+    assert not list(path.parent.glob("validation.partial"))
+    artifact["simulation_artifacts"]["y_test"][0] += 1
+    with path.open("wb") as stream:
+        pickle.dump(artifact, stream)
+    with pytest.raises(ValueError, match="checksum"):
+        load_prediction_labels(path, split="test")
+
+
+@pytest.mark.parametrize(
+    "task_type",
+    [
+        task_type
+        for task_type in TaskType
+        if task_type not in (TaskType.BINARY_CLASSIFICATION, TaskType.REGRESSION)
+    ],
+)
+def test_artifacts_reject_unsupported_task_types(
+    tmp_path: Path, task_type: TaskType
+) -> None:
+    table = _table([0.0, 1.0], "2020-01-01")
+    split = InnerSplit(Database({}), pd.Timestamp("2020-02-01"), table, table, table)
+    source = SimpleNamespace(task=SimpleNamespace(task_type=task_type), metric=mae)
+    writer = PredictionArtifactWriter(tmp_path, source, "test-model", 0, False)
+    with pytest.raises(
+        ValueError, match="Prediction artifacts do not support task type"
+    ):
+        writer.save_validation([], split)
+    assert not list(tmp_path.iterdir())
