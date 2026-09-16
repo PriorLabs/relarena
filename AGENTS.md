@@ -12,9 +12,17 @@ text included.
 
 ## CI is the trust boundary
 
-Changes under `.github/` need an approval from the `release-maintainers`
-team that cannot be bypassed. Ordinary code review can be bypassed by
-relational maintainers, so `.github/` is where secrets are guarded:
+When a change touches `.github/`, tell the user that the PR will need approval
+from `release-maintainers` before merging. Preparing, committing, pushing, and
+opening the PR are allowed before that approval.
+
+Prefer putting workflow changes in a small, separate PR so release maintainers
+can review them easily. This is a recommendation, not a requirement; keep related
+changes together when splitting would make review harder. Never bypass the
+required approval to merge.
+
+Ordinary code review can be bypassed by relational maintainers, so `.github/`
+is where secrets are guarded:
 
 - A workflow step with access to a secret or an OIDC token may only run
   pinned actions or scripts under `.github/scripts/`. It must not run the
