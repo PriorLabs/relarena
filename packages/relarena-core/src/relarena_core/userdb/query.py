@@ -115,7 +115,7 @@ class PredictiveQuery:
         custom database. Omit it to fall back to `RELARENA_CACHE_DIR`, or to use
         no persistent cache when that variable is unset. See `relarena_core.cache`.
         """
-        discover_models()
+        discover_models(refresh=False)
 
         cache = resolve_cache_config(cache_dir, on_miss="fill")
         self._warn_schema_only_cache(cache)

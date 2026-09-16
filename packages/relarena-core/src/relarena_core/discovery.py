@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib import invalidate_caches
 from importlib.metadata import entry_points
 from threading import RLock
 
@@ -10,18 +11,20 @@ _complete = False
 _lock = RLock()
 
 
-def discover_models() -> None:
+def discover_models(*, refresh: bool = True) -> None:
     """Import model modules declared in the relarena.models entry-point group.
 
     Module imports execute registration decorators against the shared registry.
-    After one pass without failures the call returns immediately, so callers can
-    invoke it per lookup. A failed import raises an error naming the plugin and
-    leaves discovery retryable. Importing core does not run discovery.
+    Explicit calls rescan installed entry points without reloading successful
+    plugins. Use refresh=False for automatic discovery during repeated fits.
+    A failed import names the plugin and leaves discovery retryable.
     """
     global _complete
     with _lock:
-        if _complete:
+        if _complete and not refresh:
             return
+        _complete = False
+        invalidate_caches()
         for entry in sorted(
             entry_points(group="relarena.models"), key=lambda e: (e.name, e.value)
         ):

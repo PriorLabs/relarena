@@ -82,7 +82,7 @@ query: |
         def predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
             return np.full(len(table.df), self.mean)
 
-    monkeypatch.setattr(query_module, "discover_models", lambda: None)
+    monkeypatch.setattr(query_module, "discover_models", lambda **kwargs: None)
     monkeypatch.setattr(registry, "_entries", {})
     registry.register(
         SuppliedModel,

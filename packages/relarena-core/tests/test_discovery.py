@@ -83,3 +83,40 @@ def test_missing_model_explains_discovery() -> None:
     with pytest.raises(KeyError) as error:
         MethodRegistry().get("external-model")
     assert "discover_models()" in str(error.value)
+
+
+def test_explicit_discovery_loads_new_plugins_after_cached_discovery(
+    isolated: MethodRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first = _entry("first", Mock())
+    added = _entry("added", Mock())
+    entries = Mock(return_value=[first])
+    monkeypatch.setattr(discovery, "entry_points", entries)
+    discovery.discover_models(refresh=False)
+    entries.return_value = [first, added]
+    discovery.discover_models(refresh=False)
+    entries.assert_called_once_with(group="relarena.models")
+    added.load.assert_not_called()
+
+    discovery.discover_models()
+    first.load.assert_called_once_with()
+    added.load.assert_called_once_with()
+    assert entries.call_count == 2
+    discovery.discover_models(refresh=False)
+    assert entries.call_count == 2
+
+
+def test_failed_refresh_remains_retryable_by_automatic_discovery(
+    isolated: MethodRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first = _entry("first", Mock())
+    added = _entry("added", Mock(side_effect=[ImportError("missing backend"), None]))
+    entries = Mock(return_value=[first])
+    monkeypatch.setattr(discovery, "entry_points", entries)
+    discovery.discover_models()
+    entries.return_value = [first, added]
+    with pytest.raises(RuntimeError, match="added"):
+        discovery.discover_models()
+    discovery.discover_models(refresh=False)
+    first.load.assert_called_once_with()
+    assert added.load.call_count == 2
