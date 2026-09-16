@@ -31,13 +31,17 @@ that the task references—so one database file can back many tasks. For the hos
 TabPFN-Rel example, install its extra and configure tabpfn-client authentication:
 
 ```bash
-pip install "relarena[tabpfn-rel-api]"
+pip install "tabpfn-rel[api]"
 ```
+
+`tabpfn-rel` re-exports RPI from its `relarena-core` dependency. This workflow
+does not require the `relarena` benchmark package. Use `tabpfn-rel[local]` and
+model name `tabpfn-rel-local` for the local backend.
 
 Load and run the task:
 
 ```python
-from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
+from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
 preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client", n_trials=0).predict()
@@ -234,7 +238,13 @@ database snapshot, define a task with a later `test_timestamp` and fit it under
 that split instead.
 
 **Choosing the model.** The model is a run-time argument, instead of being part of
-the spec, which makes it possible to easily compare different models:
+the spec, which makes it possible to easily compare different models. The
+constant and LightGBM baselines come from `relarena`. Install their dependencies
+before starting Python:
+
+```bash
+pip install "relarena[lightgbm,tabpfn-rel-api]"
+```
 
 ```python
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")

@@ -42,8 +42,7 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). It benchmarks the se
 > production-ready. The model report covering RelArena-α, TabPFN-Rel, and the RPI is available
 > at [arXiv:2608.16319](https://arxiv.org/abs/2608.16319).
 
-TabPFN-Rel users can install `tabpfn-rel[local]` directly or use
-`relarena[tabpfn-rel-local]` for benchmarking. Both install the same model implementation.
+For predictions on your own database, see [TabPFN-Rel and RPI](#tabpfn-rel).
 
 ## 📊 Leaderboards
 
@@ -109,7 +108,7 @@ for the source files and provenance.
 From a source checkout with the reporting extras installed:
 
 ```bash
-uv sync --locked --group cpu --extra leaderboard --extra plots
+uv sync --locked --all-packages --group cpu --extra leaderboard --extra plots
 OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py
 OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py --check
 ```
@@ -207,43 +206,92 @@ systems* toggle in [Details](#-details).
 
 </details>
 
+<a id="tabpfn-rel"></a>
 <details>
-<summary><b>🗄️ Run RelArena on your own database</b> — the Relational Predictive Interface (RPI)</summary>
+<summary><b>🗄️ TabPFN-Rel: predict on your own database</b> — installation, RPI and examples</summary>
 
-The **RPI** generalizes the process that generated RelBench v1's entity-level forecasting tasks,
-but replaces custom task-generation code with a declarative interface: the database and the
-prediction task are specified entirely in YAML configuration files, without writing Python,
-turning a collection of CSV or Parquet files into a RelArena-α task. `PredictiveQuery` is the
-Python façade. Install the model backend first and configure tabpfn-client
-authentication:
+**TabPFN-Rel** uses TabPFN to predict outcomes from related tables. It is available
+as a standalone package; you do not need the RelArena benchmark package to use it.
+
+Start with the [Olist seller-churn cookbook](https://docs.priorlabs.ai/cookbook/relational_predictions_tabpfn_rel).
+It walks through a real seven-table database, task definitions, fitting,
+prediction, feature caching and comparison with simple baselines.
+
+### Install
+
+Requires Python 3.11 or 3.12. Choose a backend:
 
 ```bash
-pip install "relarena[tabpfn-rel-api]"
+pip install "tabpfn-rel[api]"    # hosted TabPFN; no local GPU needed
+pip install "tabpfn-rel[local]"  # local TabPFN; GPU recommended
 ```
 
+The hosted backend requires tabpfn-client authentication. Local model access
+follows TabPFN's setup instructions. Both extras install `relarena-core`, which
+provides the shared runtime and Relational Predictive Interface (RPI).
+
+### How it works
+
+Define your tables, keys and timestamps in a database YAML file, and your target,
+label SQL and temporal splits in a task YAML file. RPI constructs the training
+labels. TabPFN-Rel aggregates related records with Deep Feature Synthesis (DFS)
+and fits TabPFN on the resulting features. Feature generation respects the task's
+time cutoffs, keeping future records out of the inputs.
+
+TabPFN-Rel converts each relational prediction task into a flat table by exhaustively
+aggregating along all join paths implied by the schema's primary-to-foreign-key relationships up
+to a maximum depth *d* (deep feature synthesis, with *d* tuned per task over {2, 3, 4}). TabPFN-3
+then predicts query labels in-context from labelled context rows. It inherits that core recipe
+from RDBLearn and improves on it in four ways:
+
+1. Improved tuning regime. The database used during tuning (the inner split) is frozen at the
+   validation cut-off, mirroring the outer split's test cut-off, which resolves the data drift
+   that previously occurred during tuning. Because RelArena-α automates tuning, every baseline
+   now benefits from this.
+2. Improved TFM backbone. TabPFN-3 replaces the previous set of backbones, and the number of
+   rows fed into the model grows by an order of magnitude. Runtime stays comparable, thanks to
+   the removed backbone-selection tuning axis and a more scalable architecture.
+3. Support for text features. Text columns from the entity table are re-attached after
+   featurization, which the hosted TabPFN-3 handles natively. Text is only available through the
+   API, so the text-free `tabpfn-rel-local` variant covers everyone who cannot use it.
+4. Better context selection. A context-selection regime trading off recency against diversity
+   across estimators replaces RDBLearn's random subsampling, at no additional runtime cost.
+   Validation examples are also reused as additional context for test predictions, since recent
+   examples are particularly informative on temporal forecasting tasks.
+
+### Predict on your database
+
 ```python
-from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
+from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
 predictions = PredictiveQuery(spec).fit("tabpfn-rel-client", n_trials=0).predict()
 ```
 
-The example fits the default model once. Set a positive `n_trials` budget for
-temporal hyperparameter tuning. Compatible registered models use the same interface. See
-[docs/predictive-task.md](docs/predictive-task.md) for the task definition, SQL rules, split
-semantics, and worked examples;
-[`packages/relarena/src/relarena/userdb/relbench_v1/`](packages/relarena/src/relarena/userdb/relbench_v1) for example specifications
-covering all 21 entity-level RelBench v1 tasks; and
-[`examples/olist_seller_churn.py`](examples/olist_seller_churn.py) for the full path on a real
-7-table Kaggle database. That example predicts seller churn, where held-out ROC AUC is 0.50 for
-the global constant, 0.58 for entity-only LightGBM, 0.69 for the per-entity constant, and 0.79
-for TabPFN-Rel.
+Use model name `tabpfn-rel-local` for local inference. `n_trials=0` fits the
+default configuration once; a positive budget enables temporal hyperparameter
+tuning. RPI supports entity-level classification and regression. Choosing a
+valid target and excluding fields unavailable at prediction time remain the
+user's responsibility.
 
-Designing an interface for specifying relational prediction problems remains an open research
-question, so this version is deliberately expressive, aimed at researchers and early-adopting
-practitioners, and includes only limited safeguards against task mis-specification. Its
-expressivity is intentionally constrained to entity-level forecasting tasks for compatibility
-with RelArena-α, so not every predictive task over a relational database can be represented yet.
+### Benchmark and compare models
+
+Install `relarena[tabpfn-rel-api]` or `relarena[tabpfn-rel-local]` to run
+TabPFN-Rel through the benchmark CLI. RelArena also supplies baseline models that
+can use the same RPI task. Install the relevant baseline extras for comparisons.
+
+### Documentation and examples
+
+- [TabPFN-Rel package guide](packages/tabpfn-rel/README.md): backend setup,
+  model APIs and benchmarking commands.
+- [RPI task guide](docs/predictive-task.md): database schemas, label SQL,
+  temporal splits and feature caching.
+- [Tiny generated database](packages/tabpfn-rel/examples/tiny_database.py): a
+  minimal runnable example.
+- [Olist Python example](examples/olist_seller_churn.py): seller churn on the
+  same dataset used in the cookbook.
+- [RelBench task specifications](packages/relarena/src/relarena/userdb/relbench_v1):
+  YAML examples for the 21 entity-level RelBench v1 tasks.
 
 </details>
 
@@ -589,32 +637,6 @@ Everything else per method lives at its source: install caveats in
 need platform-specific PyG sampling wheels beyond their extras), excluded backends and cache
 warmers in each model's docstring, and the complete implementation choices in the
 [adding-a-model appendix](docs/adding-a-model.md#appendix--what-every-existing-model-chose).
-
-</details>
-
-<details>
-<summary><b>🧪 TabPFN-Rel</b> — the relational harness for TabPFN-3</summary>
-
-TabPFN-Rel converts each relational prediction task into a flat table by exhaustively
-aggregating along all join paths implied by the schema's primary-to-foreign-key relationships up
-to a maximum depth *d* (deep feature synthesis, with *d* tuned per task over {2, 3, 4}). TabPFN-3
-then predicts query labels in-context from labelled context rows. It inherits that core recipe
-from RDBLearn and improves on it in four ways:
-
-1. Improved tuning regime. The database used during tuning (the inner split) is frozen at the
-   validation cut-off, mirroring the outer split's test cut-off, which resolves the data drift
-   that previously occurred during tuning. Because RelArena-α automates tuning, every baseline
-   now benefits from this.
-2. Improved TFM backbone. TabPFN-3 replaces the previous set of backbones, and the number of
-   rows fed into the model grows by an order of magnitude. Runtime stays comparable, thanks to
-   the removed backbone-selection tuning axis and a more scalable architecture.
-3. Support for text features. Text columns from the entity table are re-attached after
-   featurization, which the hosted TabPFN-3 handles natively. Text is only available through the
-   API, so the text-free `tabpfn-rel-local` variant covers everyone who cannot use it.
-4. Better context selection. A context-selection regime trading off recency against diversity
-   across estimators replaces RDBLearn's random subsampling, at no additional runtime cost.
-   Validation examples are also reused as additional context for test predictions, since recent
-   examples are particularly informative on temporal forecasting tasks.
 
 </details>
 
