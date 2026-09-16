@@ -54,6 +54,12 @@ def query(
     request: pytest.FixtureRequest,
     write_database: Callable[..., Path],
 ) -> PredictiveQuery:
+    for variable in (
+        "RELARENA_CACHE_DIR",
+        "RELARENA_DISABLE_CACHE",
+        "RELARENA_DISABLE_FEATURE_CACHE",
+    ):
+        monkeypatch.delenv(variable, raising=False)
     for name in ("tabpfn-v3", "tabpfn-v3-api"):
         monkeypatch.setitem(
             tfm.TFM_REGISTRY,
