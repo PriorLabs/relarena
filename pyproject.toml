@@ -25,10 +25,9 @@ cpu = ["torch"]
 [tool.uv]
 package = false
 exclude-newer = "3 days"
-# These packages were published after the global cutoff while their exact
-# dependency pins were being integrated. Exact pins keep the exemptions
-# reproducible without weakening the cutoff for unrelated dependencies.
-exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false }
+# Allow these backends and plugins within their declared version bounds
+# without weakening the cutoff for unrelated dependencies.
+exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false, tabpfn-rel = false }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
@@ -38,7 +37,6 @@ conflicts = [
 [tool.uv.sources]
 relarena = { workspace = true }
 relarena-core = { workspace = true }
-tabpfn-rel = { workspace = true }
 # bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
 # The resolved commit is pinned in uv.lock for reproducibility.
 bencheval = { git = "https://github.com/autogluon/tabarena.git", subdirectory = "packages/bencheval", rev = "9f3878b882439cb885003b5f978676961b059b6d" }
@@ -52,7 +50,7 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.ruff]
-src = ["packages/relarena/src", "packages/relarena-core/src", "packages/tabpfn-rel/src"]
+src = ["packages/relarena/src", "packages/relarena-core/src"]
 required-version = "==0.15.13"
 force-exclude = true
 line-length = 88
@@ -95,8 +93,8 @@ ignore-decorators = ["typing.override", "typing_extensions.override"]
 ]
 
 [tool.uv.workspace]
-members = ["packages/relarena", "packages/relarena-core", "packages/tabpfn-rel"]
+members = ["packages/relarena", "packages/relarena-core"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/relarena/tests", "packages/relarena-core/tests", "packages/tabpfn-rel/tests"]
+testpaths = ["packages/relarena/tests", "packages/relarena-core/tests"]
 addopts = "--import-mode=importlib"
