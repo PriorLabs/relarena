@@ -15,7 +15,7 @@ saves; the TabPFN forward pass runs either way and is what needs a GPU.
 
 Run (GPU recommended; the first run downloads the RelBench dataset):
 
-    uv run --extra local python examples/tabpfn_rel_caching.py
+    uv run --all-packages --extra tabpfn-rel-local python examples/tabpfn_rel_caching.py
 
 RELARENA_EXAMPLE_SKIP_TFM=1 runs only the DFS featurization + cache and skips the
 TabPFN forward pass, so the caching can be exercised on CPU / locally with no GPU. On

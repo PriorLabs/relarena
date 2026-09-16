@@ -533,7 +533,7 @@ Complete these steps on the submission branch before merging:
 - [ ] Regenerate the joint plot and both README tables from the repository root:
 
   ```bash
-  uv sync --locked --group dev --group cpu --extra leaderboard --extra plots
+  uv sync --locked --all-packages --group dev --group cpu --extra leaderboard --extra plots
   OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py
   OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py --check
   ```

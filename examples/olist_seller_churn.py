@@ -18,13 +18,13 @@ including each seller's own past churn rate: constant-global 0.50, lightgbm
 Setup (needs a Kaggle account + ~/.kaggle/kaggle.json), from the repository root:
 
     uvx kaggle datasets download -d olistbr/brazilian-ecommerce -p data/olist --unzip
-    uv sync --extra tabpfn-rel-api
-    uv run python -c "from tabpfn_client import init; init()"
+    uv sync --all-packages --extra tabpfn-rel-api
+    uv run --no-sync python -c "from tabpfn_client import init; init()"
     OMP_NUM_THREADS=1 uv run --no-sync python examples/olist_seller_churn.py
 
 The default uses the hosted TabPFN API. To run the model locally instead:
 
-    uv sync --extra tabpfn-rel-local
+    uv sync --all-packages --extra tabpfn-rel-local
     OMP_NUM_THREADS=1 uv run --no-sync python examples/olist_seller_churn.py \
         --backend local
 """
