@@ -28,11 +28,11 @@ from relbench.base import Database, EntityTask, Table
 from relbench.datasets import get_dataset
 from relbench.tasks import get_task
 
-from relarena.core.dataset import (
+from relarena.identity import relbench_run_identity
+from relarena_core.dataset import (
     TaskSource,
     clean_database,
 )
-from relarena.identity import relbench_run_identity
 
 #: rel-ratebeer per-user aggregates computed over the *entire* rating history, so a
 #: row can encode information from after its own timestamp.

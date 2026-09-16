@@ -9,10 +9,10 @@ import pandas as pd
 import pytest
 from relbench.base import Table, TaskType
 
-from relarena.core.identity import RunIdentity
-from relarena.core.registry import registry
 from relarena.models.kurversc import KURVERSC_DEFAULTS, KurveRSCSystem
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
+from relarena_core.identity import RunIdentity
+from relarena_core.registry import registry
 
 
 def _label_table(*, masked: bool = False) -> Table:

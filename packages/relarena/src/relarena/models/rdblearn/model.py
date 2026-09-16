@@ -2,7 +2,7 @@
 
 Combines:
   * **featurization** — multi-hop Deep Feature Synthesis over the foreign-key graph
-    (`relarena.core.featurization.build_dfs_features`, with the depth cache),
+    (`relarena_core.featurization.build_dfs_features`, with the depth cache),
     plus target-history augmentation (past-label aggregates), temporal-diff
     features, and the anchor columns (entity key + cutoff-time calendar features);
   * **search space** — an explicit grid over **(which tabular foundation model) ×
@@ -13,7 +13,7 @@ Combines:
 
 The estimator is a tabular foundation model (TabPFN v2 / v2.5); see
 `relarena.models.rdblearn.tfm` for the backend definitions and
-`relarena.core.tfm` for shared fitting
+`relarena_core.tfm` for shared fitting
 (the TFM handles categoricals natively). This is RDBLearn proper
 (https://github.com/HKUSHXLab/rdblearn) — DFS features + a foundation model.
 
@@ -42,12 +42,12 @@ import os
 import numpy as np
 from relbench.base import Database, EntityTask, Table
 
-from relarena.core.featurization.dfs import DFS_MAX_DEPTH, build_dfs_features
-from relarena.core.model import RelArenaModel
-from relarena.core.registry import register_model
-from relarena.core.search_space import SearchSpace
-from relarena.core.tfm import fit_tfm, predict_tfm
 from relarena.models.rdblearn.tfm import TFM_REGISTRY
+from relarena_core.featurization.dfs import DFS_MAX_DEPTH, build_dfs_features
+from relarena_core.model import RelArenaModel
+from relarena_core.registry import register_model
+from relarena_core.search_space import SearchSpace
+from relarena_core.tfm import fit_tfm, predict_tfm
 
 _MIN_DEPTH = 2
 

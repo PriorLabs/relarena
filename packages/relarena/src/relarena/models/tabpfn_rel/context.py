@@ -28,8 +28,8 @@ import numpy as np
 import pandas as pd
 from relbench.base import TaskType
 
-from relarena.core.tfm import FittedTFM, fit_tfm
 from relarena.models.tabpfn_rel.tfm import TFM_REGISTRY
+from relarena_core.tfm import FittedTFM, fit_tfm
 
 #: Default ensemble size for the pool strategies when the config pins none.
 DEFAULT_POOL_N_ESTIMATORS = 8

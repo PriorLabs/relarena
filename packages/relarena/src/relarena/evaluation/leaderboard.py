@@ -17,13 +17,13 @@ The board's task set comes from the frame it is given (optionally narrowed by a
 from __future__ import annotations
 
 import logging
-from importlib import import_module
 
 import pandas as pd
 
-from relarena.core.metrics import to_metric_error
-from relarena.core.registry import registry
 from relarena.evaluation.subsets import TaskMask, apply_subset
+from relarena_core.discovery import discover_models
+from relarena_core.metrics import to_metric_error
+from relarena_core.registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ def method_kind(model: str) -> str:
     package rather than isolating one model (see `RelArenaSystem`).
     Unregistered names (reference baselines, retired methods) rank as models.
     """
-    import_module("relarena.models")
+    discover_models()
 
     try:
         return registry.kind(model)

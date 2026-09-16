@@ -16,7 +16,7 @@ def test__rdblearn_tfm__import__registers_model_without_loading_backends() -> No
     code = """
 import sys
 from relarena.models.rdblearn import RDBLearnModel, tfm
-from relarena.core.registry import registry
+from relarena_core.registry import registry
 
 prefixes = ('tabpfn', 'tabpfn_client', 'fastdfs')
 loaded = [name for name in sys.modules

@@ -29,10 +29,10 @@ import argparse
 import os
 import sys
 
-from relarena.core.cache import resolve_cache_config
-from relarena.core.featurization.warm_cache import warm_dfs_cache
 from relarena.dataset import RelBenchDatasetTask
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
+from relarena_core.cache import resolve_cache_config
+from relarena_core.featurization.warm_cache import warm_dfs_cache
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
