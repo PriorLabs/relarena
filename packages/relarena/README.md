@@ -20,7 +20,7 @@ This distribution depends on `relarena-core`. TabPFN-Rel is optional and can als
 be installed directly as `tabpfn-rel[local]` or `tabpfn-rel[api]` for prediction on
 user databases without the benchmark package.
 
-The three distributions are sibling packages in the same monorepo. See the
+TabPFN-Rel is developed in [its own repository](https://github.com/PriorLabs/tabpfn-rel). See the
 [repository README](https://github.com/PriorLabs/relarena#readme) for model support,
 installation extras, cache usage and benchmark commands, and the
 [contributor guide](https://github.com/PriorLabs/relarena/blob/main/CONTRIBUTING.md)

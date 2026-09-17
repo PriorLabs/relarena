@@ -18,7 +18,7 @@
 [RelBench v1](https://github.com/snap-stanford/relbench), standardizing data loading, evaluation
 protocols, tuning regimes, and support for systems with custom tuning, inspired by established
 tabular benchmarks such as [TabArena](https://tabarena.ai). It benchmarks the separately packaged
-**[TabPFN-Rel](packages/tabpfn-rel)** model and provides the
+**[TabPFN-Rel](https://github.com/PriorLabs/tabpfn-rel)** model and provides the
 **Relational Predictive Interface (RPI)** for prediction on your own database. What the framework contributes:
 
 - **Reproducibility.** Every reported method re-run through explicit model and system APIs, with
@@ -282,11 +282,11 @@ can use the same RPI task. Install the relevant baseline extras for comparisons.
 
 ### Documentation and examples
 
-- [TabPFN-Rel package guide](packages/tabpfn-rel/README.md): backend setup,
+- [TabPFN-Rel package guide](https://github.com/PriorLabs/tabpfn-rel#readme): backend setup,
   model APIs and benchmarking commands.
 - [RPI task guide](docs/predictive-task.md): database schemas, label SQL,
   temporal splits and feature caching.
-- [Tiny generated database](packages/tabpfn-rel/examples/tiny_database.py): a
+- [Tiny generated database](https://github.com/PriorLabs/tabpfn-rel/blob/main/examples/tiny_database.py): a
   minimal runnable example.
 - [Olist Python example](examples/olist_seller_churn.py): seller churn on the
   same dataset used in the cookbook.
@@ -463,10 +463,9 @@ pinned by `uv.lock`).
 <details>
 <summary><b>🛠️ Developer setup</b> — everything, plus pre-commit</summary>
 
-The three installable packages are siblings under `packages/`: `relarena`,
-`relarena-core`, and `tabpfn-rel`. They share this workspace and lockfile.
-TabPFN-Rel depends on core and works without the benchmark package. Wheel
-metadata uses ordinary version requirements.
+The two installable packages under `packages/`, `relarena` and `relarena-core`,
+share this workspace and lockfile. [TabPFN-Rel](https://github.com/PriorLabs/tabpfn-rel)
+is developed separately and installed from PyPI through the model extras.
 
 ```bash
 uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
@@ -652,15 +651,10 @@ relarena/
 │   │   ├── pyproject.toml
 │   │   ├── src/relarena/  # benchmark implementation and public API
 │   │   └── tests/
-│   ├── relarena-core/     # contracts, temporal tuning, RPI, caching, optional DFS
-│   │   ├── pyproject.toml
-│   │   ├── src/relarena_core/
-│   │   └── tests/
-│   └── tabpfn-rel/        # independent model distribution and backend recipes
+│   └── relarena-core/     # contracts, temporal tuning, RPI, caching, optional DFS
 │       ├── pyproject.toml
-│       ├── src/tabpfn_rel/
-│       ├── tests/
-│       └── examples/
+│       ├── src/relarena_core/
+│       └── tests/
 ├── baseline_results/      # released results and reference numbers
 ├── docs/                  # model, tuning, temporal-validation and RPI guides
 ├── examples/              # benchmark and user-database demonstrations

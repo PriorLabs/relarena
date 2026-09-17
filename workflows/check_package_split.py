@@ -1,6 +1,6 @@
 """Check built packages in three isolated installations on every CI run.
 
-Installs core, the benchmark and TabPFN-Rel separately to catch missing runtime
+Installs core, the benchmark and the published TabPFN-Rel plugin to catch missing runtime
 dependencies, package data and entry points hidden by a workspace install. Checks
 wheel metadata, schemas, notices, plugin discovery and the benchmark CLI's task
 listing. Backend extras and real inference are not exercised.
@@ -24,7 +24,7 @@ from pathlib import Path
 CASES = (
     ("core", "relarena-core"),
     ("base", "relarena"),
-    ("model", "tabpfn-rel"),
+    ("plugin", "tabpfn-rel==0.0.1"),
 )
 
 
@@ -43,14 +43,14 @@ def run(command: list[str], cwd: Path, env: dict[str, str], log: Path) -> None:
 def check_artifacts(wheels: Path) -> list[str]:
     """Verify dependency direction, package ownership, schemas and notices."""
     pins = []
-    for name in ("relarena", "relarena_core", "tabpfn_rel"):
+    for name in ("relarena", "relarena_core"):
         wheel = next(wheels.glob(f"{name}-*.whl"))
         with zipfile.ZipFile(wheel) as archive:
             names = archive.namelist()
             metadata = BytesParser().parsebytes(
                 archive.read(next(n for n in names if n.endswith("/METADATA")))
             )
-            pins.append(f"{metadata['Name']}=={metadata['Version']}")
+            pins.append(f"{metadata['Name']} @ {wheel.resolve().as_uri()}")
             requirements = metadata.get_all("Requires-Dist", [])
             assert not any(" @ " in req for req in requirements), requirements
             for namespace in ("relarena", "relarena_core", "tabpfn_rel"):
@@ -73,19 +73,15 @@ def check_artifacts(wheels: Path) -> list[str]:
                     r.startswith(("relarena>", "relarena=", "relarena[", "relarena "))
                     for r in requirements
                 )
-                if name == "relarena_core":
-                    assert not any(r.startswith("tabpfn") for r in requirements)
-                    for schema in ("database", "task"):
-                        assert f"relarena_core/userdb/{schema}.schema.json" in names
-                else:
-                    assert any(r.startswith("relarena-core") for r in requirements)
+                assert not any(r.startswith("tabpfn") for r in requirements)
+                for schema in ("database", "task"):
+                    assert f"relarena_core/userdb/{schema}.schema.json" in names
             if name != "relarena_core":
                 entrypoints = archive.read(
                     next(n for n in names if n.endswith("/entry_points.txt"))
                 ).decode()
                 assert "[relarena.models]" in entrypoints
-                target = "relarena.models" if name == "relarena" else "tabpfn_rel.model"
-                assert target in entrypoints
+                assert "relarena.models" in entrypoints
         with tarfile.open(next(wheels.glob(f"{name}-*.tar.gz"))) as archive:
             names = archive.getnames()
             assert any(n.endswith("/pyproject.toml") for n in names)
@@ -114,7 +110,6 @@ def main() -> None:
     for source in (
         root / "packages/relarena-core",
         root / "packages/relarena",
-        root / "packages/tabpfn-rel",
     ):
         run(["uv", "build", "--out-dir", str(wheels)], source, env, log)
     pins = check_artifacts(wheels)
@@ -147,7 +142,7 @@ def main() -> None:
         )
         run([python, "-m", "pip", "check"], output, env, log)
         host = name == "base"
-        has_model = name == "model"
+        has_model = name == "plugin"
         code = f"""
 import importlib.metadata as metadata
 import importlib.util
