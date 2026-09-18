@@ -17,6 +17,11 @@ from relarena.checksums import (
     table_checksum,
 )
 from relarena.dataset import RelBenchDatasetTask
+from relarena.predictions import (
+    load_prediction_labels,
+    load_predictions,
+    prediction_context,
+)
 from relarena.results import summary_to_dataframe
 from relarena.runner import (
     run_experiment,
@@ -63,6 +68,9 @@ __all__ = [
     "cache_key",
     "cached_artifact",
     "list_entity_tasks",
+    "load_predictions",
+    "load_prediction_labels",
+    "prediction_context",
     "run_experiment",
     "run_model_experiment",
     "run_system_experiment",
