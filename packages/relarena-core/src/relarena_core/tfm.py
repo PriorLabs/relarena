@@ -144,12 +144,18 @@ def fit_tfm(
     cap = max_train_samples if max_train_samples is not None else spec.max_train_samples
     rng = np.random.default_rng(seed)
 
-    feature_cols = list(df.columns)
-
     y_arr = y.to_numpy()
     idx = _downsample_indices(y_arr, task_type, cap, rng)
     X = df.iloc[idx]
     y_arr = y_arr[idx]
+    # A column can become entirely missing after context sampling. Freeze its
+    # removal so prediction-only strings never reach a fitted numeric encoder.
+    X = X.dropna(axis=1, how="all")
+    feature_cols = list(X.columns)
+    if not feature_cols:
+        raise ValueError(
+            "No features remain after dropping all-missing training columns."
+        )
 
     kwargs = dict(device=device, seed=seed, **(overrides or {}))
     if task_type == TaskType.REGRESSION:
