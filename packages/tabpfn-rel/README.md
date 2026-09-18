@@ -37,11 +37,12 @@ Define the database relationships and prediction task in YAML, following
 Then:
 
 ```python
-from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data")
-query = PredictiveQuery(spec).fit("tabpfn-rel-local", n_trials=0)
-predictions = query.predict()
+fitted = PredictiveContext(spec).fit("tabpfn-rel-local", n_trials=0)
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+predictions = fitted.predict(query)
 ```
 
 Use `tabpfn-rel-client` for the hosted backend. `n_trials=0` fits the default

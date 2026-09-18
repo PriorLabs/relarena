@@ -1,22 +1,11 @@
-"""Python façade for the Relational Predictive Interface (RPI).
-
-`PredictiveQuery` wraps the pieces validated separately — `UserEntityTask`
-(SQL → labels), `TaskSource.from_objects` (splits), and
-`predict_at` (label-less inference) — into a single object so the common
-flow reads as `PredictiveQuery(spec).fit(model).predict()`.
-
-`fit` runs RelArena's standard protocol by default: tune the model's search
-space on the inner split (train→val, DB censored at `val_timestamp`), select
-the best config by validation score, then perform the model's final-fit regime
-on the outer split. For example, TabPFN-Rel sweeps its depth grid and picks the
-best configuration rather than running one default.
-"""
+"""Training contexts, fitted predictors, and explicit prediction requests."""
 
 from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
@@ -32,6 +21,7 @@ from relarena_core.identity import (
 )
 from relarena_core.model import RelArenaModel
 from relarena_core.registry import registry
+from relarena_core.results import TrialResult
 from relarena_core.search_space import TaskStats, resolve_search_space
 from relarena_core.selection import select_best
 from relarena_core.system import RelArenaSystem
@@ -46,8 +36,8 @@ from relarena_core.userdb.task import UserEntityTask
 _TASK_SCHEMA = load_schema("task.schema.json")
 
 
-class PredictiveQuery:
-    """A user task over a database: fit on historical labels, predict the future."""
+class PredictiveContext:
+    """A database and training task shared by fitted predictors."""
 
     def __init__(
         self, spec: PredictiveQuerySpec, *, data_version: str | None = None
@@ -82,16 +72,20 @@ class PredictiveQuery:
             run_identity=identity,
         )
         self.task: EntityTask = self._source.task
-        #: The task's prediction target, read by `predict`.
-        self._at_timestamp = task.at_timestamp
-        self._entities = task.entities
-        self._model: RelArenaModel | None = None
-        self._cache = CacheConfig(directory=None, on_miss="compute")
         self._identity = identity
         self._warned_schema_only_cache = False
-        #: Tuning trials and the selected config from the most recent `fit`.
-        self.trials: list | None = None
-        self.config: dict | None = None
+
+    @classmethod
+    def from_yaml(
+        cls,
+        path: str | Path,
+        *,
+        data_dir: str | Path | None = None,
+        data_version: str | None = None,
+    ) -> PredictiveContext:
+        """Load a database and training task from YAML."""
+        spec = PredictiveQuerySpec.from_yaml(path, data_dir=data_dir)
+        return cls(spec, data_version=data_version)
 
     def fit(
         self,
@@ -100,8 +94,8 @@ class PredictiveQuery:
         n_trials: int = 10,
         seed: int = 0,
         cache_dir: str | Path | None = None,
-    ) -> PredictiveQuery:
-        """Fit the registered model named `model`; returns self so `predict` chains.
+    ) -> FittedPredictor:
+        """Fit a registered model and return its independent fitted state.
 
         With `n_trials > 0` (default 10): tune the model's search space on the
         inner split (train→val, DB censored at `val_timestamp`), select the best
@@ -119,11 +113,10 @@ class PredictiveQuery:
 
         cache = resolve_cache_config(cache_dir, on_miss="fill")
         self._warn_schema_only_cache(cache)
-        self._cache = cache
         model_cls = registry.get(model)
         if isinstance(model_cls, type) and issubclass(model_cls, RelArenaSystem):
             raise TypeError(
-                f"'{model}' is a RelArenaSystem. PredictiveQuery requires a "
+                f"'{model}' is a RelArenaSystem. PredictiveContext requires a "
                 "RelArenaModel because it fits once and predicts at a later, "
                 "caller-selected timestamp."
             )
@@ -132,7 +125,7 @@ class PredictiveQuery:
         # fill: on a custom DB the store starts empty, so build it as we go (the
         # tuning trials + refit then reuse it); a later run reads what this built.
         if n_trials > 0:
-            self.trials = run_tuning(
+            trials = run_tuning(
                 model_cls,
                 search_space,
                 self.task,
@@ -142,19 +135,19 @@ class PredictiveQuery:
                 cache=cache,
                 run_identity=self._identity.for_phase("inner"),
             )
-            self.config = select_best(self.trials, self._source.metric).config
+            config = select_best(trials, self._source.metric).config
         else:
             # Resolve a factory search space (e.g. relgt builds its grid from
             # TaskStats) before reading its defaults; a plain SearchSpace is
             # returned unchanged.
-            self.trials = None
+            trials = None
             stats = TaskStats(
                 num_train_nodes=len(self._source.inner_split().train_table.df)
             )
             space = resolve_search_space(search_space, stats)
-            self.config = dict(space.default_overrides)
+            config = dict(space.default_overrides)
         fitted = model_cls(
-            self.config,
+            config,
             cache=cache,
             run_identity=self._identity.for_phase("outer"),
         )
@@ -171,8 +164,7 @@ class PredictiveQuery:
             train_table, val_table = outer.train_table, outer.val_table
 
         fitted.fit(self.task, outer.db_state, train_table, val_table, seed=seed)
-        self._model = fitted
-        return self
+        return FittedPredictor(self, fitted, cache, trials, config)
 
     def precompute_cache(self, cache_dir: str | Path) -> str | Path:
         """Build the shared DFS feature cache on CPU; return `cache_dir`.
@@ -190,62 +182,6 @@ class PredictiveQuery:
         self._warn_schema_only_cache(cache)
         warm_dfs_cache(self._source, cache)
         return cache_dir
-
-    def predict(self, *, cache_dir: str | Path | None = None) -> pd.DataFrame:
-        """Predict label-less rows for the task's configured target.
-
-        The target is owned by the task spec: `at_timestamp` (the prediction anchor,
-        defaulting to `test_timestamp`) and `entities` (defaulting to all). In line
-        with the RelBench protocol, the feature database remains frozen at the
-        task's `test_timestamp`; a later anchor changes the prediction seed but does
-        not expose rows written after that cutoff.
-
-        `entities` are the user's original ids; they are translated to the internal
-        reindexed ids for scoring, and the returned `entity_col` is translated back
-        to the original ids (for native RelBench datasets, which have no id map, ids
-        pass through unchanged).
-
-        `cache_dir` caches the prediction-time DFS features; it defaults to the one
-        passed to `fit`.
-        """
-        fitted = self._model
-        if fitted is None:
-            raise RuntimeError("Call fit(...) first.")
-        db = self._source._db
-        test_timestamp = self._source._dataset.test_timestamp
-        anchor = (
-            test_timestamp
-            if self._at_timestamp is None
-            else pd.Timestamp(self._at_timestamp)
-        )
-        if anchor > test_timestamp:
-            warnings.warn(
-                f"Prediction anchor {anchor} is after test_timestamp "
-                f"{test_timestamp}. RelArena follows the RelBench protocol, so "
-                "the feature database remains frozen at test_timestamp and rows "
-                "after that cutoff are not visible to the model.",
-                UserWarning,
-                stacklevel=2,
-            )
-        entities = self._entities
-        id_map = getattr(self._source._dataset, "pkey_maps", {}).get(
-            self.task.entity_table
-        )
-        cache = (
-            resolve_cache_config(cache_dir, on_miss="fill")
-            if cache_dir is not None
-            else self._cache
-        )
-        fitted.cache = cache
-        fitted.run_identity = self._identity.for_phase("predict")
-        self._warn_schema_only_cache(cache)
-        preds = predict_at(
-            fitted, self.task, db, anchor, self._to_internal_ids(entities, id_map)
-        )
-        if id_map is not None:
-            to_original = pd.Series(id_map.index, index=id_map.to_numpy())
-            preds[self.task.entity_col] = preds[self.task.entity_col].map(to_original)
-        return preds
 
     def compute_test_labels(
         self, *, data_end_timestamp: str | pd.Timestamp | None = None
@@ -300,12 +236,96 @@ class PredictiveQuery:
             and not self._warned_schema_only_cache
         ):
             warnings.warn(
-                "Persistent PredictiveQuery caching has no data_version; keys may "
+                "Persistent PredictiveContext caching has no data_version; keys may "
                 "fall back to a schema-only fingerprint. Pass data_version=... and "
                 "bump it when row content changes.",
                 stacklevel=3,
             )
             self._warned_schema_only_cache = True
+
+
+@dataclass(frozen=True, kw_only=True)
+class PredictiveQuery:
+    """Entities and anchor time to score with a fitted predictor."""
+
+    entities: EntitySelector
+    at_timestamp: str | pd.Timestamp
+
+    def __post_init__(self) -> None:
+        """Validate selections and normalize explicit timestamps."""
+        if isinstance(self.entities, str):
+            if self.entities != "all":
+                raise ValueError("entities must be 'all' or a sequence of IDs.")
+        else:
+            try:
+                object.__setattr__(self, "entities", tuple(self.entities))
+            except TypeError:
+                raise ValueError(
+                    "entities must be 'all' or a sequence of IDs."
+                ) from None
+        if self.at_timestamp != "test_timestamp":
+            timestamp = pd.Timestamp(self.at_timestamp)
+            if pd.isna(timestamp):
+                raise ValueError("at_timestamp must be a date or 'test_timestamp'.")
+            object.__setattr__(self, "at_timestamp", timestamp)
+
+
+@dataclass
+class FittedPredictor:
+    """A fitted model and its tuning results for one training context."""
+
+    context: PredictiveContext
+    _model: RelArenaModel
+    _cache: CacheConfig
+    trials: list[TrialResult] | None
+    config: dict[str, Any]
+
+    def predict(
+        self, query: PredictiveQuery, *, cache_dir: str | Path | None = None
+    ) -> pd.DataFrame:
+        """Predict original entity IDs with features frozen at the context cutoff."""
+        fitted = self._model
+        db = self.context._source._db
+        test_timestamp = self.context._source._dataset.test_timestamp
+        anchor = (
+            test_timestamp
+            if query.at_timestamp == "test_timestamp"
+            else pd.Timestamp(query.at_timestamp)
+        )
+        if anchor > test_timestamp:
+            warnings.warn(
+                f"Prediction anchor {anchor} is after test_timestamp "
+                f"{test_timestamp}. RelArena follows the RelBench protocol, so "
+                "the feature database remains frozen at test_timestamp and rows "
+                "after that cutoff are not visible to the model.",
+                UserWarning,
+                stacklevel=2,
+            )
+        entities = query.entities
+        id_map = getattr(self.context._source._dataset, "pkey_maps", {}).get(
+            self.context.task.entity_table
+        )
+        cache = (
+            resolve_cache_config(cache_dir, on_miss="fill")
+            if cache_dir is not None
+            else self._cache
+        )
+        fitted.cache = cache
+        fitted.run_identity = self.context._identity.for_phase("predict")
+        self.context._warn_schema_only_cache(cache)
+        preds = predict_at(
+            fitted,
+            self.context.task,
+            db,
+            anchor,
+            self._to_internal_ids(entities, id_map),
+        )
+        if id_map is not None:
+            to_original = pd.Series(id_map.index, index=id_map.to_numpy())
+            preds[self.context.task.entity_col] = preds[
+                self.context.task.entity_col
+            ].map(to_original)
+        return preds
 
     @staticmethod
     def _to_internal_ids(
@@ -337,30 +357,22 @@ class PredictiveQuery:
 
 @dataclass(frozen=True)
 class PredictiveQuerySpec:
-    """A predictive task plus the database it runs against.
-
-    Bundles the two halves a run needs - the `task` (label SQL, split timestamps,
-    prediction target) and its `database` (table schema) - into one object. The
-    solver choice (which model, how many tuning trials, the seed) is not part of the
-    spec; it is passed to `PredictiveQuery.fit` at call time, so the same spec
-    can run against several models. Load one from a task YAML via `from_yaml`.
-    """
+    """A training task and database specification."""
 
     database: DatabaseSpec
     task: PredictiveTaskSpec
 
     @classmethod
     def from_yaml(
-        cls, path: str, *, data_dir: str | None = None
+        cls, path: str | Path, *, data_dir: str | Path | None = None
     ) -> PredictiveQuerySpec:
         """Load a spec from a task YAML file.
 
         The task YAML holds the task fields (label `query`, `entity_col`,
         `target_col`, `task_type`, `timedelta`), the `val_timestamp` /
-        `test_timestamp` split cutoffs, an optional prediction target (`entities` /
-        `at_timestamp`), and a `database` field naming the database YAML. The
-        database path is resolved relative to the task file's directory (absolute
-        paths used as-is); its tables' data files resolve against `data_dir`.
+        `test_timestamp` split cutoffs and a `database` field naming the database
+        YAML. The database path is resolved relative to the task file's directory
+        (absolute paths used as-is); its tables' data files resolve against `data_dir`.
         """
         raw = yaml.safe_load(Path(path).read_text())
         validate(raw, _TASK_SCHEMA, kind="task")

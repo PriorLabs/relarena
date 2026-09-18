@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PredictiveTask",
-  "description": "A predictive task over a relational database, as loaded by PredictiveQuerySpec.from_yaml. Defines the SQL label task, the train/val/test split timestamps, what to predict, and a reference to the database YAML that holds the table schema.",
+  "description": "A predictive task over a relational database, as loaded by PredictiveQuerySpec.from_yaml. Defines the SQL label task, the train/val/test split timestamps, and a reference to the database YAML that holds the table schema.",
   "type": "object",
   "required": ["database", "entity_table", "entity_col", "time_col", "target_col", "task_type", "timedelta", "val_timestamp", "test_timestamp", "query"],
   "additionalProperties": false,
@@ -47,17 +47,6 @@
     "test_timestamp": {
       "type": "string",
       "description": "Outer-split (final) cutoff. Any string pandas.Timestamp can parse; must be later than val_timestamp."
-    },
-    "at_timestamp": {
-      "type": "string",
-      "description": "Anchor time to predict at. Any string pandas.Timestamp can parse. Defaults to test_timestamp. Under the RelBench protocol, a later anchor does not advance the feature database beyond test_timestamp and emits a warning."
-    },
-    "entities": {
-      "description": "What to predict for: 'all' (every entity) or an explicit list of entity ids. May not be null.",
-      "oneOf": [
-        { "const": "all" },
-        { "type": "array", "items": { "type": ["string", "integer"] } }
-      ]
     },
     "query": {
       "type": "string",

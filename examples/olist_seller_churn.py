@@ -37,7 +37,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from relarena.userdb import PredictiveQuery, PredictiveQuerySpec
+from relarena.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 
 def prepare_olist_data(csv_dir: str) -> Path:
@@ -80,8 +80,11 @@ def fit_predict_and_evaluate(
     The model is a run-time choice, not part of the spec, so swap it here to compare
     against constant / lightgbm baselines.
     """
-    pq = PredictiveQuery(spec).fit(model, n_trials=n_trials, seed=0)
-    preds = pq.predict()
+    pq = PredictiveContext(spec)
+    fitted = pq.fit(model, n_trials=n_trials, seed=0)
+    preds = fitted.predict(
+        PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+    )
     labels = pq.compute_test_labels()
     scored = labels.merge(
         preds,

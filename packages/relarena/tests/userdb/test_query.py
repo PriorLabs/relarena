@@ -14,7 +14,12 @@ import pytest
 from relarena.userdb import relbench_v1_spec, relbench_v1_tasks
 from relarena_core.cache import CacheConfig
 from relarena_core.identity import RunIdentity
-from relarena_core.userdb.query import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb.query import (
+    FittedPredictor,
+    PredictiveContext,
+    PredictiveQuery,
+    PredictiveQuerySpec,
+)
 
 _EXAMPLES = Path(__file__).resolve().parents[4] / "examples"
 _DB_YAML = "drivers:\n  pkey: driverId\n"
@@ -46,27 +51,27 @@ def _id_map() -> pd.Series:
 
 
 def test__to_internal_ids__all_selector__passes_through() -> None:
-    assert PredictiveQuery._to_internal_ids("all", _id_map()) == "all"
+    assert FittedPredictor._to_internal_ids("all", _id_map()) == "all"
 
 
 def test__to_internal_ids__no_map__passes_through() -> None:
     # Native RelBench datasets have no id map; ids stay as given.
-    assert PredictiveQuery._to_internal_ids(["s_a"], None) == ["s_a"]
+    assert FittedPredictor._to_internal_ids(["s_a"], None) == ["s_a"]
 
 
 def test__to_internal_ids__original_ids__mapped_to_indices() -> None:
-    assert PredictiveQuery._to_internal_ids(["s_c", "s_a"], _id_map()) == [2, 0]
+    assert FittedPredictor._to_internal_ids(["s_c", "s_a"], _id_map()) == [2, 0]
 
 
 def test__to_internal_ids__unknown_ids__dropped_with_warning() -> None:
     with pytest.warns(UserWarning, match="absent from the database"):
-        out = PredictiveQuery._to_internal_ids(["s_a", "nope"], _id_map())
+        out = FittedPredictor._to_internal_ids(["s_a", "nope"], _id_map())
     assert out == [0]
 
 
 def test__to_internal_ids__scalar__raises() -> None:
     with pytest.raises(ValueError, match="got scalar"):
-        PredictiveQuery._to_internal_ids(5, _id_map())
+        FittedPredictor._to_internal_ids(5, _id_map())
 
 
 def test__from_yaml__task_and_database__loaded_and_composed(tmp_path: Path) -> None:
@@ -77,9 +82,10 @@ def test__from_yaml__task_and_database__loaded_and_composed(tmp_path: Path) -> N
     assert spec.task.val_timestamp == pd.Timestamp("2005-01-01")
 
 
-def test__from_yaml__null_entities__raises(tmp_path: Path) -> None:
-    """An explicit `entities: null` fails schema validation on load."""
-    task = _TASK_YAML + "entities: null\n"
+@pytest.mark.parametrize("field", ["entities: all", "at_timestamp: 2005-01-31"])
+def test__from_yaml__prediction_fields__raise(tmp_path: Path, field: str) -> None:
+    """Prediction selections are specified on the query."""
+    task = _TASK_YAML + field + "\n"
     with pytest.raises(ValueError, match="Invalid task YAML"):
         PredictiveQuerySpec.from_yaml(_write_pair(tmp_path, task=task))
 
@@ -133,11 +139,12 @@ def test__fit__constant_global_model__predicts_and_computes_test_labels(
         _write_pair(tmp_path, task=task, db=db), data_dir=str(tmp_path)
     )
 
-    query = PredictiveQuery(spec, data_version="tiny-v1").fit(
-        "constant-global", n_trials=0, cache_dir=tmp_path / "cache"
+    context = PredictiveContext(spec, data_version="tiny-v1")
+    query = context.fit("constant-global", n_trials=0, cache_dir=tmp_path / "cache")
+    preds = query.predict(
+        PredictiveQuery(entities="all", at_timestamp="test_timestamp")
     )
-    preds = query.predict()
-    labels = query.compute_test_labels()
+    labels = context.compute_test_labels()
 
     assert sorted(preds["driverId"]) == [0, 1, 2, 3]
     assert preds["date"].unique().tolist() == [pd.Timestamp("2004-12-01")]
@@ -157,11 +164,11 @@ def test__fit__constant_global_model__predicts_and_computes_test_labels(
     assert query._model.run_identity.phase == "predict"
 
     with pytest.raises(ValueError, match="require data through"):
-        query.compute_test_labels(data_end_timestamp="2004-12-15")
+        context.compute_test_labels(data_end_timestamp="2004-12-15")
 
 
-def _schema_only_query(*, data_version: str | None = None) -> PredictiveQuery:
-    query = PredictiveQuery.__new__(PredictiveQuery)
+def _schema_only_query(*, data_version: str | None = None) -> PredictiveContext:
+    query = PredictiveContext.__new__(PredictiveContext)
     query._identity = RunIdentity(
         "user", "schema", "drivers-dnf", "task", data_version=data_version
     )
@@ -203,7 +210,7 @@ def test__warn_schema_only_cache__persistent_store__warns_once(
     ],
 )
 def test__warn_schema_only_cache__unambiguous_use__does_not_warn(
-    query: PredictiveQuery, cache: CacheConfig
+    query: PredictiveContext, cache: CacheConfig
 ) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("error")
@@ -221,19 +228,23 @@ def test__predict__anchor_after_test_cutoff__warns_about_frozen_db(
         _dataset=SimpleNamespace(test_timestamp=test_timestamp),
     )
     query.task = SimpleNamespace(entity_table="drivers", entity_col="driverId")
-    query._model = SimpleNamespace(cache=None, run_identity=None)
-    query._cache = CacheConfig(directory=None, on_miss="compute")
-    query._at_timestamp = pd.Timestamp("2020-02-01")
-    query._entities = "all"
+    context = query
+    query = FittedPredictor(
+        context,
+        SimpleNamespace(cache=None, run_identity=None),
+        CacheConfig(directory=None, on_miss="compute"),
+        None,
+        {},
+    )
     predict_at = Mock(return_value=pd.DataFrame({"driverId": [], "y_pred": []}))
     monkeypatch.setattr("relarena_core.userdb.query.predict_at", predict_at)
 
     with pytest.warns(UserWarning, match="feature database remains frozen"):
-        query.predict()
+        query.predict(PredictiveQuery(entities="all", at_timestamp="2020-02-01"))
 
     predict_at.assert_called_once_with(
         query._model,
-        query.task,
+        context.task,
         frozen_db,
         pd.Timestamp("2020-02-01"),
         "all",

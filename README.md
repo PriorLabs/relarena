@@ -262,10 +262,12 @@ from RDBLearn and improves on it in four ways:
 ### Predict on your database
 
 ```python
-from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-predictions = PredictiveQuery(spec).fit("tabpfn-rel-client", n_trials=0).predict()
+fitted = PredictiveContext(spec).fit("tabpfn-rel-client", n_trials=0)
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+predictions = fitted.predict(query)
 ```
 
 Use model name `tabpfn-rel-local` for local inference. `n_trials=0` fits the

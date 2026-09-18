@@ -2,7 +2,7 @@
 
 The **Relational Predictive Interface (RPI)** lets you define an entity-level
 prediction task—binary classification or regression—over your own relational
-database and run it with the models registered in RelArena. `PredictiveQuery` is
+database and run it with the models registered in RelArena. `PredictiveContext` is
 the Python façade for this interface.
 
 ## What even is a predictive task over a relational database?
@@ -25,8 +25,7 @@ future rows, so any relational database plus a question of that shape becomes a
 supervised prediction task. Two task types are supported today:
 `binary_classification` (0/1) and `regression` (numeric).
 
-A task is two YAML files: a **task file** (the label SQL, split timestamps, and what
-to predict) and a **database file** (the schema and paths to CSV or Parquet tables)
+A task is two YAML files: a **task file** (the label SQL and split timestamps) and a **database file** (the schema and paths to CSV or Parquet tables)
 that the task references—so one database file can back many tasks. For the hosted
 TabPFN-Rel example, install its extra and configure tabpfn-client authentication:
 
@@ -41,16 +40,19 @@ model name `tabpfn-rel-local` for the local backend.
 Load and run the task:
 
 ```python
-from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client", n_trials=0).predict()
+context = PredictiveContext(spec)
+fitted = context.fit(model="tabpfn-rel-client", n_trials=0)
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+preds = fitted.predict(query)
 ```
 
 `from_yaml` reads the task file, resolves its `database:` reference (a path relative
 to the task file), and loads the database. `fit` builds the dataset and fits the
 default configuration when `n_trials=0`; a positive budget enables temporal tuning.
-`predict` scores the label-less rows at the end of the data.
+`predict` scores label-less rows for the requested entities and timestamp.
 
 ## Build the task in four steps
 
@@ -133,7 +135,6 @@ timedelta: 30 days             # forward prediction window
 num_eval_timestamps: 40        # how many anchor times to spread across history
 val_timestamp: '2005-01-01'
 test_timestamp: '2010-01-01'
-entities: all                  # "all", or an explicit list of entity ids
 query: |
   SELECT t.timestamp AS date, re.driverId AS driverId,
          MAX(CASE WHEN re.statusId != 1 THEN 1 ELSE 0 END) AS did_not_finish
@@ -224,11 +225,15 @@ See `examples/olist_seller_churn.yaml` and the RelBench `*.user-churn` /
 
 ### End to end
 
-One pipeline: `fit` builds the dataset, tunes on train→val, and performs the
-selected model's final-fit regime; `predict` scores label-less rows at
-`test_timestamp` by default. A task may set `at_timestamp` to request a different
-prediction anchor. Keep the `PredictiveQuery` around to reuse the fitted model or
-inspect the tuning trials (`.trials` / `.config`).
+A `PredictiveContext` loads the database and training task. Its `fit` method tunes
+on train→val and performs the selected model's final-fit regime, returning a
+`FittedPredictor` with independent model state and tuning results (`.trials` /
+`.config`). Multiple fitted predictors can share a context.
+
+Pass a `PredictiveQuery` to `predict`. Both `entities` and `at_timestamp` are
+required. Use `entities="all"` or original entity IDs, and either an explicit date
+or `at_timestamp="test_timestamp"` to select the context's final cutoff. Prediction
+selections belong to the query, not to task YAML.
 
 Following the RelBench protocol, the feature database is frozen at the task's
 `test_timestamp`. Setting a later `at_timestamp` changes the timestamp of the
@@ -248,8 +253,11 @@ pip install "relarena[lightgbm,tabpfn-rel-api]"
 
 ```python
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
+context = PredictiveContext(spec)
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 for model in ["constant-global", "lightgbm", "tabpfn-rel-client"]:
-    preds = PredictiveQuery(spec).fit(model, n_trials=10).predict()
+    fitted = context.fit(model, n_trials=10)
+    preds = fitted.predict(query)
 ```
 
 Good starting points are `constant-global` (constant baseline), `lightgbm` (entity-only),
@@ -280,8 +288,10 @@ neither is set. The underlying `relarena_core.cache` API is optional and experim
 models may implement caching independently.
 
 ```python
-pq = PredictiveQuery(spec).fit("tabpfn-rel-local", cache_dir="/scratch/my_db_cache")
-preds = pq.predict()   # reuses the cache_dir passed to fit
+context = PredictiveContext(spec)
+pq = context.fit("tabpfn-rel-local", cache_dir="/scratch/my_db_cache")
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+preds = pq.predict(query)   # reuses the cache_dir passed to fit
 ```
 
 When the source data contain the complete window after `test_timestamp`,
@@ -289,7 +299,7 @@ materialize those historical outcomes and join them to predictions for your own
 evaluation. Test labels are never passed to the model:
 
 ```python
-test_labels = pq.compute_test_labels()
+test_labels = context.compute_test_labels()
 ```
 
 By default, coverage is checked against the database's latest timestamp. Pass
@@ -303,10 +313,11 @@ the store first with `precompute_cache` on a big CPU node, then `fit` on the GPU
 it instead of recomputing:
 
 ```python
-pq = PredictiveQuery(spec)
-pq.precompute_cache("/scratch/my_db_cache")                          # CPU, no TFM
-pq.fit("tabpfn-rel-local", cache_dir="/scratch/my_db_cache")      # GPU, reads the store
-preds = pq.predict()
+context = PredictiveContext(spec)
+context.precompute_cache("/scratch/my_db_cache")                          # CPU, no TFM
+pq = context.fit("tabpfn-rel-local", cache_dir="/scratch/my_db_cache")      # GPU, reads the store
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+preds = pq.predict(query)
 ```
 
 `examples/olist_seller_churn.py` shows the full flow on real data (the Olist
@@ -316,7 +327,7 @@ worked example below); its header has the exact data-download and run commands.
 
 Fit the `constant-global` baseline every time and treat it as the bar to clear: a constant,
 the median for regression or the majority class for classification
-(`PredictiveQuery(spec).fit("constant-global")`). Where the entity's own history is
+(`PredictiveContext(spec).fit("constant-global")`). Where the entity's own history is
 the obvious signal, also check a per-entity baseline (each entity's own past
 average). Ship a model only if it clearly beats these.
 
