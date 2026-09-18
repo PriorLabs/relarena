@@ -314,7 +314,12 @@ worked example below); its header has the exact data-download and run commands.
 A `PredictiveQuery` specifies which entities to score at one timestamp. It does
 not select a test cohort or compute labels. In particular,
 `entities="all", at_timestamp="test_timestamp"` requests all entities visible to
-prediction at the test cutoff, which can include entities outside the test set.
+prediction at the test cutoff. In many tasks, this is a **superset of the test
+entities at that timestamp**: the label SQL applies eligibility conditions, such
+as recent activity, that `entities="all"` does not apply. Using the test timestamp
+alone does not select the test cohort. To score exactly its rows, take the entity
+IDs from `compute_test_labels()` as shown below. For tasks with multiple test
+timestamps, repeat this for each timestamp's group.
 
 A test query is an ordinary `PredictiveQuery` whose entity IDs come from the
 labeled test rows at that timestamp. The YAML's `query:` field is **label SQL**:
