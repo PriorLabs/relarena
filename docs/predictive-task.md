@@ -294,21 +294,6 @@ query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 preds = pq.predict(query)   # reuses the cache_dir passed to fit
 ```
 
-When the source data contain the complete window after `test_timestamp`,
-materialize those historical outcomes and join them to predictions for your own
-evaluation. Test labels are never passed to the model:
-
-```python
-test_labels = context.compute_test_labels()
-```
-
-By default, coverage is checked against the database's latest timestamp. Pass
-`data_end_timestamp=...` when the database is known to be complete only through
-a different date, such as for a partial or sparse extract. The method raises if
-that cutoff does not cover the first test label window. Later windows are
-limited to those fully covered by the cutoff. A genuine
-production forecast has no labels until its forward window has happened.
-
 To split the expensive DFS build (CPU-bound, memory-heavy) from the GPU fit, precompute
 the store first with `precompute_cache` on a big CPU node, then `fit` on the GPU reads
 it instead of recomputing:
@@ -323,6 +308,106 @@ preds = pq.predict(query)
 
 `examples/olist_seller_churn.py` shows the full flow on real data (the Olist
 worked example below); its header has the exact data-download and run commands.
+
+### Prediction queries and test queries
+
+A `PredictiveQuery` specifies which entities to score at one timestamp. It does
+not select a test cohort or compute labels. In particular,
+`entities="all", at_timestamp="test_timestamp"` requests all entities visible to
+prediction at the test cutoff, which can include entities outside the test set.
+
+A test query is an ordinary `PredictiveQuery` whose entity IDs come from the
+labeled test rows at that timestamp. The YAML's `query:` field is **label SQL**:
+it selects the eligible entities and computes their target values. It is separate
+from the Python `PredictiveQuery` object.
+
+`context.compute_test_labels()` constructs the test rows as follows:
+
+1. Generate anchor timestamps starting at `test_timestamp`, spaced by
+   `timedelta`, up to `num_eval_timestamps` anchors.
+2. Keep only anchors whose full label window is covered by the available data.
+3. Run the label SQL with those anchors in `timestamp_df`, using the full database
+   so the SQL can observe outcomes after each anchor.
+4. Filter dangling entity references and return timestamps, original entity IDs,
+   and labels.
+
+By default, coverage ends at the database's latest timestamp. Pass
+`data_end_timestamp=...` if the data are known to be complete through a different
+date, for example with a sparse extract. At least the first test window must be
+fully covered, or the method raises. A live forecast has no ground-truth labels
+until its outcome window has elapsed.
+
+For example, the Olist label SQL selects sellers active during the preceding
+30 days and labels whether they churn during the following 30 days. Those
+eligible sellers define the test cohort. Other tasks can select different
+entities at each timestamp.
+
+#### Predict and evaluate every test row
+
+Given a `context`, fit once and explicitly iterate over its test timestamp/entity
+groups. Each prediction includes the timestamp and entity ID, so join on those
+keys rather than relying on row order. Labels are used for evaluation; they are
+not passed to `predict`. Prediction still uses the context's database frozen at
+`test_timestamp`, including when a query requests a later test anchor.
+
+```python
+import pandas as pd
+
+from relarena.userdb import PredictiveQuery
+
+labels = context.compute_test_labels()
+fitted = context.fit("constant-global", n_trials=0)
+prediction_batches = []
+for timestamp, entity_ids in context.group_test_entities(labels):
+    query = PredictiveQuery(entities=entity_ids, at_timestamp=timestamp)
+    prediction_batches.append(fitted.predict(query))
+
+if not prediction_batches:
+    raise ValueError("The test cohort is empty.")
+
+keys = [context.task.time_col, context.task.entity_col]
+target = context.task.target_col
+scored = labels.merge(
+    pd.concat(prediction_batches, ignore_index=True),
+    on=keys,
+    how="outer",
+    validate="one_to_one",
+    indicator=True,
+)
+if not scored["_merge"].eq("both").all():
+    raise ValueError("Prediction rows must exactly match test label rows.")
+scored = scored.drop(columns="_merge")
+if scored[f"{target}_pred"].isna().any():
+    raise ValueError("Predictions are missing rows from the test cohort.")
+
+for metric in context.task.metrics:
+    value = metric(scored[target], scored[f"{target}_pred"])
+    print(f"{metric.__name__}: {value:.4f}")
+```
+
+This evaluates the combined test rows across timestamps. See the runnable
+[RelBench test-row example](../examples/relbench_test_rows.py) for loading a
+reference task and its database. For example:
+
+```bash
+OMP_NUM_THREADS=1 uv run --no-sync python examples/relbench_test_rows.py \
+    --dataset rel-f1 --task driver-dnf
+```
+
+For a task with exactly one test timestamp, such as Olist, no loop is needed:
+
+```python
+labels = context.compute_test_labels()
+query = PredictiveQuery(
+    entities=labels[context.task.entity_col].tolist(),
+    at_timestamp="test_timestamp",
+)
+predictions = fitted.predict(query)
+```
+
+Use the same key-based join and evaluation above, with `predictions` in place of
+`pd.concat(prediction_batches, ignore_index=True)`. The
+[Olist example](../examples/olist_seller_churn.py) shows this single-timestamp path.
 
 ### Does a model even help? Check a constant baseline
 

@@ -94,9 +94,13 @@ def fit_predict_and_evaluate(
     scored = labels.merge(
         preds,
         on=[pq.task.time_col, pq.task.entity_col],
-        how="left",
+        how="outer",
         validate="one_to_one",
+        indicator=True,
     )
+    if not scored["_merge"].eq("both").all():
+        raise ValueError("Prediction rows must exactly match test label rows.")
+    scored = scored.drop(columns="_merge")
     if scored[f"{pq.task.target_col}_pred"].isna().any():
         raise RuntimeError("Predictions are missing rows from the test cohort.")
     roc_auc = roc_auc_score(

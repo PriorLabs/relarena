@@ -36,9 +36,13 @@ def predict_test_rows(context: PredictiveContext, model: str) -> pd.DataFrame:
     scored = labels.merge(
         pd.concat(batches, ignore_index=True),
         on=[context.task.time_col, context.task.entity_col],
-        how="left",
+        how="outer",
         validate="one_to_one",
+        indicator=True,
     )
+    if not scored["_merge"].eq("both").all():
+        raise ValueError("Prediction rows must exactly match test label rows.")
+    scored = scored.drop(columns="_merge")
     if scored[f"{context.task.target_col}_pred"].isna().any():
         raise ValueError("Predictions are missing rows from the test cohort.")
     return scored
