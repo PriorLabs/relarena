@@ -60,7 +60,7 @@ def query(
         "RELARENA_DISABLE_FEATURE_CACHE",
     ):
         monkeypatch.delenv(variable, raising=False)
-    for name in ("tabpfn-v3", "tabpfn-v3-api", "tabpfn-v3.5-api"):
+    for name in ("tabpfn-v3", "tabpfn-v3-api"):
         monkeypatch.setitem(
             tfm.TFM_REGISTRY,
             name,
@@ -76,7 +76,7 @@ def query(
 @pytest.mark.parametrize(
     "query", ["binary_classification", "regression"], indirect=True
 )
-@pytest.mark.parametrize("backend", ["local", "client-2026-08-15", "client-2026-09-18"])
+@pytest.mark.parametrize("backend", ["local", "client"])
 @pytest.mark.parametrize("n_trials", [0, 2])
 def test_rpi_fits_tunes_and_reuses_prediction_cache(
     query: PredictiveQuery, backend: str, n_trials: int, tmp_path: Path
@@ -87,15 +87,13 @@ def test_rpi_fits_tunes_and_reuses_prediction_cache(
     assert sorted(predictions["customer_id"]) == ["a", "b", "c", "d"]
     assert predictions["y_pred"].notna().all()
     assert len(query.compute_test_labels()) == 4
-    assert query.config["max_depth"] in (
-        (4,) if backend == "client-2026-09-18" else (2, 3)
-    )
+    assert query.config["max_depth"] in (2, 3)
     if n_trials:
-        assert len(query.trials) == (1 if backend == "client-2026-09-18" else 2)
+        assert len(query.trials) == 2
         assert all(trial.val_score is not None for trial in query.trials)
     else:
         assert query.trials is None
-    if backend.startswith("client"):
+    if backend == "client":
         assert "description__raw_text" in query._model._fitted.estimator.columns_
     assert list((tmp_path / "cache").rglob("*.parquet"))
 

@@ -17,10 +17,8 @@ def test_tabpfn_v3_spec_has_no_text_support() -> None:
     assert not tfm.TFM_REGISTRY["tabpfn-v3"].supports_text
 
 
-@pytest.mark.parametrize("version", ["v3", "v3.5"])
-def test_tabpfn_api_spec_builds_the_client_estimator(
+def test_tabpfn_v3_api_spec_builds_the_client_estimator(
     monkeypatch: pytest.MonkeyPatch,
-    version: str,
 ) -> None:
 
     captured: dict[str, object] = {}
@@ -34,18 +32,18 @@ def test_tabpfn_api_spec_builds_the_client_estimator(
     module.TabPFNRegressor = _ApiEstimator  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "tabpfn_client", module)
 
-    spec = tfm.TFM_REGISTRY[f"tabpfn-{version}-api"]
+    spec = tfm.TFM_REGISTRY["tabpfn-v3-api"]
     estimator = spec.make_classifier(device="cuda", seed=7)
 
     assert isinstance(estimator, _ApiEstimator)
     # device is server-side and never forwarded to the client constructor.
     assert captured == {
-        "model_path": f"{version}_default",
+        "model_path": "v3_default",
         "random_state": 7,
         "ignore_pretraining_limits": True,
     }
     assert isinstance(spec.make_regressor(device="cpu", seed=7), _ApiEstimator)
-    assert captured["model_path"] == f"{version}_default"
+    assert captured["model_path"] == "v3_default"
     # The API handles raw text natively.
     assert spec.supports_text
 

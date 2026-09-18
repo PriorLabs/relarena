@@ -25,7 +25,7 @@ Issues = "https://github.com/PriorLabs/relarena/issues"
 
 [project.optional-dependencies]
 local = ["tabpfn>=8", "relarena-core[dfs]>=0.0.1,<0.1"]
-api = ["tabpfn-client>=0.5.3", "relarena-core[dfs]>=0.0.1,<0.1"]
+api = ["tabpfn-client>=0.3.2", "relarena-core[dfs]>=0.0.1,<0.1"]
 
 [project.entry-points."relarena.models"]
 tabpfn_rel = "tabpfn_rel.model"
