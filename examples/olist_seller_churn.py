@@ -82,10 +82,15 @@ def fit_predict_and_evaluate(
     """
     pq = PredictiveContext(spec)
     fitted = pq.fit(model, n_trials=n_trials, seed=0)
-    preds = fitted.predict(
-        PredictiveQuery(entities="all", at_timestamp="test_timestamp")
-    )
     labels = pq.compute_test_labels()
+    # For multiple test timestamps, see:
+    # examples/relbench_test_rows.py
+    preds = fitted.predict(
+        PredictiveQuery(
+            entities=labels[pq.task.entity_col].tolist(),
+            at_timestamp="test_timestamp",
+        )
+    )
     scored = labels.merge(
         preds,
         on=[pq.task.time_col, pq.task.entity_col],

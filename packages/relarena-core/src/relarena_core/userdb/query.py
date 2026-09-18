@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -191,7 +192,7 @@ class PredictiveContext:
         Pass `data_end_timestamp` when the database is known to be complete only
         through a particular date (for example, for a partial or sparse extract).
         If omitted, the latest timestamp present anywhere in the database is used.
-        Raises when that cutoff does not cover every test window's label horizon.
+        Only complete test windows are returned; at least one must be available.
         """
         dataset = self._source._dataset
         full_db = dataset.get_db(upto_test_timestamp=False)
@@ -200,9 +201,7 @@ class PredictiveContext:
             if data_end_timestamp is None
             else pd.Timestamp(data_end_timestamp)
         )
-        required_until = (
-            dataset.test_timestamp + self.task.timedelta * self.task.num_eval_timestamps
-        )
+        required_until = dataset.test_timestamp + self.task.timedelta
         if available_until < required_until:
             raise ValueError(
                 "Cannot compute complete test labels: the configured test windows "
@@ -212,7 +211,11 @@ class PredictiveContext:
 
         timestamps = pd.date_range(
             start=dataset.test_timestamp,
-            periods=self.task.num_eval_timestamps,
+            end=min(
+                dataset.test_timestamp
+                + self.task.timedelta * (self.task.num_eval_timestamps - 1),
+                available_until - self.task.timedelta,
+            ),
             freq=self.task.timedelta,
         )
         labels = self.task.make_table(full_db, timestamps)
@@ -228,6 +231,13 @@ class PredictiveContext:
             to_original = pd.Series(id_map.index, index=id_map.to_numpy())
             labels[self.task.entity_col] = labels[self.task.entity_col].map(to_original)
         return labels
+
+    def group_test_entities(
+        self, labels: pd.DataFrame
+    ) -> Iterator[tuple[pd.Timestamp, list[Any]]]:
+        """Yield each test timestamp and its labeled entity IDs."""
+        for timestamp, rows in labels.groupby(self.task.time_col, sort=True):
+            yield pd.Timestamp(timestamp), rows[self.task.entity_col].tolist()
 
     def _warn_schema_only_cache(self, cache: CacheConfig) -> None:
         if (

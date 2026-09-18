@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import runpy
 import warnings
+from dataclasses import replace
 from pathlib import Path
 from textwrap import indent
 from types import SimpleNamespace
@@ -99,8 +101,10 @@ def test__from_yaml__unquoted_timestamps__accepted(tmp_path: Path) -> None:
     assert spec.task.val_timestamp == pd.Timestamp("2005-01-01")
 
 
+@pytest.mark.parametrize("num_timestamps", [1, 40])
 def test__fit__constant_global_model__predicts_and_computes_test_labels(
     tmp_path: Path,
+    num_timestamps: int,
 ) -> None:
     """The full fit -> predict flow can materialize labels for its test cohort."""
     months = pd.date_range("2004-01-15", "2005-06-15", freq="30D")
@@ -139,6 +143,7 @@ def test__fit__constant_global_model__predicts_and_computes_test_labels(
         _write_pair(tmp_path, task=task, db=db), data_dir=str(tmp_path)
     )
 
+    spec = replace(spec, task=replace(spec.task, num_eval_timestamps=num_timestamps))
     context = PredictiveContext(spec, data_version="tiny-v1")
     query = context.fit("constant-global", n_trials=0, cache_dir=tmp_path / "cache")
     preds = query.predict(
@@ -150,7 +155,17 @@ def test__fit__constant_global_model__predicts_and_computes_test_labels(
     assert preds["date"].unique().tolist() == [pd.Timestamp("2004-12-01")]
     assert "y_pred" in preds.columns
     assert list(labels.columns) == ["date", "driverId", "y"]
-    assert sorted(labels["driverId"]) == [0, 1]
+    assert sorted(labels["driverId"].unique()) == [0, 1]
+    expected = context.task.get_table("test", mask_input_cols=False).df
+    pd.testing.assert_frame_equal(labels, expected[labels.columns])
+    assert labels["date"].nunique() == (1 if num_timestamps == 1 else 6)
+    batches = []
+    for timestamp, entities in context.group_test_entities(labels):
+        batches.append(
+            query.predict(PredictiveQuery(entities=entities, at_timestamp=timestamp))
+        )
+    preds = pd.concat(batches, ignore_index=True).sample(frac=1, random_state=0)
+    assert len(preds) == len(labels)
     scored = labels.merge(
         preds,
         on=["date", "driverId"],
@@ -162,6 +177,11 @@ def test__fit__constant_global_model__predicts_and_computes_test_labels(
     assert query._model.cache.on_miss == "fill"
     assert query._model.run_identity.data_version == "tiny-v1"
     assert query._model.run_identity.phase == "predict"
+
+    example = runpy.run_path(str(_EXAMPLES / "relbench_test_rows.py"))
+    evaluated = example["predict_test_rows"](context, "constant-global")
+    assert len(evaluated) == len(labels)
+    assert evaluated["y_pred"].notna().all()
 
     with pytest.raises(ValueError, match="require data through"):
         context.compute_test_labels(data_end_timestamp="2004-12-15")

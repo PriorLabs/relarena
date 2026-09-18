@@ -305,7 +305,8 @@ test_labels = context.compute_test_labels()
 By default, coverage is checked against the database's latest timestamp. Pass
 `data_end_timestamp=...` when the database is known to be complete only through
 a different date, such as for a partial or sparse extract. The method raises if
-that cutoff does not cover all configured test label windows. A genuine
+that cutoff does not cover the first test label window. Later windows are
+limited to those fully covered by the cutoff. A genuine
 production forecast has no labels until its forward window has happened.
 
 To split the expensive DFS build (CPU-bound, memory-heavy) from the GPU fit, precompute
