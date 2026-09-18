@@ -7,10 +7,9 @@ Parquet files plus YAML database and task specifications. `PredictiveQuerySpec`
 bundles the whole
 task into one object (loadable from YAML, or built in code from a
 `DatabaseSpec` + `PredictiveTaskSpec`);
-`PredictiveQuery(spec).fit(model).predict()` runs it end to end, and
-`PredictiveQuery.compute_test_labels` materializes outcomes for historical test
-windows when the source data cover their label horizon. The 21 RelBench-v1 entity
-tasks ship as reference specs (`relbench_v1_spec`).
+`PredictiveContext(spec).fit(model)` returns a fitted predictor. Pass an explicit
+`PredictiveQuery` to its `predict` method. `PredictiveContext.compute_test_labels`
+materializes outcomes for historical test windows.
 """
 
 from relarena.userdb.relbench_v1 import (
@@ -19,11 +18,18 @@ from relarena.userdb.relbench_v1 import (
     relbench_v1_tasks,
 )
 from relarena_core.userdb.ingest import DatabaseSpec
-from relarena_core.userdb.query import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb.query import (
+    FittedPredictor,
+    PredictiveContext,
+    PredictiveQuery,
+    PredictiveQuerySpec,
+)
 from relarena_core.userdb.spec import PredictiveTaskSpec
 
 __all__ = [
     "DatabaseSpec",
+    "PredictiveContext",
+    "FittedPredictor",
     "PredictiveQuery",
     "PredictiveQuerySpec",
     "PredictiveTaskSpec",

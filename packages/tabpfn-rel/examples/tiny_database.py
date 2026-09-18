@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
+from tabpfn_rel import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 
 def write_database(directory: Path, task_type: str = "binary_classification") -> Path:
@@ -70,10 +70,14 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         task = write_database(Path(tmp))
         spec = PredictiveQuerySpec.from_yaml(str(task), data_dir=tmp)
-        query = PredictiveQuery(spec, data_version="example-v1").fit(
+        query = PredictiveContext(spec, data_version="example-v1").fit(
             f"tabpfn-rel-{args.backend}", n_trials=args.n_trials
         )
-        print(query.predict().to_string(index=False))
+        print(
+            query.predict(
+                PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+            ).to_string(index=False)
+        )
 
 
 if __name__ == "__main__":

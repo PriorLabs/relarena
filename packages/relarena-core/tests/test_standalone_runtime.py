@@ -9,7 +9,7 @@ from relbench.base import Database, EntityTask, Table
 
 from relarena_core import RelArenaModel, registry
 from relarena_core.search_space import SearchSpace
-from relarena_core.userdb import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 from relarena_core.userdb import query as query_module
 
 
@@ -92,11 +92,11 @@ query: |
         ),
     )
     spec = PredictiveQuerySpec.from_yaml(tmp_path / "task.yaml", data_dir=tmp_path)
-    query = PredictiveQuery(spec, data_version="fixture-v1")
+    query = PredictiveContext(spec, data_version="fixture-v1")
     inner, outer = query._source.inner_split(), query._source.outer_split()
-    query.fit(SuppliedModel.name, n_trials=2)
-    assert query.config == {"fail": False}
-    assert [trial.ok for trial in query.trials] == [False, True]
+    fitted = query.fit(SuppliedModel.name, n_trials=2)
+    assert fitted.config == {"fail": False}
+    assert [trial.ok for trial in fitted.trials] == [False, True]
     assert fits[0][0] == len(inner.train_table.df)
     assert fits[0][2] <= inner.cutoff
     expected_rows = len(outer.train_table.df)
@@ -104,7 +104,36 @@ query: |
         expected_rows += len(outer.val_table.df)
     assert fits[-1][:2] == (expected_rows, refit_full)
     assert fits[-1][2] <= outer.cutoff
-    predictions = query.predict()
+    fits_before_prediction = len(fits)
+    predictions = fitted.predict(
+        PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+    )
     assert sorted(predictions.customer_id) == ["a", "b", "c", "d"]
     assert np.isfinite(predictions.y_pred).all()
     assert len(query.compute_test_labels()) == 4
+    selected = fitted.predict(
+        PredictiveQuery(entities=["c"], at_timestamp="2004-11-15")
+    )
+    assert selected.customer_id.tolist() == ["c"]
+    assert selected.date.tolist() == [pd.Timestamp("2004-11-15")]
+    assert len(fits) == fits_before_prediction
+
+
+@pytest.mark.parametrize(
+    "kwargs", [{}, {"entities": "all"}, {"at_timestamp": "test_timestamp"}]
+)
+def test_prediction_query_requires_both_fields(kwargs: dict) -> None:
+    with pytest.raises(TypeError):
+        PredictiveQuery(**kwargs)
+
+
+@pytest.mark.parametrize("entities", [None, 5, "unknown"])
+def test_prediction_query_rejects_invalid_entities(entities: object) -> None:
+    with pytest.raises(ValueError, match="entities"):
+        PredictiveQuery(entities=entities, at_timestamp="test_timestamp")
+
+
+@pytest.mark.parametrize("timestamp", [None, "NaT", "invalid-date"])
+def test_prediction_query_rejects_invalid_timestamp(timestamp: object) -> None:
+    with pytest.raises(ValueError):
+        PredictiveQuery(entities="all", at_timestamp=timestamp)
