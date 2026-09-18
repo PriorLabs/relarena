@@ -142,7 +142,7 @@ if __name__ == "__main__":
     )
     model = {
         "local": "tabpfn-rel-local",
-        "client": "tabpfn-rel-client",
+        "client": "tabpfn-rel-client-2026-08-15",
     }[args.backend]
     n_trials = (
         args.n_trials

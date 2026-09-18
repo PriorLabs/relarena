@@ -44,7 +44,7 @@ from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQ
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
 context = PredictiveContext(spec)
-fitted = context.fit(model="tabpfn-rel-client", n_trials=0)
+fitted = context.fit(model="tabpfn-rel-client-2026-08-15", n_trials=0)
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 preds = fitted.predict(query)
 ```
@@ -255,7 +255,7 @@ pip install "relarena[lightgbm,tabpfn-rel-api]"
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
 context = PredictiveContext(spec)
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
-for model in ["constant-global", "lightgbm", "tabpfn-rel-client"]:
+for model in ["constant-global", "lightgbm", "tabpfn-rel-client-2026-08-15"]:
     fitted = context.fit(model, n_trials=10)
     preds = fitted.predict(query)
 ```

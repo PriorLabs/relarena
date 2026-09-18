@@ -146,7 +146,7 @@ hours (`rdblearn`, `tabpfn-rel`, RelGNN, `relgt`):_
 | `graphsage` | 4 | 47 min | 2 min | 9 min | 35 min | 83 min | 141 min |
 | `rdblearn` | 6 | 11 min | 0.5 min | 2 min | 7 min | 11 min | 50 min |
 | `tabpfn-rel-local` | 3 | 12 min | 0.6 min | 0.8 min | 4 min | 6 min | 85 min |
-| `tabpfn-rel-client` | 3 | 76 min | 18 min | 72 min | 88 min | 94 min | 108 min |
+| `tabpfn-rel-client-2026-08-15` | 3 | 76 min | 18 min | 72 min | 88 min | 94 min | 108 min |
 | `relgnn-es` (RelGNN) | 10 | 73 min | 1 min | 6 min | 28 min | 99 min | 336 min |
 | `relgt` | 9 | 511 min | 40 min | 175 min | 273 min | 466 min | 2442 min |
 | `rt-plurel` | — | 351 min | 109 min | 129 min | 231 min | 516 min | 979 min |
@@ -176,6 +176,6 @@ operator choices. Five caveats on reading them:
   but its `TaskStats` factory cuts the grid to 3 or 1 configs on larger tasks,
   so its effective budget is task-dependent whatever is passed.
 - `constant-global`, `constant-per-entity`, and `lightgbm` ran on CPU. The
-  local accelerated models ran on one `rtx-pro-6000`. `tabpfn-rel-client`
+  local accelerated models ran on one `rtx-pro-6000`. `tabpfn-rel-client-2026-08-15`
   records the CPU client device, but performs inference through the hosted API.
   The runtimes are therefore not a like-for-like hardware comparison.
