@@ -44,7 +44,7 @@ Load and run the task:
 from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client", n_trials=0).predict()
+preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client-2026-08-15", n_trials=0).predict()
 ```
 
 `from_yaml` reads the task file, resolves its `database:` reference (a path relative
@@ -248,7 +248,7 @@ pip install "relarena[lightgbm,tabpfn-rel-api]"
 
 ```python
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-for model in ["constant-global", "lightgbm", "tabpfn-rel-client"]:
+for model in ["constant-global", "lightgbm", "tabpfn-rel-client-2026-08-15"]:
     preds = PredictiveQuery(spec).fit(model, n_trials=10).predict()
 ```
 

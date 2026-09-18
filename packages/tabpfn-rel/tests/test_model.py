@@ -25,8 +25,10 @@ from tabpfn_rel import model as model_mod
 from tabpfn_rel import tfm
 from tabpfn_rel.context import hard_pool_subsample_indices
 from tabpfn_rel.model import (
+    TABPFN_REL_CLIENT_20260918_SPACE,
     TABPFN_REL_CLIENT_SPACE,
     TABPFN_REL_LOCAL_SPACE,
+    TabPFNRelClient20260918Model,
     TabPFNRelClientModel,
     TabPFNRelLocalModel,
     TabPFNRelModel,
@@ -63,8 +65,10 @@ def test__local_space__default_is_the_validated_config() -> None:
 
 def test__client_model__registered_with_client_tfm_and_text() -> None:
     discover_models()
-    assert registry.get("tabpfn-rel-client") is TabPFNRelClientModel
-    assert registry.search_space("tabpfn-rel-client") is TABPFN_REL_CLIENT_SPACE
+    assert registry.get("tabpfn-rel-client-2026-08-15") is TabPFNRelClientModel
+    assert (
+        registry.search_space("tabpfn-rel-client-2026-08-15") is TABPFN_REL_CLIENT_SPACE
+    )
     default = TABPFN_REL_CLIENT_SPACE.default_overrides
     assert default["tfm"] == "tabpfn-v3-api"
     assert default["with_text"] is True
@@ -352,3 +356,24 @@ def test__fit__with_text_on_a_textless_tfm__raises(
             val_table=None,
             seed=0,
         )
+
+
+def test_dated_client_has_one_fixed_depth_four_configuration() -> None:
+    discover_models()
+    name = "tabpfn-rel-client-2026-09-18"
+    assert registry.get(name) is TabPFNRelClient20260918Model
+    space = registry.search_space(name)
+    assert space is TABPFN_REL_CLIENT_20260918_SPACE
+    assert not space.is_tunable
+    assert space.configs(n_trials=10, seed=0) == [
+        {
+            "tfm": "tabpfn-v3.5-api",
+            "context_strategy": "hard_pool",
+            "subsample_samples": 200_000,
+            "pool_inflation": 4.0,
+            "with_text": True,
+            "max_depth": 4,
+        }
+    ]
+    assert TabPFNRelClient20260918Model.fit is TabPFNRelModel.fit
+    assert TabPFNRelClient20260918Model.predict is TabPFNRelModel.predict

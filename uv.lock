@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-08T14:24:39.111916Z"
+exclude-newer = "2026-09-15T09:30:54.54639Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -3036,7 +3036,7 @@ wheels = [
 
 [[package]]
 name = "tabpfn-client"
-version = "0.4.2"
+version = "0.5.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -3056,9 +3056,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/51/84/a66b50165b3e820c6951a1e2701e52aba502adfea96395b4be871030c1c3/tabpfn_client-0.4.2.tar.gz", hash = "sha256:9d574bffdf86ba76e1a5658579a9ea55757b0fbb03e3282cebc167036db815b0", size = 203376, upload-time = "2026-08-20T12:37:55.313Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/3e/88099b11d24b14538a60bff7826a10ca6caba02e5d6ac6d761d40cdbcd21/tabpfn_client-0.5.3.tar.gz", hash = "sha256:6c964255b7f98e42427dc67957a32ae28014320c03f841fcf154bfcc7a1683c6", size = 275590, upload-time = "2026-09-05T22:10:43.588Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/d7/b61d765e449f49dba6bc7c1d1d1ec7b5a0d8ddc7fb06525617f30655185c/tabpfn_client-0.4.2-py3-none-any.whl", hash = "sha256:66b50741d23b137b28074451c7509ccc9a2b49d7843dbfec4931e732cba8e2f9", size = 66538, upload-time = "2026-08-20T12:37:53.994Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/99/ad062fe71cb11ce1286dddaf985104f883cf17495faa8e3cfb7e6816d90b/tabpfn_client-0.5.3-py3-none-any.whl", hash = "sha256:9b4f7af7d58e40b401ae6fcae503e95555c8c05de55e09e38789bc20104bc39c", size = 76000, upload-time = "2026-09-05T22:10:42.246Z" },
 ]
 
 [[package]]
@@ -3120,7 +3120,7 @@ requires-dist = [
     { name = "relarena-core", extras = ["dfs"], marker = "extra == 'local'", editable = "packages/relarena-core" },
     { name = "relbench", specifier = "==2.1.2" },
     { name = "tabpfn", marker = "extra == 'local'", specifier = ">=8" },
-    { name = "tabpfn-client", marker = "extra == 'api'", specifier = ">=0.3.2" },
+    { name = "tabpfn-client", marker = "extra == 'api'", specifier = ">=0.5.3" },
 ]
 provides-extras = ["local", "api"]
 

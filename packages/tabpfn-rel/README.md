@@ -44,7 +44,7 @@ query = PredictiveQuery(spec).fit("tabpfn-rel-local", n_trials=0)
 predictions = query.predict()
 ```
 
-Use `tabpfn-rel-client` for the hosted backend. `n_trials=0` fits the default
+Use `tabpfn-rel-client-2026-08-15` for the hosted backend. `n_trials=0` fits the default
 configuration once; a positive budget enables the shared temporal tuning protocol.
 API fits and predictions consume service quota. The predictive classes are the
 same classes exported by `relarena_core.userdb` and, when installed,
@@ -62,7 +62,23 @@ Larger budgets also evaluate deeper DFS configurations. Unlike RPI, a zero CLI
 budget evaluates no grid configurations.
 
 `relarena[tabpfn-rel-api]` installs the hosted backend, selected with
-`--model tabpfn-rel-client`.
+`--model tabpfn-rel-client-2026-08-15` for the TabPFN 3 depth grid.
+The fixed-depth submission `tabpfn-rel-client-2026-09-18` uses TabPFN 3.5
+through the API, DFS depth 4, raw text, and 200,000 rows per estimator drawn
+from a recency pool of up to 800,000 rows. It uses a single configuration
+and the standard single-stage predictor.
+
+To evaluate the source checkout without publishing a package release:
+
+```bash
+uv sync --locked --all-packages --extra tabpfn-rel-api
+uv run --no-sync relarena --model tabpfn-rel-client-2026-09-18 --seed 0 --n-trials 1 --output results.csv
+```
+
+Authenticate with the TabPFN client before evaluation. The backend selector is
+`v3.5_default`; the account must have access to that model family. This selector
+tracks the service's default checkpoint within 3.5, so record the source commit,
+lockfile, and evaluation date with results. It is not an immutable checkpoint ID.
 
 The CLI and predictive interface discover installed models automatically. Direct
 registry users call discovery explicitly:

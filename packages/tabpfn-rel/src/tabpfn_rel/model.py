@@ -23,10 +23,12 @@ DFS matrix is content-cached, so the downsample / pool selection happens cheaply
 afterward (rather than being fused into a pre-DFS slice); text is handled inside
 the estimator at fit time.
 
-Two variants are registered, sharing the config validated in the reference sweeps —
+The local and 2026-08-15 API variants share the configuration —
 TabPFN v3 with hard-pool recency contexts (`K=100k`, `M=4·K`), tuned over DFS depth
-only: `tabpfn-rel-local` runs the local TabPFN v3, and `tabpfn-rel-client` runs
+only: `tabpfn-rel-local` runs the local TabPFN v3, and
+`tabpfn-rel-client-2026-08-15` runs
 through the hosted TabPFN API with anchor-table text passed through raw.
+The 2026-09-18 API variant uses TabPFN 3.5, fixed DFS depth 4, and K=200k.
 """
 
 from __future__ import annotations
@@ -187,4 +189,23 @@ class TabPFNRelLocalModel(TabPFNRelModel):
 class TabPFNRelClientModel(TabPFNRelModel):
     """`tabpfn-rel` through the hosted TabPFN API, with raw anchor-table text."""
 
-    name = "tabpfn-rel-client"
+    name = "tabpfn-rel-client-2026-08-15"
+
+
+TABPFN_REL_CLIENT_20260918_SPACE = SearchSpace(
+    default_overrides={
+        "tfm": "tabpfn-v3.5-api",
+        "context_strategy": "hard_pool",
+        "subsample_samples": 200_000,
+        "pool_inflation": 4.0,
+        "with_text": True,
+        "max_depth": 4,
+    },
+)
+
+
+@register_model(search_space=TABPFN_REL_CLIENT_20260918_SPACE)
+class TabPFNRelClient20260918Model(TabPFNRelModel):
+    """Hosted TabPFN 3.5 with depth-four DFS and 200k recency contexts."""
+
+    name = "tabpfn-rel-client-2026-09-18"

@@ -9,7 +9,7 @@ Pair a task with parquet from `materialize_relbench` and run it:
 
     materialize_relbench("rel-f1", "data/rel-f1")
     spec = relbench_v1_spec("rel-f1", "driver-dnf", data_dir="data/rel-f1")
-    preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client").predict()
+    preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client-2026-08-15").predict()
 
 The specs reproduce RelBench's own `make_table` output byte-for-byte (verified
 across all 21 tasks), including its split timestamps. The materialized tables are
