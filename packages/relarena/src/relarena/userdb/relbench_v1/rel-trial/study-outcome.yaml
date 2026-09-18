@@ -8,7 +8,6 @@ timedelta: 365 days
 num_eval_timestamps: 1
 val_timestamp: '2020-01-01 00:00:00'
 test_timestamp: '2021-01-01 00:00:00'
-entities: all
 query: |
   WITH trial_info AS (
       SELECT oa.nct_id, oa.p_value, s.start_date, oa.date

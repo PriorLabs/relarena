@@ -21,14 +21,16 @@ package is optional. An inference extra supplies
 the DFS engine and the selected estimator backend. Backend authentication and model
 access follow TabPFN or tabpfn-client's own setup instructions.
 
-Try the [generated database example](examples/tiny_database.py) from the monorepo root:
+Run the [local RPI integration tests](tests/test_rpi_local.py) from the monorepo
+root after installing the local extra and test dependencies:
 
 ```bash
-uv run --package tabpfn-rel --extra local python packages/tabpfn-rel/examples/tiny_database.py
+TABPFN_RUN_LOCAL_TESTS=1 OMP_NUM_THREADS=1 \
+    uv run --no-sync pytest packages/tabpfn-rel/tests/test_rpi_local.py
 ```
 
-It creates four customers and their event history, fits the default configuration,
-and prints one prediction per customer.
+These tests use generated databases and a local TabPFN v3 checkpoint, downloading
+the checkpoint if it is not cached. They are skipped unless explicitly enabled.
 
 ## Predict on your database
 
@@ -37,11 +39,12 @@ Define the database relationships and prediction task in YAML, following
 Then:
 
 ```python
-from tabpfn_rel import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data")
-query = PredictiveQuery(spec).fit("tabpfn-rel-local", n_trials=0)
-predictions = query.predict()
+fitted = PredictiveContext(spec).fit("tabpfn-rel-local", n_trials=0)
+query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+predictions = fitted.predict(query)
 ```
 
 Use `tabpfn-rel-client` for the hosted backend. `n_trials=0` fits the default

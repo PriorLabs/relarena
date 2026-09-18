@@ -41,7 +41,7 @@ def graph_cache_key(db: Database, run_identity: RunIdentity | None) -> str:
         ).hexdigest()
         segments.append(f"data-{digest}")
     if phase == "predict":
-        # PredictiveQuery identities fingerprint the source schema/content version,
+        # PredictiveContext identities fingerprint the source schema/content version,
         # while the graph sees a view censored at the prediction anchor. Distinguish
         # those views without pulling unrelated task/model fields into the key.
         digest = hashlib.blake2s(
