@@ -1,7 +1,6 @@
 # RelArena examples
 
-Run these examples from the RelArena repository root. A standalone generated-data
-example is in [`packages/tabpfn-rel`](../packages/tabpfn-rel/examples/tiny_database.py).
+Run these examples from the RelArena repository root.
 
 | Example | Question it answers | Needs |
 |---|---|---|

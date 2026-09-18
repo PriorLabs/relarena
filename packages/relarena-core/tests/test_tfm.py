@@ -16,9 +16,11 @@ class _StubClassifier:
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> "_StubClassifier":
         self.classes_ = np.unique(y)
         self.n_train_ = len(X)
+        self.fit_frame_ = X.copy()
         return self
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        self.predict_frame_ = X.copy()
         cols = np.arange(1, len(self.classes_) + 1, dtype=float)
         return np.tile(cols / cols.sum(), (len(X), 1))
 
@@ -27,9 +29,11 @@ class _StubRegressor:
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> "_StubRegressor":
         self.mean_ = float(np.mean(y))
         self.n_train_ = len(X)
+        self.fit_frame_ = X.copy()
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
+        self.predict_frame_ = X.copy()
         return np.full(len(X), self.mean_)
 
 
@@ -156,3 +160,58 @@ def test_fit_uses_the_tfms_own_sample_cap() -> None:
     y = pd.Series([0] * 25 + [1] * 25)
     fitted = fit_tfm(df, y, TaskType.BINARY_CLASSIFICATION, spec=spec, seed=0)
     assert fitted.estimator.n_train_ == 5
+
+
+@pytest.mark.parametrize(
+    "task_type", [TaskType.BINARY_CLASSIFICATION, TaskType.REGRESSION]
+)
+def test_all_missing_columns_are_removed_from_fit_and_predict(
+    stub_tfm: TFMSpec, task_type: TaskType
+) -> None:
+    train = pd.DataFrame(
+        {
+            "num": [1.0, 2.0, 3.0, 4.0],
+            "sparse": pd.Series([np.nan] * 4, dtype=object),
+            "nullable": pd.Series([pd.NA] * 4, dtype="string"),
+            "partial": [np.nan, 1.0, np.nan, 2.0],
+            "constant": [7.0] * 4,
+        }
+    )
+    original = train.copy(deep=True)
+    fitted = fit_tfm(train, pd.Series([0, 1, 0, 1]), task_type, spec=stub_tfm, seed=0)
+    expected = train[["num", "partial", "constant"]]
+    assert fitted.feature_cols == list(expected.columns)
+    pd.testing.assert_frame_equal(fitted.estimator.fit_frame_, expected)
+    prediction = train.assign(sparse="general", nullable="business")
+    predict_tfm(fitted, prediction[prediction.columns[::-1]])
+    pd.testing.assert_frame_equal(fitted.estimator.predict_frame_, expected)
+    pd.testing.assert_frame_equal(train, original)
+    assert prediction["sparse"].eq("general").all()
+
+
+def test_all_missing_columns_are_detected_after_sampling(stub_tfm: TFMSpec) -> None:
+    y = pd.Series(np.arange(20.0))
+    idx = _downsample_indices(
+        y.to_numpy(), TaskType.REGRESSION, 5, np.random.default_rng(0)
+    )
+    train = pd.DataFrame({"num": np.arange(20.0), "sparse": ["general"] * 20})
+    train.loc[idx, "sparse"] = np.nan
+    assert train["sparse"].notna().any()
+    fitted = fit_tfm(
+        train, y, TaskType.REGRESSION, spec=stub_tfm, seed=0, max_train_samples=5
+    )
+    assert fitted.feature_cols == ["num"]
+    pd.testing.assert_frame_equal(fitted.estimator.fit_frame_, train.iloc[idx][["num"]])
+    predict_tfm(fitted, train)
+    pd.testing.assert_frame_equal(fitted.estimator.predict_frame_, train[["num"]])
+
+
+def test_all_missing_training_frame_raises(stub_tfm: TFMSpec) -> None:
+    with pytest.raises(ValueError, match="No features remain"):
+        fit_tfm(
+            pd.DataFrame({"empty": [np.nan] * 4}),
+            pd.Series([0, 1, 0, 1]),
+            TaskType.BINARY_CLASSIFICATION,
+            spec=stub_tfm,
+            seed=0,
+        )
