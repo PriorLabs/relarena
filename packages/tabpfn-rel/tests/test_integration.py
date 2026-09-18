@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
 from collections.abc import Callable
 from pathlib import Path
 
@@ -33,19 +32,6 @@ class _Estimator:
 
 def _make_estimator(**kwargs: object) -> _Estimator:
     return _Estimator()
-
-
-_EXAMPLE = Path(__file__).resolve().parents[1] / "examples" / "tiny_database.py"
-
-
-@pytest.fixture(scope="session")
-def write_database() -> Callable[..., Path]:
-    """The generated-database writer from the example script, loaded by path."""
-    spec = importlib.util.spec_from_file_location("tiny_database", _EXAMPLE)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.write_database
 
 
 @pytest.fixture

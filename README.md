@@ -288,8 +288,6 @@ can use the same RPI task. Install the relevant baseline extras for comparisons.
   model APIs and benchmarking commands.
 - [RPI task guide](docs/predictive-task.md): database schemas, label SQL,
   temporal splits and feature caching.
-- [Tiny generated database](packages/tabpfn-rel/examples/tiny_database.py): a
-  minimal runnable example.
 - [Olist Python example](examples/olist_seller_churn.py): seller churn on the
   same dataset used in the cookbook.
 - [RelBench task specifications](packages/relarena/src/relarena/userdb/relbench_v1):

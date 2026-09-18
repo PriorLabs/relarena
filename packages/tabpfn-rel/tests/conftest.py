@@ -1,22 +1,15 @@
-"""Predict on a generated two-table database with local or hosted TabPFN.
-
-From this package directory, run
-``uv run --package tabpfn-rel --extra local python examples/tiny_database.py``.
-For the hosted backend, install the api extra and pass ``--backend client``.
-"""
+"""Generated two-table database for RPI tests."""
 
 from __future__ import annotations
 
-import argparse
-import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
-from tabpfn_rel import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
-
-def write_database(directory: Path, task_type: str = "binary_classification") -> Path:
+def _write_database(directory: Path, task_type: str = "binary_classification") -> Path:
     """Write a small relational dataset and a forward-looking prediction task."""
     directory.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(
@@ -61,24 +54,7 @@ def write_database(directory: Path, task_type: str = "binary_classification") ->
     return task
 
 
-def main() -> None:
-    """Generate data, fit the selected model and print its predictions."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=["local", "client"], default="local")
-    parser.add_argument("--n-trials", type=int, default=0)
-    args = parser.parse_args()
-    with tempfile.TemporaryDirectory() as tmp:
-        task = write_database(Path(tmp))
-        spec = PredictiveQuerySpec.from_yaml(str(task), data_dir=tmp)
-        query = PredictiveContext(spec, data_version="example-v1").fit(
-            f"tabpfn-rel-{args.backend}", n_trials=args.n_trials
-        )
-        print(
-            query.predict(
-                PredictiveQuery(entities="all", at_timestamp="test_timestamp")
-            ).to_string(index=False)
-        )
-
-
-if __name__ == "__main__":
-    main()
+@pytest.fixture
+def write_database() -> Callable[..., Path]:
+    """Return a writer for a generated two-table database."""
+    return _write_database
