@@ -69,7 +69,7 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client | Model | 1821.4 | 1749.9–1927.4 |
+| 1 | tabpfn-rel-client-2026-08-15 | Model | 1821.4 | 1749.9–1927.4 |
 | 2 | tabpfn-rel-local | Model | 1706.1 | 1626.4–1824.3 |
 | 3 | graphsage | Model | 1658.3 | 1574.7–1742.7 |
 | 4 | relgt | Model | 1575.3 | 1470.1–1706.2 |
@@ -87,7 +87,7 @@ they do not measure variation across training seeds. The plots and tables show t
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
 | 1 | rt-plurel | System | 1859.7 | 1756.5–1951.5 |
-| 2 | tabpfn-rel-client | Model | 1829.7 | 1761.0–1928.7 |
+| 2 | tabpfn-rel-client-2026-08-15 | Model | 1829.7 | 1761.0–1928.7 |
 | 3 | kurversc | System | 1783.0 | 1703.6–1861.7 |
 | 4 | tabpfn-rel-local | Model | 1730.5 | 1645.5–1820.1 |
 | 5 | graphsage | Model | 1663.6 | 1588.1–1747.4 |
@@ -269,7 +269,7 @@ from RDBLearn and improves on it in four ways:
 from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-fitted = PredictiveContext(spec).fit("tabpfn-rel-client", n_trials=0)
+fitted = PredictiveContext(spec).fit("tabpfn-rel-client-2026-08-15", n_trials=0)
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 predictions = fitted.predict(query)
 ```
@@ -615,7 +615,8 @@ as an experimental final-fit variant.
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
-| `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
+| `tabpfn-rel-client-2026-08-15` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
+| `tabpfn-rel-client-2026-09-18` | TabPFN-Rel (API) | depth-4 DFS + hosted TabPFN-3.5 with text, 200k context | model | pending evaluation | train + val | `tabpfn-rel-api` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |

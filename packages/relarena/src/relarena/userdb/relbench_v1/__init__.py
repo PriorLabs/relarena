@@ -11,7 +11,7 @@ Pair a task with parquet from `materialize_relbench` and run it:
 
     materialize_relbench("rel-f1", "data/rel-f1")
     spec = relbench_v1_spec("rel-f1", "driver-dnf", data_dir="data/rel-f1")
-    fitted = PredictiveContext(spec).fit(model="tabpfn-rel-client")
+    fitted = PredictiveContext(spec).fit(model="tabpfn-rel-client-2026-08-15")
     query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
     preds = fitted.predict(query)
 
