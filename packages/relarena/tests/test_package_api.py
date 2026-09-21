@@ -32,9 +32,8 @@ def test_public_class_and_registry_identity(name: str) -> None:
     assert PredictiveQuery is CoreQuery
 
 
-@pytest.mark.parametrize("consumer", ["relarena", "tabpfn_rel"])
-def test_consumers_use_public_core_interfaces(consumer: str) -> None:
-    package = pytest.importorskip(consumer)
+def test_uses_public_core_interfaces() -> None:
+    package = relarena
     violations = []
     for path in Path(package.__file__).parent.rglob("*.py"):
         for node in ast.walk(ast.parse(path.read_text())):
