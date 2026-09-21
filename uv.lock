@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-18T08:19:32.766317Z"
+exclude-newer = "2026-09-18T08:39:56.93646Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2398,7 +2398,6 @@ version = "0.1.0"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
-    { name = "datasets" },
     { name = "jsonschema" },
     { name = "numpy" },
     { name = "pandas" },
@@ -2467,7 +2466,6 @@ requires-dist = [
     { name = "bencheval", marker = "extra == 'leaderboard'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
     { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
     { name = "configspace", specifier = ">=1.0" },
-    { name = "datasets", specifier = ">=4" },
     { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
     { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
     { name = "jsonschema", specifier = ">=4.0" },
@@ -2500,6 +2498,7 @@ version = "0.0.2"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
+    { name = "datasets" },
     { name = "duckdb" },
     { name = "jsonschema" },
     { name = "numpy" },
@@ -2518,6 +2517,7 @@ dfs = [
 [package.metadata]
 requires-dist = [
     { name = "configspace", specifier = ">=1.0" },
+    { name = "datasets", specifier = ">=4" },
     { name = "duckdb", specifier = ">=1.2.2" },
     { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.1" },
     { name = "jsonschema", specifier = ">=4.0" },

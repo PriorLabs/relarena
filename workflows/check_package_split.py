@@ -1,4 +1,4 @@
-"""Check built packages in five isolated installations on every CI run.
+"""Check built packages in seven isolated installations on every CI run.
 
 Installs core, the benchmark and the published TabPFN-Rel plugin to catch missing runtime
 dependencies, package data and entry points hidden by a workspace install. Checks
@@ -25,6 +25,8 @@ CASES = (
     ("core", "relarena-core"),
     ("base", "relarena"),
     ("plugin", "tabpfn-rel==0.0.2"),
+    ("plugin-api", "tabpfn-rel[api]==0.0.2"),
+    ("plugin-local", "tabpfn-rel[local]==0.0.2"),
     ("api", "relarena[tabpfn-rel-api]"),
     ("local", "relarena[tabpfn-rel-local]"),
 )
@@ -144,7 +146,7 @@ def main() -> None:
         )
         run([python, "-m", "pip", "check"], output, env, log)
         host = name in ("base", "api", "local")
-        has_model = name in ("plugin", "api", "local")
+        has_model = name in ("plugin", "plugin-api", "plugin-local", "api", "local")
         code = f"""
 import importlib.metadata as metadata
 import importlib.util

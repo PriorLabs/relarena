@@ -39,7 +39,6 @@ dependencies = [
     # RelBench release may reprocess the data even if the splits look unchanged.
     # (Also re-record whenever dataset.drop_noncanonical_columns changes.)
     "relbench==2.1.2",
-    "datasets>=4",
     "numpy>=1.24",
     # Mirrors fastdfs' own pandas range (the dfs extras resolve it);
     # anything below 2.3.3 is unsatisfiable here.
