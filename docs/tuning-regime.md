@@ -156,7 +156,7 @@ over every trial and refit, or the system's `time_total`, with the distribution
 taken over the 21 RelBench v1 tasks.
 
 The budget is set in exactly one place — `--n-trials` on the CLI (default 10),
-or `PredictiveQuery.fit(n_trials=...)`. Nothing derives it from the search
+or `PredictiveContext.fit(n_trials=...)`. Nothing derives it from the search
 space and no per-model default exists, so the numbers above are per-invocation
 operator choices. Five caveats on reading them:
 

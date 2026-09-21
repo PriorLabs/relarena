@@ -8,7 +8,6 @@ timedelta: 60 days
 num_eval_timestamps: 40
 val_timestamp: '2005-01-01 00:00:00'
 test_timestamp: '2010-01-01 00:00:00'
-entities: all
 query: |
   SELECT t.timestamp AS date, re.driverId AS driverId,
          mean(re.positionOrder) AS position

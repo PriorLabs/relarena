@@ -1,9 +1,9 @@
-"""Check built packages in three isolated installations on every CI run.
+"""Check built packages in five isolated installations on every CI run.
 
 Installs core, the benchmark and the published TabPFN-Rel plugin to catch missing runtime
 dependencies, package data and entry points hidden by a workspace install. Checks
 wheel metadata, schemas, notices, plugin discovery and the benchmark CLI's task
-listing. Backend extras and real inference are not exercised.
+listing. Both TabPFN-Rel extras are installed; real inference is not exercised.
 
 Run from the workspace with ``python workflows/check_package_split.py --output PATH``.
 Downloads dependencies, but does not download model weights or call an API.
@@ -24,7 +24,9 @@ from pathlib import Path
 CASES = (
     ("core", "relarena-core"),
     ("base", "relarena"),
-    ("plugin", "tabpfn-rel==0.0.1"),
+    ("plugin", "tabpfn-rel==0.0.2"),
+    ("api", "relarena[tabpfn-rel-api]"),
+    ("local", "relarena[tabpfn-rel-local]"),
 )
 
 
@@ -141,8 +143,8 @@ def main() -> None:
             log,
         )
         run([python, "-m", "pip", "check"], output, env, log)
-        host = name == "base"
-        has_model = name == "plugin"
+        host = name in ("base", "api", "local")
+        has_model = name in ("plugin", "api", "local")
         code = f"""
 import importlib.metadata as metadata
 import importlib.util

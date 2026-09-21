@@ -21,6 +21,7 @@ from relbench.tasks import get_task
 
 from relarena.dataset import drop_noncanonical_task_columns
 from relarena.userdb import (
+    PredictiveContext,
     materialize_relbench,
     relbench_v1_spec,
     relbench_v1_tasks,
@@ -70,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
             test_timestamp=spec.task.test_timestamp,
         )
         ours = UserEntityTask(ds, spec.task)
+        context = PredictiveContext(spec)
         keys = [spec.task.time_col, spec.task.entity_col]
         for split in ("train", "val", "test"):
             want = drop_noncanonical_task_columns(
@@ -78,6 +80,19 @@ def main(argv: list[str] | None = None) -> int:
             got = drop_noncanonical_task_columns(
                 ours, ours.get_table(split, mask_input_cols=False), dataset
             ).df
+            if split == "test":
+                labels = context.compute_test_labels()
+                label_ok = _split_matches(want, labels, keys)
+                query_rows = pd.DataFrame(
+                    [
+                        (timestamp, entity)
+                        for timestamp, entities in context.group_test_entities(labels)
+                        for entity in entities
+                    ],
+                    columns=keys,
+                )
+                if not label_ok or not _split_matches(want[keys], query_rows, keys):
+                    failures.append(f"{dataset}.{task}[test queries and labels]")
             ok = _split_matches(want, got, keys)
             note = (
                 f"({len(want)} rows)" if ok else f"(want {len(want)}, got {len(got)})"
