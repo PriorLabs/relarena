@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-18T08:57:19.081282Z"
+exclude-newer = "2026-09-18T09:11:12.601141Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2394,7 +2394,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
@@ -3086,7 +3086,7 @@ wheels = [
 
 [[package]]
 name = "tabpfn-rel"
-version = "0.0.2"
+version = "0.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -3094,9 +3094,9 @@ dependencies = [
     { name = "relarena-core" },
     { name = "relbench" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a8/ce/c3f5e499170f4a629547394794cbe3bd1066e31f6cf834d6129156b46a02/tabpfn_rel-0.0.2.tar.gz", hash = "sha256:af42ae9eed4cfb5bb31c7821ace0eb92827cc80b6d4c15740c89792b97654d6a", size = 19060, upload-time = "2026-09-18T17:40:49.32Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/3a/bb27457dfcf9630ea2e72a186dee4b7597fd3cb500dafc24d8d4316f942d/tabpfn_rel-0.0.3.tar.gz", hash = "sha256:458d05235d230ee38e03ed3038b62db5edc2341dccb0ec2438ce0b186640b897", size = 19063, upload-time = "2026-09-21T09:10:16.839Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/85/9b4b675225fb0a1b11bd2a1652ef4bb56a3fe0e5459c01383d6393d531fc/tabpfn_rel-0.0.2-py3-none-any.whl", hash = "sha256:b0f48141da7b1b8be49017aa2eeea8e43e368495f9b42f38498dfe172f3608d5", size = 22218, upload-time = "2026-09-18T17:40:48.371Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/94/0c10fc9cafc251940babd9afb0b22f523db10acaa00a5ff9fb496da27ec5/tabpfn_rel-0.0.3-py3-none-any.whl", hash = "sha256:44ce2e58bebce7549c7d12f82b18c5fd858e6cbb68e0a0bde0bdd2a122d75fa3", size = 22216, upload-time = "2026-09-21T09:10:15.589Z" },
 ]
 
 [package.optional-dependencies]
