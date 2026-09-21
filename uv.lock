@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-18T08:39:56.93646Z"
+exclude-newer = "2026-09-18T08:57:19.081282Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2494,7 +2494,7 @@ provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relg
 
 [[package]]
 name = "relarena-core"
-version = "0.0.2"
+version = "0.0.3"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
