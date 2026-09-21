@@ -14,6 +14,7 @@ _BASELINES = {
     "graphsage",
     "kurversc",
     "lightgbm",
+    "nori-rel",
     "rdblearn",
     "relgnn",
     "relgnn-es",
@@ -83,7 +84,7 @@ assert registry.get('extra-model') is ExtraModel
 assert registry.search_space('extra-model').default_overrides == {{}}
 relarena.models._register_builtin_models()
 assert registry.get('extra-model') is ExtraModel
-assert len(registry) == 11
+assert len(registry) == 12
 """
     subprocess.run([sys.executable, "-c", code], check=True)
 

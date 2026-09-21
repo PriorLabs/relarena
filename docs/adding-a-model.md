@@ -437,6 +437,7 @@ Reuse an existing extra where the stack matches:
 | `rdblearn` | DFS + local TabPFN | `rdblearn` |
 | `tabpfn-rel-local` | `tabpfn-rel[local]` plugin | `tabpfn-rel-local` |
 | `tabpfn-rel-api` | DFS + `tabpfn-client` | `tabpfn-rel-client` |
+| `nori-rel` | DFS + the frozen Nori 30M | `nori-rel` |
 | `rdl` | shared RDL stack: PyG, PyTorch Frame, text embedder | umbrella, not used directly |
 | `graphsage` / `relgnn` / `relgt` | `relarena[rdl]` (+ `einops`, `h5py` for `relgt`) | the GNN baselines |
 
@@ -553,6 +554,7 @@ Complete these steps on the submission branch before merging:
 | `lightgbm` | `lightgbm/` | `space`, 14 params | `{}` | `True` | all | `lightgbm` | `featurization/entity`, `_shared/gbdt/lgb` |
 | `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
 | `tabpfn-rel-local`, `tabpfn-rel-client` | external `tabpfn-rel` package | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `tabpfn-rel-local` / `tabpfn-rel-api` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
+| `nori-rel` | `nori_rel/` | neither | `{max_depth: 2}` | `True` | regression | `nori-rel` | `relarena_core.featurization/dfs` + cache |
 | `graphsage` | `graphsage/` | `space` | explicit | `True` | binary, regression | `graphsage` | `_shared/gnn/{graph,training,_vendor/gnn}` |
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |

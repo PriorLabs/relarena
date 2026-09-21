@@ -8,8 +8,6 @@ dev = [
     "pytest>=9.1.1",
     "pre-commit>=4.0",
     "ruff==0.15.13",
-    # Focused adapter tests exercise the public optional-package boundary.
-    "kurversc==0.1.1",
     "lightgbm>=4.0,<4.7",
     "fastdfs>=1.1",
     # Match the woodwork/pkg_resources cap in the core DFS extra.
@@ -18,12 +16,20 @@ dev = [
 # The "cuda" and "cpu" groups switch between the cuda and CPU-only versions of torch.
 # With no group, torch comes from package dependencies via pypi, which is the cuda
 # build. The "cuda" group is a dummy, required for the "conflicts" option below.
+# Focused adapter tests exercise the public optional-package boundary. kurversc
+# caps numpy<2, so it sits in its own group rather than in `dev`: extras whose
+# runtime needs numpy>=2 cannot otherwise be installed alongside the test tools.
+kurversc = ["kurversc==0.1.1"]
 cuda = []
 # The CPU-only build avoids downloading CUDA when not required.
 cpu = ["torch"]
 
 [tool.uv]
 package = false
+# Keep kurversc in the default sync so the usual dev flow is unchanged by the
+# group split above. Installing the nori-rel extra means dropping it:
+# `uv sync --all-packages --no-group kurversc --extra nori-rel`.
+default-groups = ["dev", "kurversc"]
 exclude-newer = "3 days"
 # Allow these backends and plugins within their declared version bounds
 # without weakening the cutoff for unrelated dependencies.
@@ -32,6 +38,13 @@ conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
     [{ group = "cuda" }, { group = "cpu" }],
+    # kurversc caps numpy<2 and synthefy-nori requires numpy>=2, so the two extras
+    # cannot share an environment. Declaring the conflict keeps both resolvable.
+    [
+        { package = "relarena", extra = "kurversc" },
+        { package = "relarena", extra = "nori-rel" },
+    ],
+    [{ group = "kurversc" }, { package = "relarena", extra = "nori-rel" }],
 ]
 
 [tool.uv.sources]
