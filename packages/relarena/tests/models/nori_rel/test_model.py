@@ -16,6 +16,7 @@ from relbench.base import TaskType
 
 from relarena.models.nori_rel import model as model_module
 from relarena.models.nori_rel.model import NORI_REL_SPACE, NoriRelModel
+from relarena_core.featurization.dfs import DFS_MAX_DEPTH
 from relarena_core.registry import registry
 
 
@@ -122,7 +123,9 @@ def test__fit_predict__uses_depth_two_and_median_output(
     assert model._model.fit_rows == 3
     assert model._model.output_type == "median"
     assert [call["depth"] for call in feature_calls] == [2, 2]
-    assert [call["max_depth"] for call in feature_calls] == [2, 2]
+    # The shared cache is keyed on max_depth, so Nori-Rel must build the same
+    # deepest matrix as RDBLearn and the default warmer, then slice to depth 2.
+    assert [call["max_depth"] for call in feature_calls] == [DFS_MAX_DEPTH] * 2
     np.testing.assert_array_equal(prediction, [-0.25, 0.5, 1.25])
 
 
@@ -213,3 +216,35 @@ def test__config__rejects_nonreported_depth() -> None:
 
     with pytest.raises(ValueError, match="requires max_depth=2"):
         model.fit(task, object(), train, None, seed=0)
+
+
+def test__random_window__large_window_keeps_every_forward_within_budget() -> None:
+    """The `window > _MAX_CONTEXT_ROWS` branch is the one with no query padding."""
+
+    class Problem:
+        n_train = 200_000
+        window = 120_000
+        n_test = 9_000
+        query_chunk = 25_000
+
+        def predict(
+            self, context_idx: np.ndarray, query_idx: np.ndarray | None = None
+        ) -> np.ndarray:
+            assert query_idx is None, "the large-window branch predicts every test row"
+            self.pool = context_idx
+            self.forward_rows = [
+                len(context_idx)
+                + len(range(start, min(start + self.query_chunk, self.n_test)))
+                for start in range(0, self.n_test, self.query_chunk)
+            ]
+            return np.zeros(self.n_test)
+
+    problem = Problem()
+    prediction = model_module._random_window(problem, np.random.default_rng(3))
+
+    # The pool is capped below `window`, which `Problem.predict` requires, and every
+    # chunked forward pass stays inside the row budget.
+    assert len(problem.pool) == model_module._MAX_CONTEXT_ROWS
+    assert len(problem.pool) < problem.window
+    assert max(problem.forward_rows) <= model_module._MAX_FORWARD_ROWS
+    assert len(prediction) == problem.n_test

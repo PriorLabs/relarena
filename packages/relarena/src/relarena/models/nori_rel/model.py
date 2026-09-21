@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 from relbench.base import Database, EntityTask, Table, TaskType
 
-from relarena_core.featurization.dfs import build_dfs_features
+from relarena_core.featurization.dfs import DFS_MAX_DEPTH, build_dfs_features
 from relarena_core.model import RelArenaModel
 from relarena_core.registry import register_model
 from relarena_core.search_space import SearchSpace
@@ -195,7 +195,11 @@ class NoriRelModel(RelArenaModel):
             db,
             table,
             depth=self._depth,
-            max_depth=self._depth,
+            # Build (and cache) the deepest shared matrix and slice to our depth,
+            # exactly as RDBLearn does: `max_depth` is part of the DFS cache key, so
+            # passing our own depth here would key a private `max-depth-2` entry and
+            # miss every cache warmed at the default depth.
+            max_depth=DFS_MAX_DEPTH,
             history_table=self._history_table,
             keep_anchor_columns=True,
             cache=self.cache,
