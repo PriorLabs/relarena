@@ -6,6 +6,10 @@
 
 ## RelArena-α: Open and Reproducible Benchmarking for Relational Learning
 
+> [!TIP]
+> **Looking for TabPFN-Rel?** TabPFN-Rel now has its own repository:
+> [PriorLabs/tabpfn-rel](https://github.com/PriorLabs/tabpfn-rel).
+
 ---
 
 | 📂 [Examples](examples) | 📊 [Leaderboards](#-leaderboards) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 [Model Report](https://arxiv.org/abs/2608.16319) |
