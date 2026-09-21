@@ -6,9 +6,11 @@ Run these examples from the RelArena repository root.
 |---|---|---|
 | [`olist_seller_churn.py`](olist_seller_churn.py) | How do I run a model on **my own** database? | Kaggle account; no GPU by default |
 | [`tabpfn_rel_caching.py`](tabpfn_rel_caching.py) | Why is the feature cache worth setting up? | RelBench download; GPU recommended |
+| [`nori_rel.ipynb`](nori_rel.ipynb) | How do I run Nori-Rel on a RelBench regression task? | RelBench download; GPU strongly recommended |
 
 Start with the Olist example if you are evaluating RelArena on your own data;
-start with the caching one if you are setting up a sweep.
+start with the caching one if you are setting up a sweep; use the Nori-Rel
+notebook for a guided run of the frozen 30M checkpoint.
 
 ## `olist_seller_churn.py` — Relational Predictive Interface (RPI)
 
@@ -68,6 +70,24 @@ RELARENA_EXAMPLE_SKIP_TFM=1 OMP_NUM_THREADS=1 \
 
 See the feature-cache section of the [package README](../README.md) for how to
 point a real sweep at a shared store.
+
+## `nori_rel.ipynb` — Nori-Rel from setup to saved result
+
+A cell-by-cell walkthrough of the regression-only Nori-Rel integration. It checks
+the environment, lists supported tasks without downloading data, warms the shared
+DFS feature cache, runs one task with the frozen public Nori 30M checkpoint,
+inspects the validation and test metrics, and saves a CSV.
+
+Launch it from the repository root so its kernel uses the `nori-rel` extra:
+
+```bash
+uv sync --all-packages --no-group kurversc --extra nori-rel
+uv run --all-packages --no-sync --with jupyter jupyter lab examples/nori_rel.ipynb
+```
+
+The first complete run downloads the selected RelBench database and the public
+checkpoint. Use one task per GPU process; large tasks can need substantial host
+RAM while the BF16 context cache is active.
 
 ## On macOS, prefix with `OMP_NUM_THREADS=1`
 
