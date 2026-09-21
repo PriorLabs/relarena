@@ -17,20 +17,20 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-15T08:05:25.027299Z"
+exclude-newer = "2026-09-18T08:39:56.93646Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
+tabpfn-rel = false
+kurversc = false
 graphreduce = false
 relational-transformer = false
-kurversc = false
 
 [manifest]
 members = [
     "relarena",
     "relarena-core",
     "relarena-workspace",
-    "tabpfn-rel",
 ]
 
 [[package]]
@@ -2485,8 +2485,8 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
     { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
-    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", editable = "packages/tabpfn-rel" },
-    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", editable = "packages/tabpfn-rel" },
+    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.2" },
+    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.2" },
     { name = "torch" },
     { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
 ]
@@ -2498,6 +2498,7 @@ version = "0.0.2"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
+    { name = "datasets" },
     { name = "duckdb" },
     { name = "jsonschema" },
     { name = "numpy" },
@@ -2516,6 +2517,7 @@ dfs = [
 [package.metadata]
 requires-dist = [
     { name = "configspace", specifier = ">=1.0" },
+    { name = "datasets", specifier = ">=4" },
     { name = "duckdb", specifier = ">=1.2.2" },
     { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.1" },
     { name = "jsonschema", specifier = ">=4.0" },
@@ -3084,13 +3086,17 @@ wheels = [
 
 [[package]]
 name = "tabpfn-rel"
-version = "0.0.1"
-source = { editable = "packages/tabpfn-rel" }
+version = "0.0.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "relarena-core" },
     { name = "relbench" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/ce/c3f5e499170f4a629547394794cbe3bd1066e31f6cf834d6129156b46a02/tabpfn_rel-0.0.2.tar.gz", hash = "sha256:af42ae9eed4cfb5bb31c7821ace0eb92827cc80b6d4c15740c89792b97654d6a", size = 19060, upload-time = "2026-09-18T17:40:49.32Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4d/85/9b4b675225fb0a1b11bd2a1652ef4bb56a3fe0e5459c01383d6393d531fc/tabpfn_rel-0.0.2-py3-none-any.whl", hash = "sha256:b0f48141da7b1b8be49017aa2eeea8e43e368495f9b42f38498dfe172f3608d5", size = 22218, upload-time = "2026-09-18T17:40:48.371Z" },
 ]
 
 [package.optional-dependencies]
@@ -3101,35 +3107,6 @@ api = [
 local = [
     { name = "relarena-core", extra = ["dfs"] },
     { name = "tabpfn" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "relarena-core", extra = ["dfs"] },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "numpy", specifier = ">=1.24" },
-    { name = "pandas", specifier = ">=2.3.3,<3.0" },
-    { name = "relarena-core", editable = "packages/relarena-core" },
-    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'api'", editable = "packages/relarena-core" },
-    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'local'", editable = "packages/relarena-core" },
-    { name = "relbench", specifier = "==2.1.2" },
-    { name = "tabpfn", marker = "extra == 'local'", specifier = ">=8" },
-    { name = "tabpfn-client", marker = "extra == 'api'", specifier = ">=0.3.2" },
-]
-provides-extras = ["local", "api"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pre-commit", specifier = ">=4.0" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "relarena-core", extras = ["dfs"], editable = "packages/relarena-core" },
-    { name = "ruff", specifier = "==0.15.13" },
 ]
 
 [[package]]
