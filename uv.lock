@@ -17,7 +17,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-18T08:13:49.618525Z"
+exclude-newer = "2026-09-18T08:19:32.766317Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2487,8 +2487,8 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
     { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
-    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.2,<0.1" },
-    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.2,<0.1" },
+    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.2" },
+    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.2" },
     { name = "torch" },
     { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
 ]
