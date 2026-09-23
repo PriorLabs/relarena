@@ -140,20 +140,31 @@ hours (`rdblearn`, `tabpfn-rel`, RelGNN, `relgt`):_
 
 | Model | `n_trials` | mean | min | p25 | p50 | p75 | max |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `constant-global` | 0 | 0.1 s | 0.0 s | — | 0.0 s | — | 0.3 s |
-| `constant-per-entity` | 0 | 0.2 s | 0.0 s | — | 0.1 s | — | 1.3 s |
-| `lightgbm` | 30 | 14 min | 0.1 min | 0.2 min | 2 min | 28 min | 53 min |
-| `graphsage` | 4 | 47 min | 2 min | 9 min | 35 min | 83 min | 141 min |
-| `rdblearn` | 6 | 11 min | 0.5 min | 2 min | 7 min | 11 min | 50 min |
-| `tabpfn-rel-local` | 3 | 12 min | 0.6 min | 0.8 min | 4 min | 6 min | 85 min |
-| `tabpfn-rel-client` | 3 | 76 min | 18 min | 72 min | 88 min | 94 min | 108 min |
-| `relgnn-es` (RelGNN) | 10 | 73 min | 1 min | 6 min | 28 min | 99 min | 336 min |
-| `relgt` | 9 | 511 min | 40 min | 175 min | 273 min | 466 min | 2442 min |
-| `rt-plurel` | — | 351 min | 109 min | 129 min | 231 min | 516 min | 979 min |
+| `constant-global` | 0 | 0.030 s | 0.000 s | 0.001 s | 0.003 s | 0.038 s | 0.193 s |
+| `constant-per-entity` | 0 | 0.114 s | 0.001 s | 0.002 s | 0.008 s | 0.149 s | 0.668 s |
+| `lightgbm` | 30 | 13.5 min | 0.1 min | 0.2 min | 1.5 min | 27.4 min | 52.5 min |
+| `graphsage` | 4 | 44.4 min | 1.9 min | 9.1 min | 34.4 min | 75.5 min | 130.8 min |
+| `rdblearn` | 6 | 14.4 min | 0.4 min | 1.9 min | 10.2 min | 15.5 min | 73.7 min |
+| `tabpfn-rel-local` | 3 | 11.7 min | 0.6 min | 0.8 min | 3.4 min | 5.0 min | 84.9 min |
+| `tabpfn-rel-client` | 3 | 73.4 min | 15.2 min | 63.3 min | 87.5 min | 93.2 min | 99.8 min |
+| `relgnn-es` (RelGNN) | 10 | 68.1 min | 1.4 min | 5.4 min | 26.6 min | 92.1 min | 313.4 min |
+| `relgt` | 9 | 430.9 min | 36.1 min | 124.1 min | 149.8 min | 463.8 min | 2233.0 min |
+| `rt-plurel` | — | 351.0 min | 109.2 min | 129.1 min | 231.4 min | 515.5 min | 979.1 min |
 
-Total runtime is per (dataset, task): all four model phase-time columns summed
-over every trial and refit, or the system's `time_total`, with the distribution
-taken over the 21 RelBench v1 tasks.
+Total runtime is per (model, dataset, task, seed). For tuned model runs, it sums
+inner fit and prediction time across all trials, plus the selected config's outer
+fit and prediction time. A run with exactly one config tagged `default` counts
+only its outer fit and prediction time. Any extra outer evaluation of an
+unselected default config is excluded. Systems use their recorded `time_total`.
+The table reports the distribution across the 21 RelBench v1 tasks at seed 0;
+raw per-trial timings in `results.csv` are unchanged.
+
+The leaderboard's `time_train_s` is a different measure: it includes only the
+refit for a run with exactly one config tagged `default`. For other model runs,
+it includes the selected trial's inner fit plus refit, not the full tuning
+sweep. Raw inner-fold timings remain in the result rows. This rule applies per
+(model, dataset, task, seed), so a task-dependent grid can use different
+accounting across tasks. `time_infer_s` is the final prediction time.
 
 The budget is set in exactly one place — `--n-trials` on the CLI (default 10),
 or `PredictiveContext.fit(n_trials=...)`. Nothing derives it from the search

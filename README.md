@@ -574,6 +574,9 @@ budget rationale.
 **What a run records.** A model keeps one result per trial, including its configuration,
 metrics, optional predictions, and phase timings. A system records one final result with its test
 metrics, optional predictions, and total runtime; it does not synthesize model-trial fields.
+Leaderboard training time includes only the refit for runs with one default config;
+otherwise it includes the selected trial's inner fit plus refit, not the full tuning sweep.
+Raw inner-fold timings are retained in both cases.
 
 </details>
 

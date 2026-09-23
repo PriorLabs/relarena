@@ -26,7 +26,6 @@ from relarena_core.results import TrialResult
 from relarena_core.search_space import TaskStats, resolve_search_space
 from relarena_core.selection import select_best
 from relarena_core.system import RelArenaSystem
-from relarena_core.tuner import plan_configs
 from relarena_core.tuner import tune as run_tuning
 from relarena_core.userdb._schema import load_schema, validate
 from relarena_core.userdb.ingest import DatabaseSpec, build_dataset
@@ -129,9 +128,14 @@ class PredictiveContext:
                 num_train_nodes=len(self._source.inner_split().train_table.df)
             )
             search_space = resolve_search_space(search_space, stats)
-        default_only = n_trials == 0 or plan_configs(search_space, n_trials, seed) == [
-            ("default", search_space.default_overrides)
-        ]
+        grid = search_space.fixed_grid
+        default_only = (
+            n_trials == 0
+            or not search_space.is_tunable
+            or (
+                grid is not None and grid[:n_trials] == [search_space.default_overrides]
+            )
+        )
 
         # fill: on a custom DB the store starts empty, so build it as we go (the
         # tuning trials + refit then reuse it); a later run reads what this built.

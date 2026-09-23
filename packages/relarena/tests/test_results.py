@@ -76,6 +76,7 @@ def test_diagnostic_timing_is_logged_but_excluded_from_reported_runtime(
     path = tmp_path / "results.csv"
     summary_to_dataframe(summary).to_csv(path, index=False)
     results = pd.read_csv(path)
+    assert "tuning_required" not in results.columns
     assert results["val_score"].eq(0.7).all()
     assert results["fit_time_tuning"].eq(10.0).all()
     assert results["predict_time_tuning"].eq(2.0).all()

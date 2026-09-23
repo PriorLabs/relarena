@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from ConfigSpace import ConfigurationSpace, Integer
 from relbench.base import Database, EntityTask, Table
 
 from relarena_core import RelArenaModel, registry
@@ -14,9 +15,24 @@ from relarena_core.userdb import query as query_module
 
 
 @pytest.mark.parametrize("refit_full", [False, True])
-@pytest.mark.parametrize("mode", ["tuned", "default", "single-grid", "zero-budget"])
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "tuned",
+        "default",
+        "single-grid",
+        "zero-budget",
+        "capped",
+        "sampled",
+        "capped-default",
+    ],
+)
 def test_tuning_final_fit_and_original_ids(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refit_full: bool, mode: str
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    refit_full: bool,
+    mode: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     customers = pd.DataFrame({"customer_id": ["a", "b", "c", "d"]})
     dates = pd.date_range("2004-01-15", "2005-06-15", freq="30D")
@@ -69,7 +85,7 @@ query: |
             seed: int,
             time_limit: float | None = None,
         ) -> None:
-            if self.config["fail"]:
+            if self.config.get("fail", False):
                 raise ValueError("Deliberate failed tuning candidate")
             self.mean = float(train_table.df[task.target_col].mean())
             fits.append(
@@ -95,25 +111,49 @@ query: |
         space = SearchSpace(
             default_overrides={"fail": False}, fixed_grid=[{"fail": False}]
         )
+    elif mode == "capped-default":
+        space.fixed_grid = [{"fail": False}, {"fail": True}]
+    elif mode == "capped":
+        space.fixed_grid.append({"fail": False, "x": 1})
+    elif mode == "sampled":
+        space = SearchSpace(
+            default_overrides={"fail": False},
+            space=ConfigurationSpace(space=[Integer("x", (1, 10))]),
+        )
+    plan_calls = []
+    original_configs = SearchSpace.configs
+
+    def configs(self: SearchSpace, n_trials: int, seed: int) -> list[dict]:
+        plan_calls.append((n_trials, seed))
+        return original_configs(self, n_trials, seed)
+
+    monkeypatch.setattr(SearchSpace, "configs", configs)
     registry.register(SuppliedModel, space)
     spec = PredictiveQuerySpec.from_yaml(tmp_path / "task.yaml", data_dir=tmp_path)
     query = PredictiveContext(spec, data_version="fixture-v1")
     inner, outer = query._source.inner_split(), query._source.outer_split()
-    if mode != "tuned":
+    if mode not in {"tuned", "capped", "sampled"}:
 
         def unexpected_inner() -> None:
             pytest.fail("Default-only fitting must not construct the inner split")
 
         monkeypatch.setattr(query._source, "inner_split", unexpected_inner)
-    fitted = query.fit(SuppliedModel.name, n_trials=0 if mode == "zero-budget" else 2)
+    budget = {"zero-budget": 0, "capped-default": 1}.get(mode, 2)
+    fitted = query.fit(SuppliedModel.name, n_trials=budget)
     assert fitted.config == {"fail": False}
-    if mode == "tuned":
-        assert [trial.ok for trial in fitted.trials] == [False, True]
+    if mode in {"tuned", "capped", "sampled"}:
+        assert len(plan_calls) == 1
+        assert [trial.ok for trial in fitted.trials] == (
+            [True, True, True] if mode == "sampled" else [False, True]
+        )
         assert fits[0][0] == len(inner.train_table.df)
         assert fits[0][2] <= inner.cutoff
     else:
+        assert plan_calls == []
         assert fitted.trials is None
         assert len(fits) == 1
+    if mode == "capped":
+        assert sum("dropping 1" in record.message for record in caplog.records) == 1
     expected_rows = len(outer.train_table.df)
     if refit_full:
         expected_rows += len(outer.val_table.df)

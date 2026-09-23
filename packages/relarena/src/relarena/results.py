@@ -98,9 +98,6 @@ def summary_to_dataframe(
         return pd.DataFrame([{column: row[column] for column in front + remaining}])
 
     df = trials_to_dataframe(summary.trials)
-    df["tuning_required"] = not (
-        len(summary.trials) == 1 and summary.trials[0].config_tag == "default"
-    )
     if "config" in df.columns:
         df["config"] = df["config"].map(
             lambda c: json.dumps(c, sort_keys=True) if isinstance(c, dict) else c
