@@ -1180,7 +1180,26 @@ def _aligned_keys(left: pd.Series, right: pd.Series) -> tuple[pd.Series, pd.Seri
         return left.astype(float), right.astype(float)
     if pd.api.types.is_string_dtype(left) and pd.api.types.is_string_dtype(right):
         return left.astype(object), right.astype(object)
-    return left.astype("string"), right.astype("string")
+    return _stable_key_strings(left), _stable_key_strings(right)
+
+
+def _stable_key_strings(keys: pd.Series) -> pd.Series:
+    """String keys that match across a numeric and a text dtype, keeping nulls.
+
+    `astype("string")` writes the whole float 7.0 as ``"7.0"``, which never meets
+    the text id ``"7"``, and a left join answers the miss with NaN rather than an
+    error. Whole numbers are therefore written as integers. Foreign keys can be
+    null, so missing values stay missing instead of failing the conversion.
+    """
+    if not pd.api.types.is_numeric_dtype(keys):
+        return keys.astype("string")
+    numeric = keys.astype(float).to_numpy()
+    whole = np.isfinite(numeric) & (np.mod(numeric, 1) == 0)
+    strings = keys.astype("string")
+    strings[whole] = (
+        pd.Series(numeric[whole].astype(np.int64)).astype("string").to_numpy()
+    )
+    return strings
 
 
 def _time_ns(series: pd.Series) -> np.ndarray:

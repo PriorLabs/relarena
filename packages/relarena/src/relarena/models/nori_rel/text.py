@@ -107,6 +107,11 @@ def attach_anchor_text(
     return pd.concat([features.reset_index(drop=True), text], axis=1), names
 
 
+#: What `attach_anchor_text` turns a source null into when it stringifies a
+#: column: a float NaN, a Python `None` and a pandas `NA` respectively. A column
+#: made only of these is empty, although `dropna` cannot see it.
+STRINGIFIED_NULLS: Final = frozenset({str(float("nan")), str(None), str(pd.NA)})
+
 TEXT_EMBEDDER_MODEL: Final = "sentence-transformers/all-MiniLM-L6-v2"
 TEXT_EMBEDDER_REVISION: Final = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
 

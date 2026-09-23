@@ -156,6 +156,50 @@ def test_all_missing_training_columns_leave_fit_and_predict(
     assert list(model._model.predict_features) == ["value"]
 
 
+def test_text_column_empty_in_training_is_dropped(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A text column made only of stringified nulls is empty, not prose."""
+
+    def fake_features(
+        task: Any, db: Any, table: Any, **kwargs: Any
+    ) -> tuple[pd.DataFrame, list[str]]:
+        del task, db, kwargs
+        return pd.DataFrame({"value": np.arange(len(table.df), dtype=float)}), []
+
+    def fake_attach(
+        features: pd.DataFrame,
+        db: Any,
+        task: Any,
+        split: pd.DataFrame,
+        columns: list[str],
+        *,
+        strict_cutoff: bool = False,
+    ) -> tuple[pd.DataFrame, list[str]]:
+        del db, task, split, columns, strict_cutoff
+        output = features.copy()
+        # Every training row's source was null; the attach path stringified it.
+        output["notes__raw_text"] = ["nan", "None", "<NA>"][: len(output)]
+        return output, ["notes__raw_text"]
+
+    _install_fake_nori(monkeypatch)
+    monkeypatch.setattr(model_module, "build_dfs_features", fake_features)
+    monkeypatch.setattr(model_module, "anchor_text_columns", lambda db, task: ["notes"])
+    monkeypatch.setattr(model_module, "attach_anchor_text", fake_attach)
+    task = SimpleNamespace(
+        target_col="target",
+        time_col=None,
+        task_type=TaskType.BINARY_CLASSIFICATION,
+    )
+    train = SimpleNamespace(df=pd.DataFrame({"target": [0.0, 1.0, 0.0]}))
+    model = NoriRel(dict(model_module.DEFAULT_CONFIG))
+
+    model.fit(task, object(), train, None, seed=0)
+
+    assert model._columns == ["value"]
+    assert model._text_columns == []
+
+
 def test_import_does_not_load_optional_nori_dependency() -> None:
     code = (
         "import sys; import relarena.models.nori_rel; "

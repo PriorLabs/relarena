@@ -716,3 +716,22 @@ def test_no_primary_key_tie_ignores_excluded_and_nested_columns() -> None:
 
     assert not any("nested_payload" in column for column in featurizer.plan.columns)
     pd.testing.assert_frame_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "numeric",
+    [
+        pd.Series([7.0, 8.0, np.nan]),
+        pd.Series([7, 8, pd.NA], dtype="Int64"),
+    ],
+)
+def test_numeric_keys_meet_text_keys_across_the_dtype_gap(numeric: pd.Series) -> None:
+    """A whole-number id joins its text twin; a null foreign key stays null."""
+    from relarena.models.nori_rel.feature.dfs.noridfs.engine import _aligned_keys
+
+    left, right = _aligned_keys(numeric, pd.Series(["7", "8", "9"], dtype=object))
+
+    assert left.tolist()[:2] == ["7", "8"]
+    assert pd.isna(left.iloc[2])
+    assert right.tolist() == ["7", "8", "9"]
+    assert set(left.dropna()) <= set(right)

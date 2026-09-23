@@ -70,7 +70,12 @@ from .recipe import (
     NoriDFSRecipe,
 )
 from .targets import TargetRules
-from .text import anchor_text_columns, attach_anchor_text, pinned_minilm_encoder
+from .text import (
+    STRINGIFIED_NULLS,
+    anchor_text_columns,
+    attach_anchor_text,
+    pinned_minilm_encoder,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -401,7 +406,15 @@ class NoriRelModel(RelArenaModel):
         # strict temporal cutoff or the text row cap, while still carrying values
         # at predict. Drop it and freeze the set, so a prediction-only value never
         # reaches a column Nori fitted as empty.
-        features = features.dropna(axis=1, how="all")
+        # A text column arrives with its source nulls already stringified, so an
+        # empty one is a column of placeholders that `dropna` keeps.
+        text = features[self._text_columns]
+        empty_text = [
+            column
+            for column in self._text_columns
+            if (text[column].isna() | text[column].isin(STRINGIFIED_NULLS)).all()
+        ]
+        features = features.drop(columns=empty_text).dropna(axis=1, how="all")
         if features.shape[1] == 0:
             raise ValueError(
                 "no features remain after dropping all-missing training columns"
