@@ -26,6 +26,7 @@ from relarena_core.results import TrialResult
 from relarena_core.search_space import TaskStats, resolve_search_space
 from relarena_core.selection import select_best
 from relarena_core.system import RelArenaSystem
+from relarena_core.tuner import plan_configs
 from relarena_core.tuner import tune as run_tuning
 from relarena_core.userdb._schema import load_schema, validate
 from relarena_core.userdb.ingest import DatabaseSpec, build_dataset
@@ -104,6 +105,7 @@ class PredictiveContext:
         For a sampled space, `n_trials` requests that many random samples in
         addition to the default; for a fixed grid, it caps the ordered grid.
         With `n_trials == 0`, skip tuning and fit the model's default config.
+        A plan containing only the default config also skips tuning.
 
         `cache_dir` is a local directory that caches DFS features across tuning,
         the final fit, and later `predict`, useful for repeated runs on a large
@@ -122,10 +124,18 @@ class PredictiveContext:
                 "caller-selected timestamp."
             )
         search_space = registry.search_space(model)
+        if callable(search_space):
+            stats = TaskStats(
+                num_train_nodes=len(self._source.inner_split().train_table.df)
+            )
+            search_space = resolve_search_space(search_space, stats)
+        default_only = n_trials == 0 or plan_configs(search_space, n_trials, seed) == [
+            ("default", search_space.default_overrides)
+        ]
 
         # fill: on a custom DB the store starts empty, so build it as we go (the
         # tuning trials + refit then reuse it); a later run reads what this built.
-        if n_trials > 0:
+        if n_trials > 0 and not default_only:
             trials = run_tuning(
                 model_cls,
                 search_space,
@@ -138,15 +148,8 @@ class PredictiveContext:
             )
             config = select_best(trials, self._source.metric).config
         else:
-            # Resolve a factory search space (e.g. relgt builds its grid from
-            # TaskStats) before reading its defaults; a plain SearchSpace is
-            # returned unchanged.
             trials = None
-            stats = TaskStats(
-                num_train_nodes=len(self._source.inner_split().train_table.df)
-            )
-            space = resolve_search_space(search_space, stats)
-            config = dict(space.default_overrides)
+            config = dict(search_space.default_overrides)
         fitted = model_cls(
             config,
             cache=cache,

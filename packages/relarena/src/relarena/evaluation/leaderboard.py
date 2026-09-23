@@ -62,6 +62,11 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
             return pd.Series(0.0, index=rows.index)
         return rows[column].fillna(0.0)
 
+    tuning_time = seconds("fit_time_tuning")
+    if "tuning_required" in rows:
+        # Default-only inner evaluations are diagnostic, not config selection.
+        tuning_time = tuning_time.mask(rows["tuning_required"].eq(False), 0.0)
+
     frame = pd.DataFrame(
         {
             "method": rows["model"].to_numpy(),
@@ -70,9 +75,7 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
             ).to_numpy(),
             "metric_error": metric_error,
             "time_train_s": (
-                seconds("fit_time_tuning")
-                + seconds("fit_time_refit")
-                + seconds("time_total")
+                tuning_time + seconds("fit_time_refit") + seconds("time_total")
             ).to_numpy(),
             "time_infer_s": seconds("predict_time_refit").to_numpy(),
         }

@@ -14,8 +14,9 @@ from relarena_core.userdb import query as query_module
 
 
 @pytest.mark.parametrize("refit_full", [False, True])
+@pytest.mark.parametrize("mode", ["tuned", "default", "single-grid", "zero-budget"])
 def test_tuning_final_fit_and_original_ids(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refit_full: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refit_full: bool, mode: str
 ) -> None:
     customers = pd.DataFrame({"customer_id": ["a", "b", "c", "d"]})
     dates = pd.date_range("2004-01-15", "2005-06-15", freq="30D")
@@ -84,21 +85,35 @@ query: |
 
     monkeypatch.setattr(query_module, "discover_models", lambda **kwargs: None)
     monkeypatch.setattr(registry, "_entries", {})
-    registry.register(
-        SuppliedModel,
-        SearchSpace(
-            default_overrides={"fail": False},
-            fixed_grid=[{"fail": True}, {"fail": False}],
-        ),
+    space = SearchSpace(
+        default_overrides={"fail": False},
+        fixed_grid=[{"fail": True}, {"fail": False}],
     )
+    if mode == "default":
+        space = SearchSpace(default_overrides={"fail": False})
+    elif mode == "single-grid":
+        space = SearchSpace(
+            default_overrides={"fail": False}, fixed_grid=[{"fail": False}]
+        )
+    registry.register(SuppliedModel, space)
     spec = PredictiveQuerySpec.from_yaml(tmp_path / "task.yaml", data_dir=tmp_path)
     query = PredictiveContext(spec, data_version="fixture-v1")
     inner, outer = query._source.inner_split(), query._source.outer_split()
-    fitted = query.fit(SuppliedModel.name, n_trials=2)
+    if mode != "tuned":
+
+        def unexpected_inner() -> None:
+            pytest.fail("Default-only fitting must not construct the inner split")
+
+        monkeypatch.setattr(query._source, "inner_split", unexpected_inner)
+    fitted = query.fit(SuppliedModel.name, n_trials=0 if mode == "zero-budget" else 2)
     assert fitted.config == {"fail": False}
-    assert [trial.ok for trial in fitted.trials] == [False, True]
-    assert fits[0][0] == len(inner.train_table.df)
-    assert fits[0][2] <= inner.cutoff
+    if mode == "tuned":
+        assert [trial.ok for trial in fitted.trials] == [False, True]
+        assert fits[0][0] == len(inner.train_table.df)
+        assert fits[0][2] <= inner.cutoff
+    else:
+        assert fitted.trials is None
+        assert len(fits) == 1
     expected_rows = len(outer.train_table.df)
     if refit_full:
         expected_rows += len(outer.val_table.df)
