@@ -5,11 +5,15 @@ time columns / foreign keys) plus one `<task>.yaml` per task (the split timestam
 windowed-aggregation label SQL, and prediction target, each referencing `db.yaml`).
 Pair a task with parquet from `materialize_relbench` and run it:
 
-    from relarena.userdb import PredictiveQuery, materialize_relbench, relbench_v1_spec
+    from relarena.userdb import (
+        PredictiveContext, PredictiveQuery, materialize_relbench, relbench_v1_spec,
+    )
 
     materialize_relbench("rel-f1", "data/rel-f1")
     spec = relbench_v1_spec("rel-f1", "driver-dnf", data_dir="data/rel-f1")
-    preds = PredictiveQuery(spec).fit(model="tabpfn-rel-client").predict()
+    fitted = PredictiveContext(spec).fit(model="tabpfn-rel-client")
+    query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+    preds = fitted.predict(query)
 
 The specs reproduce RelBench's own `make_table` output byte-for-byte (verified
 across all 21 tasks), including its split timestamps. The materialized tables are
@@ -76,7 +80,7 @@ def relbench_v1_spec(
     choose different cutoffs over the same materialized data.
 
     `data_dir` is where the parquet lives (see `materialize_relbench`). If omitted,
-    only the schema/task fields are usable (e.g. `.task`), not a `PredictiveQuery`
+    only the schema/task fields are usable (e.g. `.task`), not a `PredictiveContext`
     run.
     """
     path = _SPEC_DIR / dataset / f"{task}.yaml"

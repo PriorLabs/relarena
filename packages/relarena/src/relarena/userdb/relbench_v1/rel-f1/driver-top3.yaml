@@ -8,7 +8,6 @@ timedelta: 30 days
 num_eval_timestamps: 40
 val_timestamp: '2005-01-01 00:00:00'
 test_timestamp: '2010-01-01 00:00:00'
-entities: all
 query: |
   SELECT t.timestamp AS date, qu.driverId AS driverId,
          CASE WHEN MIN(qu.position) <= 3 THEN 1 ELSE 0 END AS qualifying

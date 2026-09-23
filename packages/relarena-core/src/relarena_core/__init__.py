@@ -16,7 +16,7 @@ from relarena_core.results import SystemResult, TrialResult
 from relarena_core.system import RelArenaSystem
 from relarena_core.tuner import tune
 
-__version__ = "0.0.1"
+__version__ = "0.0.4"
 __all__ = [
     "CacheConfig",
     "CacheMiss",

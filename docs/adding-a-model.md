@@ -584,7 +584,11 @@ import `relarena.models._shared`.
 
 `relarena_core.discover_models()` registers installed plugins, including the
 built-in baselines when RelArena is installed. The CLI
-and `PredictiveQuery.fit` call it; direct registry users call it explicitly.
+and `PredictiveContext.fit` call it; direct registry users call it explicitly.
+Explicit discovery calls rescan installed entry points, so notebook users can call
+`discover_models()` after installing another model package without restarting the
+kernel. Automatic discovery during `PredictiveContext.fit()` uses
+`discover_models(refresh=False)` to skip rescanning after a successful pass.
 Successful entry points load once per process. A failed import raises with its
 entry-point name and original exception, and can be retried. Different classes
 cannot register the same model name. Repeated imports reuse the same class objects.

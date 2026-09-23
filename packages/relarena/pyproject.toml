@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena"
-version = "0.1.0"
+version = "0.1.2"
 authors = [{ name = "Prior Labs" }]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "src/relarena/models/VENDORED-LICENSES"]
@@ -27,7 +27,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "relarena-core==0.0.1",
+    "relarena-core==0.0.4",
     # Pinned exactly: RelBench ships the dataset/task SHA256 checksums in the package
     # itself (relbench/datasets/hashes.json, relbench/tasks/hashes.json, wired into the
     # pooch registries in relbench/datasets/__init__.py and relbench/tasks/__init__.py),
@@ -76,7 +76,7 @@ kurversc = ["kurversc==0.1.1"]
 # plus the DFS featurization deps.
 # setuptools<82 because featuretools -> woodwork imports pkg_resources at import
 # time, and setuptools 82 removed it (81 still ships it).
-rdblearn = ["tabpfn>=8", "relarena-core[dfs]==0.0.1"]
+rdblearn = ["tabpfn>=8", "relarena-core[dfs]==0.0.4"]
 # rdl: the shared Relational Deep Learning stack for the GNN baselines — PyG + PyTorch
 # Frame + a text embedder, which relbench.modeling.* needs (all lazy-imported inside
 # fit()). GPU recommended. NOTE: PyG neighbor sampling needs `pyg-lib` or `torch-sparse`
@@ -92,8 +92,8 @@ relgnn = ["relarena[rdl]"]
 relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # The separate TabPFN-Rel package registers its models through entry points.
 # The existing local and API extras install the corresponding model backend.
-tabpfn-rel-local = ["tabpfn-rel[local]>=0.0.1,<0.1"]
-tabpfn-rel-api = ["tabpfn-rel[api]>=0.0.1,<0.1"]
+tabpfn-rel-local = ["tabpfn-rel[local]>=0.0.2"]
+tabpfn-rel-api = ["tabpfn-rel[api]>=0.0.2"]
 # RelArena supports RT execution on Linux x86_64, for which relational-transformer
 # publishes a stable-ABI (abi3-py311) wheel. GPU strongly recommended -- a
 # fine-tune on CPU is not a practical run.

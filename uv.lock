@@ -17,20 +17,20 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-08T14:24:39.111916Z"
+exclude-newer = "2026-09-18T09:11:12.601141Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
+tabpfn-rel = false
+kurversc = false
 graphreduce = false
 relational-transformer = false
-kurversc = false
 
 [manifest]
 members = [
     "relarena",
     "relarena-core",
     "relarena-workspace",
-    "tabpfn-rel",
 ]
 
 [[package]]
@@ -2394,7 +2394,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.1.0"
+version = "0.1.2"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
@@ -2485,8 +2485,8 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
     { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
-    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", editable = "packages/tabpfn-rel" },
-    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", editable = "packages/tabpfn-rel" },
+    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.2" },
+    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.2" },
     { name = "torch" },
     { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
 ]
@@ -2494,10 +2494,11 @@ provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relg
 
 [[package]]
 name = "relarena-core"
-version = "0.0.1"
+version = "0.0.4"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
+    { name = "datasets" },
     { name = "duckdb" },
     { name = "jsonschema" },
     { name = "numpy" },
@@ -2516,6 +2517,7 @@ dfs = [
 [package.metadata]
 requires-dist = [
     { name = "configspace", specifier = ">=1.0" },
+    { name = "datasets", specifier = ">=4" },
     { name = "duckdb", specifier = ">=1.2.2" },
     { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.1" },
     { name = "jsonschema", specifier = ">=4.0" },
@@ -3084,13 +3086,17 @@ wheels = [
 
 [[package]]
 name = "tabpfn-rel"
-version = "0.0.1"
-source = { editable = "packages/tabpfn-rel" }
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "relarena-core" },
     { name = "relbench" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0d/3a/bb27457dfcf9630ea2e72a186dee4b7597fd3cb500dafc24d8d4316f942d/tabpfn_rel-0.0.3.tar.gz", hash = "sha256:458d05235d230ee38e03ed3038b62db5edc2341dccb0ec2438ce0b186640b897", size = 19063, upload-time = "2026-09-21T09:10:16.839Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/94/0c10fc9cafc251940babd9afb0b22f523db10acaa00a5ff9fb496da27ec5/tabpfn_rel-0.0.3-py3-none-any.whl", hash = "sha256:44ce2e58bebce7549c7d12f82b18c5fd858e6cbb68e0a0bde0bdd2a122d75fa3", size = 22216, upload-time = "2026-09-21T09:10:15.589Z" },
 ]
 
 [package.optional-dependencies]
@@ -3101,35 +3107,6 @@ api = [
 local = [
     { name = "relarena-core", extra = ["dfs"] },
     { name = "tabpfn" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "relarena-core", extra = ["dfs"] },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "numpy", specifier = ">=1.24" },
-    { name = "pandas", specifier = ">=2.3.3,<3.0" },
-    { name = "relarena-core", editable = "packages/relarena-core" },
-    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'api'", editable = "packages/relarena-core" },
-    { name = "relarena-core", extras = ["dfs"], marker = "extra == 'local'", editable = "packages/relarena-core" },
-    { name = "relbench", specifier = "==2.1.2" },
-    { name = "tabpfn", marker = "extra == 'local'", specifier = ">=8" },
-    { name = "tabpfn-client", marker = "extra == 'api'", specifier = ">=0.3.2" },
-]
-provides-extras = ["local", "api"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pre-commit", specifier = ">=4.0" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "relarena-core", extras = ["dfs"], editable = "packages/relarena-core" },
-    { name = "ruff", specifier = "==0.15.13" },
 ]
 
 [[package]]

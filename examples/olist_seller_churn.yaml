@@ -12,7 +12,6 @@ timedelta: 30 days
 num_eval_timestamps: 1
 val_timestamp: '2018-05-15 00:00:00'
 test_timestamp: '2018-06-15 00:00:00'
-entities: all
 # Seed: sellers with >=1 order in the backward window (timestamp - td, timestamp].
 # Label churn=1 if they have NO order in the forward window (timestamp, timestamp + td].
 query: |

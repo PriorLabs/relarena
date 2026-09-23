@@ -327,3 +327,59 @@ def test__compute_leaderboard__kinds_filter__excludes_systems() -> None:
 
     assert "rt-plurel" in set(combined.index)
     assert set(models_only.index) == {"constant-global", "lightgbm"}
+
+
+def test_runtime_infers_default_only_before_filtering_trials() -> None:
+    default = {
+        **_result("model", "dataset", "task", "roc_auc", 0.8),
+        "seed": 0,
+        "config_tag": "default",
+    }
+    legacy = pd.DataFrame([default])
+    other_seed = pd.DataFrame(
+        [
+            {**default, "seed": 1},
+            {
+                **default,
+                "seed": 1,
+                "config_tag": "r1",
+                "selected": False,
+                "test_score": float("nan"),
+                "error": "failed candidate",
+            },
+        ]
+    )
+    system = pd.DataFrame(
+        [
+            {
+                "model": "system",
+                "dataset": "dataset",
+                "task": "task",
+                "metric": "roc_auc",
+                "selected": True,
+                "test_score": 0.8,
+                "time_total": 12.0,
+            }
+        ]
+    )
+    results = pd.concat([legacy, other_seed, system])
+    original = results.copy(deep=True)
+
+    frame = to_bencheval_frame(results)
+
+    assert frame.time_train_s.tolist() == [0.5, 1.5, 12.0]
+    assert frame.time_infer_s.tolist() == [0.2, 0.2, 0.0]
+    pd.testing.assert_frame_equal(results, original)
+
+
+def test_historical_default_only_results_exclude_inner_fit_time() -> None:
+    results = pd.read_csv(_BASELINE_DIR / "results.csv")
+    constants = results[results.model.eq("constant-global")]
+    assert not constants.empty
+    assert constants.config_tag.eq("default").all()
+    assert constants.fit_time_tuning.gt(0).all()
+
+    frame = to_bencheval_frame(results)
+    reported = frame[frame.method.eq("constant-global")]
+
+    assert reported.time_train_s.tolist() == constants.fit_time_refit.tolist()

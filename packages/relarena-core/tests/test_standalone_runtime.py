@@ -5,17 +5,34 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from ConfigSpace import ConfigurationSpace, Integer
 from relbench.base import Database, EntityTask, Table
 
 from relarena_core import RelArenaModel, registry
 from relarena_core.search_space import SearchSpace
-from relarena_core.userdb import PredictiveQuery, PredictiveQuerySpec
+from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 from relarena_core.userdb import query as query_module
 
 
 @pytest.mark.parametrize("refit_full", [False, True])
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "tuned",
+        "default",
+        "single-grid",
+        "zero-budget",
+        "capped",
+        "sampled",
+        "capped-default",
+    ],
+)
 def test_tuning_final_fit_and_original_ids(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refit_full: bool
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    refit_full: bool,
+    mode: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     customers = pd.DataFrame({"customer_id": ["a", "b", "c", "d"]})
     dates = pd.date_range("2004-01-15", "2005-06-15", freq="30D")
@@ -68,7 +85,7 @@ query: |
             seed: int,
             time_limit: float | None = None,
         ) -> None:
-            if self.config["fail"]:
+            if self.config.get("fail", False):
                 raise ValueError("Deliberate failed tuning candidate")
             self.mean = float(train_table.df[task.target_col].mean())
             fits.append(
@@ -82,29 +99,96 @@ query: |
         def predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
             return np.full(len(table.df), self.mean)
 
-    monkeypatch.setattr(query_module, "discover_models", lambda: None)
+    monkeypatch.setattr(query_module, "discover_models", lambda **kwargs: None)
     monkeypatch.setattr(registry, "_entries", {})
-    registry.register(
-        SuppliedModel,
-        SearchSpace(
-            default_overrides={"fail": False},
-            fixed_grid=[{"fail": True}, {"fail": False}],
-        ),
+    space = SearchSpace(
+        default_overrides={"fail": False},
+        fixed_grid=[{"fail": True}, {"fail": False}],
     )
+    if mode == "default":
+        space = SearchSpace(default_overrides={"fail": False})
+    elif mode == "single-grid":
+        space = SearchSpace(
+            default_overrides={"fail": False}, fixed_grid=[{"fail": False}]
+        )
+    elif mode == "capped-default":
+        space.fixed_grid = [{"fail": False}, {"fail": True}]
+    elif mode == "capped":
+        space.fixed_grid.append({"fail": False, "x": 1})
+    elif mode == "sampled":
+        space = SearchSpace(
+            default_overrides={"fail": False},
+            space=ConfigurationSpace(space=[Integer("x", (1, 10))]),
+        )
+    plan_calls = []
+    original_configs = SearchSpace.configs
+
+    def configs(self: SearchSpace, n_trials: int, seed: int) -> list[dict]:
+        plan_calls.append((n_trials, seed))
+        return original_configs(self, n_trials, seed)
+
+    monkeypatch.setattr(SearchSpace, "configs", configs)
+    registry.register(SuppliedModel, space)
     spec = PredictiveQuerySpec.from_yaml(tmp_path / "task.yaml", data_dir=tmp_path)
-    query = PredictiveQuery(spec, data_version="fixture-v1")
+    query = PredictiveContext(spec, data_version="fixture-v1")
     inner, outer = query._source.inner_split(), query._source.outer_split()
-    query.fit(SuppliedModel.name, n_trials=2)
-    assert query.config == {"fail": False}
-    assert [trial.ok for trial in query.trials] == [False, True]
-    assert fits[0][0] == len(inner.train_table.df)
-    assert fits[0][2] <= inner.cutoff
+    if mode not in {"tuned", "capped", "sampled"}:
+
+        def unexpected_inner() -> None:
+            pytest.fail("Default-only fitting must not construct the inner split")
+
+        monkeypatch.setattr(query._source, "inner_split", unexpected_inner)
+    budget = {"zero-budget": 0, "capped-default": 1}.get(mode, 2)
+    fitted = query.fit(SuppliedModel.name, n_trials=budget)
+    assert fitted.config == {"fail": False}
+    if mode in {"tuned", "capped", "sampled"}:
+        assert len(plan_calls) == 1
+        assert [trial.ok for trial in fitted.trials] == (
+            [True, True, True] if mode == "sampled" else [False, True]
+        )
+        assert fits[0][0] == len(inner.train_table.df)
+        assert fits[0][2] <= inner.cutoff
+    else:
+        assert plan_calls == []
+        assert fitted.trials is None
+        assert len(fits) == 1
+    if mode == "capped":
+        assert sum("dropping 1" in record.message for record in caplog.records) == 1
     expected_rows = len(outer.train_table.df)
     if refit_full:
         expected_rows += len(outer.val_table.df)
     assert fits[-1][:2] == (expected_rows, refit_full)
     assert fits[-1][2] <= outer.cutoff
-    predictions = query.predict()
+    fits_before_prediction = len(fits)
+    predictions = fitted.predict(
+        PredictiveQuery(entities="all", at_timestamp="test_timestamp")
+    )
     assert sorted(predictions.customer_id) == ["a", "b", "c", "d"]
     assert np.isfinite(predictions.y_pred).all()
     assert len(query.compute_test_labels()) == 4
+    selected = fitted.predict(
+        PredictiveQuery(entities=["c"], at_timestamp="2004-11-15")
+    )
+    assert selected.customer_id.tolist() == ["c"]
+    assert selected.date.tolist() == [pd.Timestamp("2004-11-15")]
+    assert len(fits) == fits_before_prediction
+
+
+@pytest.mark.parametrize(
+    "kwargs", [{}, {"entities": "all"}, {"at_timestamp": "test_timestamp"}]
+)
+def test_prediction_query_requires_both_fields(kwargs: dict) -> None:
+    with pytest.raises(TypeError):
+        PredictiveQuery(**kwargs)
+
+
+@pytest.mark.parametrize("entities", [None, 5, "unknown"])
+def test_prediction_query_rejects_invalid_entities(entities: object) -> None:
+    with pytest.raises(ValueError, match="entities"):
+        PredictiveQuery(entities=entities, at_timestamp="test_timestamp")
+
+
+@pytest.mark.parametrize("timestamp", [None, "NaT", "invalid-date"])
+def test_prediction_query_rejects_invalid_timestamp(timestamp: object) -> None:
+    with pytest.raises(ValueError):
+        PredictiveQuery(entities="all", at_timestamp=timestamp)

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena-core"
-version = "0.0.1"
+version = "0.0.4"
 description = "Shared contracts, temporal validation and predictive queries for relational models."
 readme = "README.md"
 license = "Apache-2.0"
@@ -13,6 +13,7 @@ authors = [{ name = "Prior Labs" }]
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "relbench==2.1.2",
+    "datasets>=4",
     "numpy>=1.24",
     "pandas>=2.3.3,<3.0",
     "scikit-learn>=1.3",
