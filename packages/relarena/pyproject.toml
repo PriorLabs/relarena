@@ -94,6 +94,11 @@ relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # The existing local and API extras install the corresponding model backend.
 tabpfn-rel-local = ["tabpfn-rel[local]>=0.0.2"]
 tabpfn-rel-api = ["tabpfn-rel[api]>=0.0.2"]
+# nori-rel: the frozen Nori 30M checkpoint over relational features -- RelArena's
+# shared DFS generator for classification, a NoriDFS planner shipped in the model
+# folder for regression. synthefy-nori is imported inside fit()/predict(); its
+# [text] extra carries the MiniLM encoder for prose anchor columns. GPU recommended.
+nori-rel = ["relarena-core[dfs]==0.0.4", "synthefy-nori[text]==0.20.1"]
 # RelArena supports RT execution on Linux x86_64, for which relational-transformer
 # publishes a stable-ABI (abi3-py311) wheel. GPU strongly recommended -- a
 # fine-tune on CPU is not a practical run.
