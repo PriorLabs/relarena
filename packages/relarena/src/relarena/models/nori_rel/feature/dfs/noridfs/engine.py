@@ -1184,20 +1184,21 @@ def _aligned_keys(left: pd.Series, right: pd.Series) -> tuple[pd.Series, pd.Seri
 
 
 def _stable_key_strings(keys: pd.Series) -> pd.Series:
-    """String keys that match across a numeric and a text dtype, keeping nulls.
+    """String keys that match across a float and a text dtype, keeping nulls.
 
     `astype("string")` writes the whole float 7.0 as ``"7.0"``, which never meets
     the text id ``"7"``, and a left join answers the miss with NaN rather than an
-    error. Whole numbers are therefore written as integers. Foreign keys can be
-    null, so missing values stay missing instead of failing the conversion.
+    error. Only floats have that problem, so only floats are rewritten: integer
+    keys already stringify exactly, and going through float would corrupt ids
+    past 2**53. Foreign keys can be null, so missing values stay missing.
     """
-    if not pd.api.types.is_numeric_dtype(keys):
-        return keys.astype("string")
-    numeric = keys.astype(float).to_numpy()
-    whole = np.isfinite(numeric) & (np.mod(numeric, 1) == 0)
     strings = keys.astype("string")
+    if not pd.api.types.is_float_dtype(keys):
+        return strings
+    values = keys.to_numpy(dtype=float)
+    whole = np.isfinite(values) & (np.mod(values, 1) == 0) & (np.abs(values) < 2**63)
     strings[whole] = (
-        pd.Series(numeric[whole].astype(np.int64)).astype("string").to_numpy()
+        pd.Series(values[whole].astype(np.int64)).astype("string").to_numpy()
     )
     return strings
 

@@ -735,3 +735,17 @@ def test_numeric_keys_meet_text_keys_across_the_dtype_gap(numeric: pd.Series) ->
     assert pd.isna(left.iloc[2])
     assert right.tolist() == ["7", "8", "9"]
     assert set(left.dropna()) <= set(right)
+
+
+def test_integer_keys_past_float_precision_stay_exact() -> None:
+    """An id past 2**53 must not round through float and collide."""
+    from relarena.models.nori_rel.feature.dfs.noridfs.engine import _aligned_keys
+
+    big = 2**53 + 1
+    left, right = _aligned_keys(
+        pd.Series([big, big + 1], dtype="int64"),
+        pd.Series([str(big), str(big + 1)], dtype=object),
+    )
+
+    assert left.tolist() == [str(big), str(big + 1)]
+    assert left.tolist() == right.tolist()
