@@ -14,6 +14,7 @@ _BASELINES = {
     "graphsage",
     "kurversc",
     "lightgbm",
+    "nori-rel",
     "rdblearn",
     "relgnn",
     "relgnn-es",
@@ -32,6 +33,7 @@ class BlockBackends(importlib.abc.MetaPathFinder):
         if fullname.split('.')[0] in {{
             'fastdfs', 'tabpfn', 'tabpfn_client', 'torch_geometric',
             'torch_frame', 'relational_transformer', 'graphreduce', 'lightgbm',
+            'synthefy_nori',
         }}:
             raise ModuleNotFoundError(fullname, name=fullname)
         return None
@@ -83,7 +85,7 @@ assert registry.get('extra-model') is ExtraModel
 assert registry.search_space('extra-model').default_overrides == {{}}
 relarena.models._register_builtin_models()
 assert registry.get('extra-model') is ExtraModel
-assert len(registry) == 11
+assert len(registry) == 12
 """
     subprocess.run([sys.executable, "-c", code], check=True)
 

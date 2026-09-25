@@ -472,7 +472,7 @@ share this workspace and lockfile. [TabPFN-Rel](https://github.com/PriorLabs/tab
 is developed separately and installed from PyPI through the model extras.
 
 ```bash
-uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
+uv sync --all-packages --group dev --group kurversc --group cpu --extra leaderboard --extra plots
 uv run --all-packages pre-commit install
 ```
 
@@ -502,6 +502,7 @@ registering a method works without its extra installed.
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
+| `nori-rel` | Nori-Rel | DFS (`relarena-core[dfs]`) plus the frozen Nori 30M; GPU recommended |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
 | `rt` | RT-PluRel | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
@@ -619,6 +620,7 @@ as an experimental final-fit variant.
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
+| `nori-rel` | Nori-Rel | DFS + frozen Nori 30M | model | experimental | train + val | `nori-rel` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
