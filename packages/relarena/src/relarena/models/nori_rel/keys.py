@@ -22,8 +22,7 @@ def to_stable_join_key(entity_ids: pd.Series, column_name: str) -> pd.Series:
     categoricals are already stable and pass straight through.
 
     Args:
-        entity_ids: The id column to convert. Missing values should already be
-            rejected by the caller.
+        entity_ids: The id column to convert. Missing ids stay missing.
         column_name: Name of that column, used in the error message.
 
     Returns:
@@ -37,13 +36,18 @@ def to_stable_join_key(entity_ids: pd.Series, column_name: str) -> pd.Series:
     if pd.api.types.is_bool_dtype(entity_ids):
         return entity_ids.astype("int64").astype(str)
     if pd.api.types.is_float_dtype(entity_ids):
-        numeric = entity_ids.to_numpy(dtype=float)
+        # A missing id is what upcasts an integer column to float; it stays
+        # missing so its row matches nothing.
+        present = entity_ids.notna().to_numpy()
+        numeric = entity_ids.to_numpy(dtype=float)[present]
         if not np.array_equal(numeric, np.rint(numeric)):
             raise ValueError(
                 f"entity ids in {column_name!r} must be whole numbers; a "
                 "fractional id can never match the integer ids it is joined to"
             )
-        return pd.Series(numeric.astype("int64"), index=entity_ids.index).astype(str)
+        keys = pd.Series(np.nan, index=entity_ids.index, dtype=object)
+        keys[present] = numeric.astype("int64").astype(str)
+        return keys
     if pd.api.types.is_integer_dtype(entity_ids):
         return entity_ids.astype("int64").astype(str)
     return entity_ids.astype(str)

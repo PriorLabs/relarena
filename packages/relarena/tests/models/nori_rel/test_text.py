@@ -91,6 +91,18 @@ def test_float_entity_keys_still_match_integer_anchor_keys() -> None:
     ]
 
 
+def test_missing_float_entity_keys_match_nothing() -> None:
+    db = _database()
+    task = SimpleNamespace(entity_table="items", entity_col="item_id")
+    split = pd.DataFrame({"item_id": [1.0, np.nan]})
+    features = pd.DataFrame({"row": [0, 1]})
+
+    output, _ = attach_anchor_text(features, db, task, split, ["title"])
+
+    assert output["title__raw_text"].iloc[0] == "first sufficiently long title"
+    assert pd.isna(output["title__raw_text"].iloc[1])
+
+
 def test_fractional_entity_keys_fail_closed() -> None:
     db = _database()
     task = SimpleNamespace(entity_table="items", entity_col="item_id")
