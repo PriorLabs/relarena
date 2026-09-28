@@ -34,6 +34,7 @@ import pandas as pd
 from relbench.base import Database, EntityTask, Table, TaskType
 
 from relarena_core.featurization import build_dfs_features
+from relarena_core.featurization.dfs import DFS_MAX_DEPTH
 from relarena_core.model import RelArenaModel
 from relarena_core.registry import register_model
 from relarena_core.search_space import SearchSpace
@@ -223,18 +224,17 @@ class NoriRel(RelArenaModel):
     def _features(
         self, task: EntityTask, db: Database, table: Table
     ) -> tuple[pd.DataFrame, list[str]]:
-        """Shared DFS features built directly at depth 2.
+        """Shared DFS features, sliced to our depth from the cached matrix.
 
-        Reading the shared depth-4 cache instead moved rel-event/user-attendance
-        MAE from 0.247 to 0.283 in a benchmark run, though an uncached depth-4
-        slice of the training table matches a direct build.
+        The cache key follows `max_depth`, so reading the shared deepest matrix
+        lets a cache warmed at the default depth hit, as RDBLearn does.
         """
         return build_dfs_features(
             task,
             db,
             table,
             depth=DFS_DEPTH,
-            max_depth=DFS_DEPTH,
+            max_depth=DFS_MAX_DEPTH,
             history_table=self._history_table,
             keep_anchor_columns=True,
             cache=self.cache,

@@ -17,6 +17,7 @@ from relbench.base import TaskType
 
 from relarena.models.nori_rel import model as model_module
 from relarena.models.nori_rel.model import NoriRel
+from relarena_core.featurization.dfs import DFS_MAX_DEPTH
 from relarena_core.registry import registry
 from relarena_core.search_space import TaskStats, resolve_search_space
 
@@ -127,10 +128,10 @@ def test_prediction_contract(
     np.testing.assert_array_equal(prediction, expected)
 
 
-def test_features_build_depth_two_directly(
+def test_features_slice_the_shared_dfs_matrix_to_depth_two(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A depth-4 slice changes rel-event scores, so build depth 2 itself."""
+    """The cache key follows max_depth, so read the shared deepest matrix."""
     build = _features_of(pd.DataFrame({"value": np.arange(3, dtype=float)}))
     _install_fake_nori(monkeypatch)
     monkeypatch.setattr(model_module, "build_dfs_features", build)
@@ -143,8 +144,8 @@ def test_features_build_depth_two_directly(
     model.predict(_task(TaskType.REGRESSION), object(), query)
 
     assert [(call["depth"], call["max_depth"]) for call in build.calls] == [
-        (2, 2),
-        (2, 2),
+        (2, DFS_MAX_DEPTH),
+        (2, DFS_MAX_DEPTH),
     ]
 
 
