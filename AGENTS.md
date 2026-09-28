@@ -48,6 +48,12 @@ to copy.
 
 ## Refactor-friendly structure rules
 
+Module docstrings should explain what the file is used for and, when useful,
+name its main entrypoint. For scripts, state when and how to run them, any
+required environment or optional dependencies, and whether they run manually
+or in automation. Keep this overview brief; leave function details in their
+own docstrings.
+
 Keep the contract/tuning core, models, predictive interface, and benchmark
 evaluation layers cleanly separated:
 

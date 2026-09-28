@@ -39,15 +39,27 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
     - `metric_error` ← `to_metric_error(test_score, <primary metric>)`, using
       the per-row `metric` column (always a registered primary, never the
       auxiliary native-metric columns)
-    - `time_train_s` ← model fit times, or a system's complete `time_total`
+    - `time_train_s` ← refit time for a single default config; otherwise the
+      selected trial's inner fit plus refit, or a system's complete `time_total`
     - `time_infer_s` ← `predict_time_refit`
+
+    Pass every trial, including failed and unselected trials, so a single default
+    config can be identified per (model, dataset, task, seed). Model training time
+    is not the sum over the tuning sweep. Inner timings remain in the raw results.
 
     Only the val-selected config per run contributes (one row per method/task);
     runs without a test score (failed or test-skipped) are dropped. The caller
     must still ensure the method × task matrix is dense before ranking —
     `bencheval` rejects a sparse matrix.
     """
-    rows = results
+    rows = results.reset_index(drop=True)
+    # Identify default-only runs before filtering out unselected trials.
+    default_only = pd.Series(False, index=rows.index)
+    if {"seed", "config_tag"}.issubset(rows.columns):
+        run_size = rows.groupby(["model", "dataset", "task", "seed"], dropna=False)[
+            "config_tag"
+        ].transform("size")
+        default_only = run_size.eq(1) & rows["config_tag"].eq("default")
     if "selected" in rows.columns:
         rows = rows[rows["selected"]]
     rows = rows[rows["test_score"].notna()]
@@ -62,6 +74,8 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
             return pd.Series(0.0, index=rows.index)
         return rows[column].fillna(0.0)
 
+    tuning_time = seconds("fit_time_tuning").mask(default_only.loc[rows.index], 0.0)
+
     frame = pd.DataFrame(
         {
             "method": rows["model"].to_numpy(),
@@ -70,9 +84,7 @@ def to_bencheval_frame(results: pd.DataFrame) -> pd.DataFrame:
             ).to_numpy(),
             "metric_error": metric_error,
             "time_train_s": (
-                seconds("fit_time_tuning")
-                + seconds("fit_time_refit")
-                + seconds("time_total")
+                tuning_time + seconds("fit_time_refit") + seconds("time_total")
             ).to_numpy(),
             "time_infer_s": seconds("predict_time_refit").to_numpy(),
         }
