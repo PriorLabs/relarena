@@ -84,7 +84,7 @@ def test__check__detects_stale_content_without_writing(
     if stale_path is not None:
         path = generated.ROOT / stale_path
         path.write_bytes(
-            path.read_bytes().replace(b"tabpfn-rel-client", b"stale") + b"\n"
+            path.read_bytes().replace(b"tabpfn-rel-client-2026-08-15", b"stale") + b"\n"
         )
     paths = [
         generated.ROOT / "README.md",
