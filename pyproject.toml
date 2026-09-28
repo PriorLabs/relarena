@@ -27,7 +27,7 @@ package = false
 exclude-newer = "3 days"
 # Allow these backends and plugins within their declared version bounds
 # without weakening the cutoff for unrelated dependencies.
-exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false, tabpfn-rel = false }
+exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false, tabpfn-rel = false, tabpfn-client = false }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
