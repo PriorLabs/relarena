@@ -12,7 +12,7 @@ import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
-from relarena.evaluation import compute_leaderboard, method_kind
+from relarena.evaluation import compute_leaderboard, display_name, method_kind
 
 ROOT = Path(__file__).resolve().parents[1]
 START = "<!-- BEGIN GENERATED LEADERBOARDS -->"
@@ -191,8 +191,10 @@ def main() -> int:
         ("Models", frozenset({"model"})),
         ("Models + systems", None),
     ):
-        board = compute_leaderboard(results, kinds=kinds).sort_values(
-            "elo", ascending=False, kind="stable"
+        board = (
+            compute_leaderboard(results, kinds=kinds)
+            .sort_values("elo", ascending=False, kind="stable")
+            .rename(index=display_name)
         )
         boards.append((title, board))
         sections.append(render_board(board, title))

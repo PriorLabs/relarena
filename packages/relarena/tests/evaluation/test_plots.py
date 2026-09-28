@@ -19,6 +19,8 @@ from relarena.evaluation import (
     plot_normalized_loss_heatmap,
     write_leaderboard_plots,
 )
+from relarena_core.discovery import discover_models
+from relarena_core.registry import registry
 
 
 def _result(
@@ -125,3 +127,47 @@ def test__plot_critical_difference__too_few_tasks__writes_nothing(
     three_tasks = _dense_results(3).query("task_type == 'REGRESSION'")
     assert plot_critical_difference(three_tasks, out) is False
     assert not out.exists()
+
+
+def test__write_leaderboard_plots__alias__labels_every_plot_with_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sns = pytest.importorskip("seaborn")
+    pytest.importorskip("autorank")
+    from bencheval.evaluator import BenchmarkEvaluator
+
+    discover_models()
+    monkeypatch.setattr(registry, "_aliases", {})
+    registry.register_alias("rdblearn-latest", "rdblearn")
+    labels: list[set[str]] = []
+    heatmap = sns.heatmap
+    winrate = BenchmarkEvaluator.plot_winrate_matrix
+    critical = BenchmarkEvaluator.plot_critical_diagrams
+
+    def spy_heatmap(data: pd.DataFrame, **kwargs: object) -> object:
+        labels.append(set(data.index))
+        return heatmap(data, **kwargs)
+
+    def spy_winrate(matrix: pd.DataFrame, *args: object, **kwargs: object) -> None:
+        labels.append(set(matrix.index))
+        winrate(matrix, *args, **kwargs)
+
+    def spy_critical(
+        self: BenchmarkEvaluator, rows: pd.DataFrame, **kwargs: object
+    ) -> None:
+        labels.append(set(rows["method"]))
+        critical(self, rows, **kwargs)
+
+    monkeypatch.setattr(sns, "heatmap", spy_heatmap)
+    monkeypatch.setattr(
+        BenchmarkEvaluator, "plot_winrate_matrix", staticmethod(spy_winrate)
+    )
+    monkeypatch.setattr(BenchmarkEvaluator, "plot_critical_diagrams", spy_critical)
+
+    write_leaderboard_plots(_dense_results(5), tmp_path)
+
+    assert len(labels) == 6
+    assert all(
+        methods == {"constant-global", "lightgbm", "rdblearn-latest"}
+        for methods in labels
+    )

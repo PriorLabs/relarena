@@ -10,32 +10,37 @@ from types import ModuleType
 
 import pytest
 
+from relarena_core.discovery import discover_models
+from relarena_core.registry import registry
+
 pytest.importorskip("matplotlib")
 pytest.importorskip("bencheval.evaluator")
 
 ROOT = Path(__file__).resolve().parents[4]
 
 
-@pytest.fixture
-def generated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+def _generate(root: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     spec = importlib.util.spec_from_file_location(
         "update_leaderboards", ROOT / "workflows/update_leaderboards.py"
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    (tmp_path / "baseline_results").mkdir()
-    (tmp_path / "docs").mkdir()
+    (root / "baseline_results").mkdir(parents=True)
+    (root / "docs").mkdir()
     shutil.copyfile(
-        ROOT / "baseline_results/results.csv", tmp_path / "baseline_results/results.csv"
+        ROOT / "baseline_results/results.csv", root / "baseline_results/results.csv"
     )
-    (tmp_path / "README.md").write_text(
-        f"Before\n{module.START}\n{module.END}\nAfter\n"
-    )
-    monkeypatch.setattr(module, "ROOT", tmp_path)
+    (root / "README.md").write_text(f"Before\n{module.START}\n{module.END}\nAfter\n")
+    monkeypatch.setattr(module, "ROOT", root)
     monkeypatch.setattr(sys, "argv", ["update_leaderboards.py"])
     assert module.main() == 0
     return module
+
+
+@pytest.fixture
+def generated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    return _generate(tmp_path, monkeypatch)
 
 
 def test__generate__separate_boards_and_preserve_surrounding_text(
@@ -94,3 +99,22 @@ def test__check__detects_stale_content_without_writing(
     monkeypatch.setattr(sys, "argv", ["update_leaderboards.py", "--check"])
     assert generated.main() == (0 if stale_path is None else 1)
     assert before == {path: path.read_bytes() for path in paths}
+
+
+def test__generate__moving_an_alias__only_relabels_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    discover_models()
+    plain = (_generate(tmp_path / "plain", monkeypatch).ROOT / "README.md").read_text()
+    for target, other in (("relgt", "relgnn-es"), ("relgnn-es", "relgt")):
+        monkeypatch.setattr(registry, "_aliases", {})
+        registry.register_alias("graph-latest", target)
+        root = _generate(tmp_path / target, monkeypatch).ROOT
+        text = (root / "README.md").read_text()
+
+        assert f"| {target} |" not in text
+        assert "| graph-latest | Model |" in text
+        assert f"| {other} | Model |" in text
+        assert text.replace("| graph-latest |", f"| {target} |") == plain
+        results = "baseline_results/results.csv"
+        assert (root / results).read_bytes() == (ROOT / results).read_bytes()

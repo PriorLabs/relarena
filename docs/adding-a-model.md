@@ -134,6 +134,23 @@ split construction in [`dataset.py`](../packages/relarena-core/src/relarena_core
 `refit_on_full_data` is a genuine modelling decision, not just a flag — see
 [3e](#3e-refit-on-full-data).
 
+### Versioned submissions
+
+A method that ships new versions gives each one a dated `name`, such as
+`mymodel-2026-09-28`, so earlier results keep their identity. To point a
+stable name at the current version, register an alias next to the classes:
+
+```python
+from relarena_core.registry import registry
+
+registry.register_alias("mymodel-latest", MyModel20260928.name)
+```
+
+`--model mymodel-latest` and `PredictiveContext.fit("mymodel-latest")` run
+the dated class, and results store its dated name. Leaderboard tables and
+plots label that method with its alias. To release a new version, point the
+alias at the new class; a method has at most one alias.
+
 ### Model or system?
 
 RelArena accommodates end-to-end systems through a separate contract instead

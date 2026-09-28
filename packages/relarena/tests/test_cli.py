@@ -20,6 +20,8 @@ from relarena import cli
 from relarena.results import summary_to_dataframe
 from relarena.runner import ExperimentSummary, SystemExperimentSummary
 from relarena.tasks import TaskSpec
+from relarena_core.discovery import discover_models
+from relarena_core.registry import registry
 from relarena_core.results import SystemResult, TrialResult
 
 
@@ -158,3 +160,22 @@ def test__cli__system_summary__writes_native_system_row(
     assert row["selected"]
     assert "config" not in row.index
     assert "val_score" not in row.index
+
+
+def test__cli__model_alias__runs_the_registered_dated_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    spec = TaskSpec("rel-f1", "driver-dnf", TaskType.BINARY_CLASSIFICATION)
+    monkeypatch.setattr(cli, "list_entity_tasks", lambda datasets: [spec])
+    discover_models()
+    monkeypatch.setattr(registry, "_aliases", {})
+    registry.register_alias("constant-latest", "constant-global")
+    seen: list[type] = []
+
+    def run(model_cls: type, *args: object, **kwargs: object) -> ExperimentSummary:
+        seen.append(model_cls)
+        return _summary()
+
+    monkeypatch.setattr(cli, "run_experiment", run)
+    assert cli.main(["--model", "constant-latest"]) == 0
+    assert [cls.name for cls in seen] == ["constant-global"]
