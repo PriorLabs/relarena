@@ -3,7 +3,6 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
-import kurversc
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,6 +12,11 @@ from relarena.models.kurversc import KURVERSC_DEFAULTS, KurveRSCSystem
 from relarena.tasks import RELBENCH_V1_DATASETS, list_entity_tasks
 from relarena_core.identity import RunIdentity
 from relarena_core.registry import registry
+
+# kurversc caps numpy<2 and lives in its own dependency group, so that models
+# needing numpy>=2 can be installed alongside the test tools. The model imports it
+# lazily; these tests need it at collection time.
+kurversc = pytest.importorskip("kurversc")
 
 
 def _label_table(*, masked: bool = False) -> Table:

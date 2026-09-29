@@ -15,9 +15,14 @@ for the combined test suite. To install only one member with pip, use its direct
 for example `pip install ./packages/relarena` after its dependency wheels are available.
 
 ```bash
-uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
+uv sync --all-packages --group dev --group kurversc --group cpu --extra leaderboard --extra plots
 uv run --all-packages pre-commit install
 ```
+
+`kurversc` sits in a group of its own because it caps `numpy<2`, which no model
+needing `numpy>=2` can share an environment with. Include the group, as above,
+for the full suite; drop it when installing such a model's extra, and its
+adapter tests skip.
 
 On macOS, prefix test and CLI commands with `OMP_NUM_THREADS=1` to avoid the
 known conflict between the OpenMP runtimes bundled by PyTorch and LightGBM.
