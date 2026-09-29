@@ -34,7 +34,10 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--model",
         default=None,
-        help="registered model name (required, unless --list); e.g. 'constant-global'",
+        help=(
+            "registered model name or alias (required, unless --list); "
+            "e.g. 'constant-global'"
+        ),
     )
     p.add_argument(
         "--datasets",
@@ -102,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     frames: list[pd.DataFrame] = []
     for s in specs:
         print(
-            f"\n=== {args.model} on {s.dataset}/{s.task} ({s.task_type.name}) ===",
+            f"\n=== {model_cls.name} on {s.dataset}/{s.task} ({s.task_type.name}) ===",
             flush=True,
         )
         try:

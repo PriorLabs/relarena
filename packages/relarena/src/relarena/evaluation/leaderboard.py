@@ -135,6 +135,12 @@ def method_kind(model: str) -> str:
         return "model"
 
 
+def display_name(method: str) -> str:
+    """The label shown for `method` on boards and plots: its alias, if it has one."""
+    discover_models(refresh=False)
+    return registry.alias_for(method) or method
+
+
 def compute_leaderboard(
     results: pd.DataFrame,
     *,

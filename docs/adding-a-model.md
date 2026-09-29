@@ -28,7 +28,7 @@ example to copy.
 
 One folder may register **several** models: `dummy` → `constant-global` +
 `constant-per-entity`, `relgnn` → `relgnn` + `relgnn-es`, `tabpfn_rel` →
-`tabpfn-rel-local` + `tabpfn-rel-client`.
+`tabpfn-rel-local` + `tabpfn-rel-client-2026-08-15`.
 
 ```python
 import numpy as np
@@ -133,6 +133,23 @@ split construction in [`dataset.py`](../packages/relarena-core/src/relarena_core
 | `refit_on_full_data` | `True` / `False` | `True` | `relgt`, `relgnn-es`, `rdblearn` → `False` |
 `refit_on_full_data` is a genuine modelling decision, not just a flag — see
 [3e](#3e-refit-on-full-data).
+
+### Versioned submissions
+
+A method that ships new versions gives each one a dated `name`, such as
+`mymodel-2026-09-28`, so earlier results keep their identity. To point a
+stable name at the current version, register an alias next to the classes:
+
+```python
+from relarena_core.registry import registry
+
+registry.register_alias("mymodel-latest", MyModel20260928.name)
+```
+
+`--model mymodel-latest` and `PredictiveContext.fit("mymodel-latest")` run
+the dated class, and results store its dated name. Leaderboard tables and
+plots label that method with its alias. To release a new version, point the
+alias at the new class; a method has at most one alias.
 
 ### Model or system?
 
@@ -436,7 +453,7 @@ Reuse an existing extra where the stack matches:
 | `lightgbm` | LightGBM | `lightgbm` |
 | `rdblearn` | DFS + local TabPFN | `rdblearn` |
 | `tabpfn-rel-local` | `tabpfn-rel[local]` plugin | `tabpfn-rel-local` |
-| `tabpfn-rel-api` | DFS + `tabpfn-client` | `tabpfn-rel-client` |
+| `tabpfn-rel-api` | DFS + `tabpfn-client` | `tabpfn-rel-client-2026-08-15` |
 | `rdl` | shared RDL stack: PyG, PyTorch Frame, text embedder | umbrella, not used directly |
 | `graphsage` / `relgnn` / `relgt` | `relarena[rdl]` (+ `einops`, `h5py` for `relgt`) | the GNN baselines |
 
@@ -552,7 +569,8 @@ Complete these steps on the submission branch before merging:
 | `constant-global`, `constant-per-entity` | `dummy/` | neither | `{}` | `True` | all | core | `predict_contract` |
 | `lightgbm` | `lightgbm/` | `space`, 14 params | `{}` | `True` | all | `lightgbm` | `featurization/entity`, `_shared/gbdt/lgb` |
 | `rdblearn` | `rdblearn/` | `fixed_grid`, TFM × depth | `{tfm: tabpfn-v2, max_depth: 2}` | `False` | all | `rdblearn` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
-| `tabpfn-rel-local`, `tabpfn-rel-client` | external `tabpfn-rel` package | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `tabpfn-rel-local` / `tabpfn-rel-api` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
+| `tabpfn-rel-local`, `tabpfn-rel-client-2026-08-15` | external `tabpfn-rel` package | `fixed_grid` (one space each) | knobs + `max_depth: 2` | `True` | all | `tabpfn-rel-local` / `tabpfn-rel-api` | `relarena_core.featurization/dfs` + cache, `relarena_core.tfm` |
+| `tabpfn-rel-client-2026-09-18` | `tabpfn-rel` package | fixed configuration | depth 4, 200k hard-pool, TabPFN 3.5 API | `True` | all | `tabpfn-rel-api` | shared DFS + cache |
 | `graphsage` | `graphsage/` | `space` | explicit | `True` | binary, regression | `graphsage` | `_shared/gnn/{graph,training,_vendor/gnn}` |
 | `relgnn` (experimental) | `relgnn/` | `space` | explicit (modal per-task) | `True` | all | `relgnn` | `_shared/gnn`, own `_vendor/` |
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |

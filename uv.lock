@@ -39,14 +39,16 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer = "2026-09-26T08:21:22.152223Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
-graphreduce = false
-kurversc = false
-relational-transformer = false
+fastdfs = "2026-09-29T00:00:00Z"
 tabpfn-rel = false
+kurversc = false
+graphreduce = false
+tabpfn-client = false
+relational-transformer = false
 
 [manifest]
 members = [
@@ -686,7 +688,7 @@ wheels = [
 
 [[package]]
 name = "fastdfs"
-version = "1.1"
+version = "1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -709,9 +711,9 @@ dependencies = [
     { name = "sqlglot" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/81/4bd3bb20b75f80a9dd5c34608c1596e6d48547a0dc24064c3a9c65989817/fastdfs-1.1.tar.gz", hash = "sha256:c3142b055cf5d37188f6dedc345ad0b25b06757e0db3bdfddda82b0adb5f9c3c", size = 96787, upload-time = "2026-07-13T08:39:20.154Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/b0/e52124a6b3eeef461c7c2d122d520febba0ef01e2942c3dde7b5d589c1ed/fastdfs-1.2.tar.gz", hash = "sha256:6f9de738f249bc7fac74e05b4170ebddcf1b6b70cc2373107dbee904111b2447", size = 102414, upload-time = "2026-09-28T16:35:44.632Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/a9/a292b4d7e5331cc0a019a1d0179ac7033fec7d7de504bf52f249a0a5f1d6/fastdfs-1.1-py3-none-any.whl", hash = "sha256:4ea3b4813431c40f99fa7dec820da604a0a9366e2a0f90a4a119f2c66084fd59", size = 82903, upload-time = "2026-07-13T08:39:18.919Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/a0/709a54c0c4a20ac694c00c1332b4dfc8099f4ee28896f63dbe532cdbf525/fastdfs-1.2-py3-none-any.whl", hash = "sha256:0086a6f41b2e78595b28f1d8ed858dad55b07fe13fbe3889a1ca445511d0ff83", size = 85528, upload-time = "2026-09-28T16:35:42.976Z" },
 ]
 
 [[package]]
@@ -2631,7 +2633,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.1.2"
+version = "0.1.3"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
@@ -2730,8 +2732,8 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
     { name = "synthefy-nori", extras = ["text"], marker = "extra == 'nori-rel'", specifier = "==0.20.1" },
     { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
-    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.2" },
-    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.2" },
+    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.4" },
+    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.4" },
     { name = "torch" },
     { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
 ]
@@ -2739,7 +2741,7 @@ provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relg
 
 [[package]]
 name = "relarena-core"
-version = "0.0.4"
+version = "0.0.5"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
@@ -2767,7 +2769,7 @@ requires-dist = [
     { name = "configspace", specifier = ">=1.0" },
     { name = "datasets", specifier = ">=4" },
     { name = "duckdb", specifier = ">=1.2.2" },
-    { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.1" },
+    { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.2" },
     { name = "jsonschema", specifier = ">=4.0" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.3.3,<3.0" },
@@ -2807,7 +2809,7 @@ kurversc = [
 cpu = [{ name = "torch", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "relarena-workspace", group = "cpu" } }]
 cuda = []
 dev = [
-    { name = "fastdfs", specifier = ">=1.1" },
+    { name = "fastdfs", specifier = ">=1.2" },
     { name = "lightgbm", specifier = ">=4.0,<4.7" },
     { name = "pre-commit", specifier = ">=4.0" },
     { name = "pytest", specifier = ">=9.1.1" },
@@ -3184,6 +3186,29 @@ wheels = [
 ]
 
 [[package]]
+name = "skrub"
+version = "0.10.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cloudpickle" },
+    { name = "jinja2" },
+    { name = "joblib" },
+    { name = "matplotlib" },
+    { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "pandas" },
+    { name = "pydot" },
+    { name = "requests" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/a6/f4d0b7240ebf546d3a77f212958b930282cccb0a53d66b9b0e1639ce8230/skrub-0.10.1.tar.gz", hash = "sha256:39f58492f6889c5563a654478cd523771aaa8dab5a42ad2ce9f430efb3881f53", size = 4205317, upload-time = "2026-09-01T09:33:37.146Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/2d/492a8b0d0d8b344918312a6416c537e54081ca5d0aaf19d085a188905e41/skrub-0.10.1-py3-none-any.whl", hash = "sha256:553c6f9b19a2cb97bba776a28255e7e024e77d4f50d7c6c70b4805f4e668a3cc", size = 595919, upload-time = "2026-09-01T09:33:35.208Z" },
+]
+
+[[package]]
 name = "sniffio"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3370,7 +3395,7 @@ text = [
 
 [[package]]
 name = "tabpfn"
-version = "8.4.0"
+version = "9.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "einops" },
@@ -3378,6 +3403,7 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "joblib" },
     { name = "lightgbm" },
+    { name = "matplotlib" },
     { name = "mlx", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (platform_machine != 'arm64' and extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (platform_machine != 'arm64' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (platform_machine != 'arm64' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (sys_platform != 'darwin' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
@@ -3388,20 +3414,21 @@ dependencies = [
     { name = "safetensors" },
     { name = "scikit-learn" },
     { name = "scipy" },
+    { name = "skrub" },
     { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc')" },
     { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu' or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-kurversc')" },
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cuda' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-kurversc')" },
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/40/4b5034d4694aedac5a999d1d89b877acb8f60c48e0884271bc4678ed72d7/tabpfn-8.4.0.tar.gz", hash = "sha256:a21d2e7b183829277e1a718eed5a894d075c43530648a9519cb1cf6728b76bda", size = 815317, upload-time = "2026-08-19T10:21:21.339Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/8f/3952bf3b99048f5a1a61e7406e9454f70a80080765491c28fd0cb999420c/tabpfn-9.0.0.tar.gz", hash = "sha256:a4a845309b682eb3d58065eb5cec72e585dde3f639489a36e18948a8ace4245c", size = 893866, upload-time = "2026-09-15T12:29:24.151Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/d1/6ac2bb454e59447c23924c2c49f0419d4a3015b26f2475446979c424d7e0/tabpfn-8.4.0-py3-none-any.whl", hash = "sha256:f292cc3c57ef02da0add323474c8ae85272c857a311efbc405eb7dd4aeb065b0", size = 762051, upload-time = "2026-08-19T10:21:19.667Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/38/e68d06cf83a30c19a044ee1a9b6260b7f2d9cc37c8575efa86fd8ae6a0b6/tabpfn-9.0.0-py3-none-any.whl", hash = "sha256:0adb0e69be839051c7f9e92caadec93324cccc0256321bf967fda91e5c493f98", size = 827545, upload-time = "2026-09-15T12:29:22.201Z" },
 ]
 
 [[package]]
 name = "tabpfn-client"
-version = "0.4.2"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -3421,9 +3448,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/51/84/a66b50165b3e820c6951a1e2701e52aba502adfea96395b4be871030c1c3/tabpfn_client-0.4.2.tar.gz", hash = "sha256:9d574bffdf86ba76e1a5658579a9ea55757b0fbb03e3282cebc167036db815b0", size = 203376, upload-time = "2026-08-20T12:37:55.313Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/c0/df9cc8322cd72da6cec64e8208e6d4a5ad382d0a34df02cd044a035fecf6/tabpfn_client-0.6.1.tar.gz", hash = "sha256:682b96888809372651eff86f2b34ec96a4f38be1ff1cbea8ef9c2921e2df566d", size = 297863, upload-time = "2026-09-28T12:40:39.995Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/d7/b61d765e449f49dba6bc7c1d1d1ec7b5a0d8ddc7fb06525617f30655185c/tabpfn_client-0.4.2-py3-none-any.whl", hash = "sha256:66b50741d23b137b28074451c7509ccc9a2b49d7843dbfec4931e732cba8e2f9", size = 66538, upload-time = "2026-08-20T12:37:53.994Z" },
+    { url = "https://files.pythonhosted.org/packages/03/8b/574d92d54d133bd3b1146f9cb899702901914a2a96bd58a4d242b7b61ea7/tabpfn_client-0.6.1-py3-none-any.whl", hash = "sha256:40c49a5f06ab7b9f4e9c697433d8fc0fefba8bcf18971d372d9a2737ccda8133", size = 84751, upload-time = "2026-09-28T12:40:38.509Z" },
 ]
 
 [[package]]
@@ -3450,8 +3477,27 @@ wheels = [
 ]
 
 [[package]]
+name = "tabpfn-extensions"
+version = "0.6.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pandas" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "tabpfn" },
+    { name = "tabpfn-common-utils" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc')" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-relarena-workspace-cuda' or extra != 'group-18-relarena-workspace-cpu' or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-kurversc')" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cuda' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-kurversc')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/76/e6/bf599982b235116a061ef7681433d897a1c4070c7b3c8f0a60130a936c77/tabpfn_extensions-0.6.3.tar.gz", hash = "sha256:ff8756d2ae9146920165c0138b21dbb8e86a2d3e0cc106ce1d76324adb68211d", size = 154444, upload-time = "2026-09-21T14:23:43.905Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/b2/5c15d56b777a96bab66d81a2db959da8c24b3b6d755c8604184527a21b4e/tabpfn_extensions-0.6.3-py3-none-any.whl", hash = "sha256:9305e495cd1c7b572db63b301ccd149e4b0e7769c70a1058f76a1430caacbf63", size = 123160, upload-time = "2026-09-21T14:23:42.118Z" },
+]
+
+[[package]]
 name = "tabpfn-rel"
-version = "0.0.3"
+version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
@@ -3461,19 +3507,21 @@ dependencies = [
     { name = "relarena-core" },
     { name = "relbench" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0d/3a/bb27457dfcf9630ea2e72a186dee4b7597fd3cb500dafc24d8d4316f942d/tabpfn_rel-0.0.3.tar.gz", hash = "sha256:458d05235d230ee38e03ed3038b62db5edc2341dccb0ec2438ce0b186640b897", size = 19063, upload-time = "2026-09-21T09:10:16.839Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/87/d6b339c3c32012148e9915665e8762dfad6d8a6df0254b895418434f4396/tabpfn_rel-0.0.4.tar.gz", hash = "sha256:280291073ec91e618496899b00940bd46aae50043a7c2ce2b3d399a1a520da75", size = 20801, upload-time = "2026-09-28T16:14:50.912Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/94/0c10fc9cafc251940babd9afb0b22f523db10acaa00a5ff9fb496da27ec5/tabpfn_rel-0.0.3-py3-none-any.whl", hash = "sha256:44ce2e58bebce7549c7d12f82b18c5fd858e6cbb68e0a0bde0bdd2a122d75fa3", size = 22216, upload-time = "2026-09-21T09:10:15.589Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/2a/d90547255b73ec98929926234afc4483923641ed4e0cc5a799ad4969548a/tabpfn_rel-0.0.4-py3-none-any.whl", hash = "sha256:e1cc9952f4c4df51594d1880083dc169853277a9d8ad165976a9533e6d1eb520", size = 24484, upload-time = "2026-09-28T16:14:51.821Z" },
 ]
 
 [package.optional-dependencies]
 api = [
     { name = "relarena-core", extra = ["dfs"] },
     { name = "tabpfn-client" },
+    { name = "tabpfn-extensions" },
 ]
 local = [
     { name = "relarena-core", extra = ["dfs"] },
     { name = "tabpfn" },
+    { name = "tabpfn-extensions" },
 ]
 
 [[package]]

@@ -24,6 +24,7 @@ import pandas as pd
 
 from relarena.evaluation.leaderboard import (
     _drop_incomplete_methods,
+    display_name,
     to_bencheval_frame,
 )
 from relarena.evaluation.subsets import TaskMask, apply_subset
@@ -108,7 +109,7 @@ def plot_normalized_loss_heatmap(
         figsize=(max(7.0, 0.95 * pivot.shape[1]), 0.7 * pivot.shape[0] + 3.2)
     )
     sns.heatmap(
-        pivot,
+        pivot.rename(index=display_name),
         ax=ax,
         cmap=cmap,
         vmin=0.0,
@@ -195,7 +196,7 @@ def plot_raw_score_heatmap(
         figsize=(max(7.0, 0.95 * pivot.shape[1]), 0.6 * pivot.shape[0] + 3.0)
     )
     sns.heatmap(
-        pivot,
+        pivot.rename(index=display_name),
         ax=ax,
         cmap=cmap,
         vmin=vmin,
@@ -239,7 +240,9 @@ def plot_critical_difference(results: pd.DataFrame, save_path: str | Path) -> bo
         return False
 
     board = BenchmarkEvaluator()
-    results_per_task = board.compute_results_per_task(data=frame)
+    results_per_task = board.compute_results_per_task(
+        data=frame.assign(method=frame["method"].map(display_name))
+    )
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     # bencheval's plot_critical_diagrams does its own savefig (no dpi arg), so set
@@ -262,7 +265,9 @@ def plot_winrate_matrix(results: pd.DataFrame, save_path: str | Path) -> bool:
         return False
 
     board = BenchmarkEvaluator()
-    results_per_task = board.compute_results_per_task(data=frame)
+    results_per_task = board.compute_results_per_task(
+        data=frame.assign(method=frame["method"].map(display_name))
+    )
     matrix = board.compute_winrate_matrix(results_per_task)
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)

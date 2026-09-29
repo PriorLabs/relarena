@@ -14,13 +14,13 @@ A snapshot of RelArena baseline runs over the RelBench-v1 entity-task grid
   `relarena.evaluation.compute_leaderboard`.
 
 Models: `constant-global`, `constant-per-entity`, `lightgbm`, `graphsage`, `rdblearn`,
-`tabpfn-rel-local`, `tabpfn-rel-client`, `relgnn-es`, `relgt`, `rt-plurel`.
+`tabpfn-rel-local`, `tabpfn-rel-client-2026-08-15`, `relgnn-es`, `relgt`, `rt-plurel`.
 (`constant-global` predicts one global optimal constant; `constant-per-entity` predicts each
 entity's own optimal constant, falling back to the global one for entities absent
 from train; `relgnn-es` is RelGNN scored at its best-val checkpoint instead
 of a train+val refit; `relgt` is the Relational Graph Transformer, which reports its
 own best-val checkpoint (`refit_on_full_data=False`) per its published protocol;
-`tabpfn-rel-client` is the hosted-API variant and was launched explicitly because
+`tabpfn-rel-client-2026-08-15` is the hosted-API variant and was launched explicitly because
 routine sweeps should not spend service quota; `rt-plurel` is the Relational
 Transformer, registered as a **system** — see the package README.)
 
@@ -62,3 +62,16 @@ This committed file is the result snapshot for the alpha release. RelArena is a
 living benchmark: future versions will rerun methods as the API, implementations,
 and tuning regime become more unified. Use the release tag when reproducing this
 specific snapshot.
+
+## TabPFN 3.5 fixed submissions
+
+`tabpfn-rel-client-2026-09-28` and
+`tabpfn-rel-local-2026-09-28` each cover all 21 entity tasks at
+seed 0. They use depth 4, eight estimators, 200,000-row hard-pool contexts,
+pool inflation 4, and automatic hurdle regression at a 0.05 zero-rate threshold.
+The local submission uses native TF-IDF text processing and the API submission
+uses simple text processing. Each evaluates one default configuration.
+
+The local runs used TabPFN 9.0.0, tabpfn-extensions 0.6.3, and checkpoint
+`tabpfn-v3.5-20260909.safetensors` (SHA-256
+`ece4d67eadfea42eb0e610df5189bea60cb7f31073d81e9c7a019b76eacf0be3`).

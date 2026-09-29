@@ -2,7 +2,9 @@
 
 A string-keyed registry for both method contracts. Model entries pair a class
 with its external `SearchSpace`; system entries need no search space because
-they own their complete prediction procedure.
+they own their complete prediction procedure. An alias such as
+`tabpfn-rel-client-latest` names a registered method; lookups accept it, while
+results keep the method's own name.
 """
 
 from __future__ import annotations
@@ -37,6 +39,7 @@ class MethodRegistry:
     def __init__(self) -> None:
         """Create an empty registry."""
         self._entries: dict[str, RegistryEntry] = {}
+        self._aliases: dict[str, str] = {}
 
     def register(
         self, model_cls: Type[RelArenaModel], search_space: SearchSpaceProvider
@@ -49,6 +52,7 @@ class MethodRegistry:
         name = getattr(model_cls, "name", None)
         if not name:
             raise ValueError(f"{model_cls.__name__} must define a class-level `name`.")
+        self._check_not_alias(name)
         existing = self._entries.get(name)
         if existing is not None and existing.method_cls is not model_cls:
             raise ValueError(
@@ -66,6 +70,7 @@ class MethodRegistry:
         name = getattr(system_cls, "name", None)
         if not name:
             raise ValueError(f"{system_cls.__name__} must define a class-level `name`.")
+        self._check_not_alias(name)
         existing = self._entries.get(name)
         if existing is not None and existing.method_cls is not system_cls:
             raise ValueError(
@@ -74,6 +79,33 @@ class MethodRegistry:
             )
         self._entries[name] = RegistryEntry(system_cls, "system")
         return system_cls
+
+    def register_alias(self, alias: str, name: str) -> None:
+        """Make `alias` resolve to the registered method `name`.
+
+        A method has at most one alias, which leaderboards show as its label.
+        Raises if `name` is not registered, if `alias` is a method name, or if
+        either already has a different pairing.
+        """
+        if name not in self._entries:
+            raise KeyError(f"Cannot alias unregistered method '{name}'.")
+        if alias in self._entries:
+            raise ValueError(f"'{alias}' is a method name and cannot be an alias.")
+        existing = self._aliases.get(alias)
+        if existing is not None and existing != name:
+            raise ValueError(f"Alias '{alias}' already points to '{existing}'.")
+        current = self.alias_for(name)
+        if current is not None and current != alias:
+            raise ValueError(f"'{name}' already has the alias '{current}'.")
+        self._aliases[alias] = name
+
+    def resolve(self, name: str) -> str:
+        """Return the method name that `name` refers to, following an alias."""
+        return self._aliases.get(name, name)
+
+    def alias_for(self, name: str) -> str | None:
+        """Return the alias pointing to method `name`, or None if it has none."""
+        return next((a for a, n in self._aliases.items() if n == name), None)
 
     def get(self, name: str) -> Method:
         """Return the model or system class under `name` (raises if unknown)."""
@@ -98,7 +130,14 @@ class MethodRegistry:
         """Return the registered method names, sorted."""
         return sorted(self._entries)
 
+    def _check_not_alias(self, name: str) -> None:
+        if name in self._aliases:
+            raise ValueError(
+                f"'{name}' is already an alias of '{self._aliases[name]}'."
+            )
+
     def _entry(self, name: str) -> RegistryEntry:
+        name = self.resolve(name)
         if name not in self._entries:
             hint = (
                 " Call relarena_core.discover_models() to load installed model plugins."
@@ -113,8 +152,8 @@ class MethodRegistry:
         return (entry.method_cls for entry in self._entries.values())
 
     def __contains__(self, name: object) -> bool:
-        """Return whether a method is registered under `name`."""
-        return name in self._entries
+        """Return whether `name` is a registered method or an alias of one."""
+        return name in self._entries or name in self._aliases
 
     def __len__(self) -> int:
         """Return the number of registered methods."""
