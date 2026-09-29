@@ -3,12 +3,12 @@ revision = 3
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
 ]
 conflicts = [[
@@ -17,16 +17,16 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-26T07:36:41.287853Z"
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
-fastdfs = false
-tabpfn-rel = false
-kurversc = false
+fastdfs = "2026-09-29T00:00:00Z"
 graphreduce = false
-tabpfn-client = false
+kurversc = false
 relational-transformer = false
+tabpfn-client = false
+tabpfn-rel = false
 
 [manifest]
 members = [
