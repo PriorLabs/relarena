@@ -178,6 +178,9 @@ MANUAL_LICENSES: dict[str, str] = {
     # The KurveRSC 0.1.1 wheel ships an MIT LICENSE and declares
     # `License-Expression: MIT`; PyPI's JSON API does not expose that PEP 639 field.
     "kurversc": "MIT",
+    # The kditransform 1.2.0 wheel ships plain Apache-2.0 in
+    # dist-info/licenses/LICENSE while its metadata only says "OSI Approved".
+    "kditransform": "Apache-2.0",
 }
 
 
@@ -292,10 +295,12 @@ def fetch_pypi_license(name: str, version: str) -> tuple[str | None, str]:
         return None, ""
 
     expression = info.get("license_expression") or ""
+    # The bare `License :: OSI Approved` category names no license, so a package
+    # declaring only that has declared nothing usable.
     classifiers = [
         c.split("::")[-1].strip()
         for c in info.get("classifiers", [])
-        if c.startswith("License ::")
+        if c.startswith("License ::") and c.strip() != "License :: OSI Approved"
     ]
     body = info.get("license") or ""
 
