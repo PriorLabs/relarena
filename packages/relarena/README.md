@@ -13,7 +13,7 @@ Install TabPFN-Rel for benchmarking with a local or hosted backend:
 ```bash
 pip install "relarena[tabpfn-rel-local]"
 # Or: pip install "relarena[tabpfn-rel-api]"
-relarena --model tabpfn-rel-local --datasets rel-f1 --tasks driver-dnf --n-trials 1
+relarena --model tabpfn-rel-local-latest --datasets rel-f1 --tasks driver-dnf --n-trials 1
 ```
 
 This distribution depends on `relarena-core`. TabPFN-Rel is optional and can also
