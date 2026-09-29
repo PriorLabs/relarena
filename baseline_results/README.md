@@ -14,7 +14,7 @@ A snapshot of RelArena baseline runs over the RelBench-v1 entity-task grid
   `relarena.evaluation.compute_leaderboard`.
 
 Models: `constant-global`, `constant-per-entity`, `lightgbm`, `graphsage`, `rdblearn`,
-`tabpfn-rel-local-2026-08-15`, `tabpfn-rel-client-2026-08-15`, `relgnn-es`, `relgt`, `rt-plurel`.
+`tabpfn-rel-local-2026-08-15`, `tabpfn-rel-client-2026-08-15`, `nori-rel`, `relgnn-es`, `relgt`, `rt-plurel`.
 (`constant-global` predicts one global optimal constant; `constant-per-entity` predicts each
 entity's own optimal constant, falling back to the global one for entities absent
 from train; `relgnn-es` is RelGNN scored at its best-val checkpoint instead
@@ -75,3 +75,13 @@ uses simple text processing. Each evaluates one default configuration.
 The local runs used TabPFN 9.0.0, tabpfn-extensions 0.6.3, and checkpoint
 `tabpfn-v3.5-20260909.safetensors` (SHA-256
 `ece4d67eadfea42eb0e610df5189bea60cb7f31073d81e9c7a019b76eacf0be3`).
+
+## Nori-Rel
+
+`nori-rel` covers all 21 entity tasks at seed 0 with its single default
+configuration. It reads the depth-2 slice of the shared depth-4 DFS matrices and
+runs the frozen public Nori 30M checkpoint (Hugging Face revision
+`63c9f7facf9fb32c37ce3fc2fba331d524696318`, SHA-256
+`818433f8af12c1137b96d9ff47e109b4eef5818d4e52a9656b2e573dbf13b74d`) with
+synthefy-nori 0.20.1, without quantization or context subsampling. Its DFS
+cache was built with fastdfs 1.2.

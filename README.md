@@ -69,17 +69,18 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 2054.6 | 1957.1–2234.4 |
-| 2 | tabpfn-rel-local-latest | Model | 1837.9 | 1744.5–1975.4 |
-| 3 | tabpfn-rel-client-2026-08-15 | Model | 1797.3 | 1739.9–1874.6 |
-| 4 | tabpfn-rel-local-2026-08-15 | Model | 1712.9 | 1618.0–1831.7 |
-| 5 | graphsage | Model | 1664.0 | 1579.0–1753.2 |
-| 6 | relgt | Model | 1570.4 | 1465.4–1689.9 |
-| 7 | rdblearn | Model | 1532.9 | 1454.1–1605.5 |
-| 8 | relgnn-es | Model | 1521.8 | 1416.6–1604.5 |
-| 9 | lightgbm | Model | 1359.4 | 1220.8–1452.1 |
-| 10 | constant-per-entity | Model | 1265.5 | 1087.3–1404.9 |
-| 11 | constant-global | Model | 1000.0 | 853.5–1073.9 |
+| 1 | tabpfn-rel-client-latest | Model | 2042.0 | 1945.8–2192.1 |
+| 2 | tabpfn-rel-local-latest | Model | 1858.5 | 1764.4–1983.6 |
+| 3 | tabpfn-rel-client-2026-08-15 | Model | 1813.9 | 1761.2–1892.7 |
+| 4 | nori-rel | Model | 1767.7 | 1697.1–1866.7 |
+| 5 | tabpfn-rel-local-2026-08-15 | Model | 1723.3 | 1628.1–1833.5 |
+| 6 | graphsage | Model | 1683.8 | 1586.7–1772.3 |
+| 7 | relgt | Model | 1587.3 | 1486.1–1707.8 |
+| 8 | relgnn-es | Model | 1534.5 | 1434.3–1624.4 |
+| 9 | rdblearn | Model | 1532.4 | 1451.8–1606.9 |
+| 10 | lightgbm | Model | 1361.9 | 1222.2–1458.8 |
+| 11 | constant-per-entity | Model | 1264.1 | 1094.4–1398.7 |
+| 12 | constant-global | Model | 1000.0 | 856.1–1068.9 |
 
 </details>
 
@@ -88,19 +89,20 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 2032.8 | 1943.7–2163.2 |
-| 2 | tabpfn-rel-local-latest | Model | 1861.6 | 1775.7–1978.0 |
-| 3 | rt-plurel | System | 1857.5 | 1739.4–1936.5 |
-| 4 | tabpfn-rel-client-2026-08-15 | Model | 1810.7 | 1748.0–1890.3 |
-| 5 | kurversc | System | 1784.4 | 1710.6–1860.6 |
-| 6 | tabpfn-rel-local-2026-08-15 | Model | 1733.2 | 1634.5–1822.6 |
-| 7 | graphsage | Model | 1668.6 | 1588.3–1756.5 |
-| 8 | relgt | Model | 1575.2 | 1465.7–1684.0 |
-| 9 | rdblearn | Model | 1546.5 | 1450.6–1624.2 |
-| 10 | relgnn-es | Model | 1540.6 | 1449.5–1633.2 |
-| 11 | lightgbm | Model | 1363.3 | 1224.5–1457.3 |
-| 12 | constant-per-entity | Model | 1268.1 | 1094.7–1403.5 |
-| 13 | constant-global | Model | 1000.0 | 857.6–1067.6 |
+| 1 | tabpfn-rel-client-latest | Model | 2030.8 | 1945.1–2152.2 |
+| 2 | tabpfn-rel-local-latest | Model | 1878.2 | 1789.1–1989.4 |
+| 3 | rt-plurel | System | 1870.9 | 1765.0–1949.9 |
+| 4 | tabpfn-rel-client-2026-08-15 | Model | 1825.1 | 1768.3–1900.9 |
+| 5 | kurversc | System | 1804.7 | 1732.3–1876.8 |
+| 6 | nori-rel | Model | 1764.7 | 1693.0–1868.6 |
+| 7 | tabpfn-rel-local-2026-08-15 | Model | 1741.8 | 1646.9–1827.1 |
+| 8 | graphsage | Model | 1686.4 | 1595.9–1773.4 |
+| 9 | relgt | Model | 1590.5 | 1481.6–1700.2 |
+| 10 | relgnn-es | Model | 1551.3 | 1456.1–1650.0 |
+| 11 | rdblearn | Model | 1545.8 | 1449.6–1619.3 |
+| 12 | lightgbm | Model | 1365.7 | 1225.1–1464.5 |
+| 13 | constant-per-entity | Model | 1266.5 | 1095.3–1399.0 |
+| 14 | constant-global | Model | 1000.0 | 859.2–1064.8 |
 
 </details>
 
@@ -627,7 +629,7 @@ as an experimental final-fit variant.
 | `tabpfn-rel-client-2026-09-18` | TabPFN-Rel (API) | depth-4 DFS + hosted TabPFN-3.5 with text, 200k context | model | pending evaluation | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-28` | TabPFN-Rel (API) | TabPFN-3.5 API, hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-local-2026-09-28` | TabPFN-Rel (local) | TabPFN-3.5 OSS (TF-IDF), hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-local` |
-| `nori-rel` | Nori-Rel | DFS + frozen Nori 30M | model | experimental | train + val | `nori-rel` |
+| `nori-rel` | Nori-Rel | DFS + frozen Nori 30M | model | 21 tasks | train + val | `nori-rel` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
