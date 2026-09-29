@@ -145,7 +145,7 @@ hours (`rdblearn`, `tabpfn-rel`, RelGNN, `relgt`):_
 | `lightgbm` | 30 | 13.5 min | 0.1 min | 0.2 min | 1.5 min | 27.4 min | 52.5 min |
 | `graphsage` | 4 | 44.4 min | 1.9 min | 9.1 min | 34.4 min | 75.5 min | 130.8 min |
 | `rdblearn` | 6 | 14.4 min | 0.4 min | 1.9 min | 10.2 min | 15.5 min | 73.7 min |
-| `tabpfn-rel-local` | 3 | 11.7 min | 0.6 min | 0.8 min | 3.4 min | 5.0 min | 84.9 min |
+| `tabpfn-rel-local-2026-08-15` | 3 | 11.7 min | 0.6 min | 0.8 min | 3.4 min | 5.0 min | 84.9 min |
 | `tabpfn-rel-client-2026-08-15` | 3 | 73.4 min | 15.2 min | 63.3 min | 87.5 min | 93.2 min | 99.8 min |
 | `relgnn-es` (RelGNN) | 10 | 68.1 min | 1.4 min | 5.4 min | 26.6 min | 92.1 min | 313.4 min |
 | `relgt` | 9 | 430.9 min | 36.1 min | 124.1 min | 149.8 min | 463.8 min | 2233.0 min |

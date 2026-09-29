@@ -106,8 +106,9 @@ def test__generate__moving_an_alias__only_relabels_rows(
 ) -> None:
     discover_models()
     plain = (_generate(tmp_path / "plain", monkeypatch).ROOT / "README.md").read_text()
+    installed = dict(registry._aliases)
     for target, other in (("relgt", "relgnn-es"), ("relgnn-es", "relgt")):
-        monkeypatch.setattr(registry, "_aliases", {})
+        monkeypatch.setattr(registry, "_aliases", dict(installed))
         registry.register_alias("graph-latest", target)
         root = _generate(tmp_path / target, monkeypatch).ROOT
         text = (root / "README.md").read_text()
@@ -118,3 +119,17 @@ def test__generate__moving_an_alias__only_relabels_rows(
         assert text.replace("| graph-latest |", f"| {target} |") == plain
         results = "baseline_results/results.csv"
         assert (root / results).read_bytes() == (ROOT / results).read_bytes()
+
+
+def test__generate__unregistered_method__fails_without_writing(
+    generated: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    results = generated.ROOT / "baseline_results/results.csv"
+    frame = generated.pd.read_csv(results)
+    frame.loc[frame["model"] == "graphsage", "model"] = "retired-method"
+    frame.to_csv(results, index=False)
+    readme = (generated.ROOT / "README.md").read_bytes()
+    monkeypatch.setattr(sys, "argv", ["update_leaderboards.py"])
+    with pytest.raises(SystemExit):
+        generated.main()
+    assert (generated.ROOT / "README.md").read_bytes() == readme

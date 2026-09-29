@@ -39,7 +39,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-26T08:21:22.152223Z"
+exclude-newer = "2026-09-26T14:26:14.796344Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -2732,8 +2732,8 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
     { name = "synthefy-nori", extras = ["text"], marker = "extra == 'nori-rel'", specifier = "==0.20.1" },
     { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
-    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.4" },
-    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.4" },
+    { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.5" },
+    { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.5" },
     { name = "torch" },
     { name = "torch-geometric", marker = "extra == 'rdl'", specifier = ">=2.5" },
 ]
@@ -2798,6 +2798,7 @@ dev = [
     { name = "ruff" },
     { name = "setuptools", version = "80.10.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-nori-rel' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "setuptools", version = "81.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
+    { name = "tabpfn-rel" },
 ]
 kurversc = [
     { name = "kurversc" },
@@ -2815,6 +2816,7 @@ dev = [
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = "==0.15.13" },
     { name = "setuptools", specifier = "<82" },
+    { name = "tabpfn-rel", specifier = ">=0.0.5" },
 ]
 kurversc = [{ name = "kurversc", specifier = "==0.1.1" }]
 
@@ -3497,7 +3499,7 @@ wheels = [
 
 [[package]]
 name = "tabpfn-rel"
-version = "0.0.4"
+version = "0.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
@@ -3507,9 +3509,9 @@ dependencies = [
     { name = "relarena-core" },
     { name = "relbench" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/87/d6b339c3c32012148e9915665e8762dfad6d8a6df0254b895418434f4396/tabpfn_rel-0.0.4.tar.gz", hash = "sha256:280291073ec91e618496899b00940bd46aae50043a7c2ce2b3d399a1a520da75", size = 20801, upload-time = "2026-09-28T16:14:50.912Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/19/862cee2ec378bb3d98fdadcc86671db4ead21df58000f605094733fe1b05/tabpfn_rel-0.0.5.tar.gz", hash = "sha256:5a8237411dd21fec200e0ff41706ffad41c2b1de9a8a237907e9b92a307cd8a7", size = 21013, upload-time = "2026-09-29T11:36:42.216Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/2a/d90547255b73ec98929926234afc4483923641ed4e0cc5a799ad4969548a/tabpfn_rel-0.0.4-py3-none-any.whl", hash = "sha256:e1cc9952f4c4df51594d1880083dc169853277a9d8ad165976a9533e6d1eb520", size = 24484, upload-time = "2026-09-28T16:14:51.821Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/af/f86217160c4812e3f9180bed599e0920c30c53b925d19852fa0d3f8ee0b3/tabpfn_rel-0.0.5-py3-none-any.whl", hash = "sha256:f4059cdef2d630e87c456546fb156756998eccf7ff96941f1182584ac006e164", size = 24610, upload-time = "2026-09-29T11:36:41.13Z" },
 ]
 
 [package.optional-dependencies]

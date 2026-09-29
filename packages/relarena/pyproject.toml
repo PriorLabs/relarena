@@ -92,8 +92,8 @@ relgnn = ["relarena[rdl]"]
 relgt = ["relarena[rdl]", "einops>=0.8", "h5py>=3.0"]
 # The separate TabPFN-Rel package registers its models through entry points.
 # The existing local and API extras install the corresponding model backend.
-tabpfn-rel-local = ["tabpfn-rel[local]>=0.0.4"]
-tabpfn-rel-api = ["tabpfn-rel[api]>=0.0.4"]
+tabpfn-rel-local = ["tabpfn-rel[local]>=0.0.5"]
+tabpfn-rel-api = ["tabpfn-rel[api]>=0.0.5"]
 # nori-rel: RelArena's shared DFS features followed by the frozen Nori 30M
 # checkpoint. synthefy-nori is imported inside fit()/predict(); its [text] extra
 # carries the MiniLM encoder for prose anchor columns. GPU recommended.

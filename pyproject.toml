@@ -10,6 +10,9 @@ dev = [
     "ruff==0.15.13",
     "lightgbm>=4.0,<4.7",
     "fastdfs>=1.2",
+    # Registers the TabPFN-Rel methods that the checked-in results and generated
+    # leaderboards name, without the inference backends.
+    "tabpfn-rel>=0.0.5",
     # Match the woodwork/pkg_resources cap in the core DFS extra.
     "setuptools<82",
 ]

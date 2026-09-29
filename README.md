@@ -69,10 +69,10 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-2026-09-28 | Model | 2054.6 | 1957.1–2234.4 |
-| 2 | tabpfn-rel-local-2026-09-28 | Model | 1837.9 | 1744.5–1975.4 |
+| 1 | tabpfn-rel-client-latest | Model | 2054.6 | 1957.1–2234.4 |
+| 2 | tabpfn-rel-local-latest | Model | 1837.9 | 1744.5–1975.4 |
 | 3 | tabpfn-rel-client-2026-08-15 | Model | 1797.3 | 1739.9–1874.6 |
-| 4 | tabpfn-rel-local | Model | 1712.9 | 1618.0–1831.7 |
+| 4 | tabpfn-rel-local-2026-08-15 | Model | 1712.9 | 1618.0–1831.7 |
 | 5 | graphsage | Model | 1664.0 | 1579.0–1753.2 |
 | 6 | relgt | Model | 1570.4 | 1465.4–1689.9 |
 | 7 | rdblearn | Model | 1532.9 | 1454.1–1605.5 |
@@ -88,12 +88,12 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-2026-09-28 | Model | 2032.8 | 1943.7–2163.2 |
-| 2 | tabpfn-rel-local-2026-09-28 | Model | 1861.6 | 1775.7–1978.0 |
+| 1 | tabpfn-rel-client-latest | Model | 2032.8 | 1943.7–2163.2 |
+| 2 | tabpfn-rel-local-latest | Model | 1861.6 | 1775.7–1978.0 |
 | 3 | rt-plurel | System | 1857.5 | 1739.4–1936.5 |
 | 4 | tabpfn-rel-client-2026-08-15 | Model | 1810.7 | 1748.0–1890.3 |
 | 5 | kurversc | System | 1784.4 | 1710.6–1860.6 |
-| 6 | tabpfn-rel-local | Model | 1733.2 | 1634.5–1822.6 |
+| 6 | tabpfn-rel-local-2026-08-15 | Model | 1733.2 | 1634.5–1822.6 |
 | 7 | graphsage | Model | 1668.6 | 1588.3–1756.5 |
 | 8 | relgt | Model | 1575.2 | 1465.7–1684.0 |
 | 9 | rdblearn | Model | 1546.5 | 1450.6–1624.2 |
@@ -261,7 +261,7 @@ from RDBLearn and improves on it in four ways:
    the removed backbone-selection tuning axis and a more scalable architecture.
 3. Support for text features. Text columns from the entity table are re-attached after
    featurization, which the hosted TabPFN-3 handles natively. Text is only available through the
-   API, so the text-free `tabpfn-rel-local` variant covers everyone who cannot use it.
+   API, so the text-free `tabpfn-rel-local-2026-08-15` variant covers everyone who cannot use it.
 4. Better context selection. A context-selection regime trading off recency against diversity
    across estimators replaces RDBLearn's random subsampling, at no additional runtime cost.
    Validation examples are also reused as additional context for test predictions, since recent
@@ -273,12 +273,12 @@ from RDBLearn and improves on it in four ways:
 from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQuerySpec
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
-fitted = PredictiveContext(spec).fit("tabpfn-rel-client-2026-08-15", n_trials=0)
+fitted = PredictiveContext(spec).fit("tabpfn-rel-client-latest", n_trials=0)
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 predictions = fitted.predict(query)
 ```
 
-Use model name `tabpfn-rel-local` for local inference. `n_trials=0` fits the
+Use model name `tabpfn-rel-local-latest` for local inference. `n_trials=0` fits the
 default configuration once; a positive budget enables temporal hyperparameter
 tuning. RPI supports entity-level classification and regression. Choosing a
 valid target and excluding fields unavailable at prediction time remain the
@@ -622,7 +622,7 @@ as an experimental final-fit variant.
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
-| `tabpfn-rel-local` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
+| `tabpfn-rel-local-2026-08-15` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client-2026-08-15` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-18` | TabPFN-Rel (API) | depth-4 DFS + hosted TabPFN-3.5 with text, 200k context | model | pending evaluation | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-28` | TabPFN-Rel (API) | TabPFN-3.5 API, hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-api` |

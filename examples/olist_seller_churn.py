@@ -141,8 +141,8 @@ if __name__ == "__main__":
         str(here / "olist_seller_churn.yaml"), data_dir=str(data_dir)
     )
     model = {
-        "local": "tabpfn-rel-local",
-        "client": "tabpfn-rel-client-2026-08-15",
+        "local": "tabpfn-rel-local-latest",
+        "client": "tabpfn-rel-client-latest",
     }[args.backend]
     n_trials = (
         args.n_trials
