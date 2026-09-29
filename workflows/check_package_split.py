@@ -24,9 +24,9 @@ from pathlib import Path
 CASES = (
     ("core", "relarena-core"),
     ("base", "relarena"),
-    ("plugin", "tabpfn-rel==0.0.2"),
-    ("plugin-api", "tabpfn-rel[api]==0.0.2"),
-    ("plugin-local", "tabpfn-rel[local]==0.0.2"),
+    ("plugin", "tabpfn-rel==0.0.5"),
+    ("plugin-api", "tabpfn-rel[api]==0.0.5"),
+    ("plugin-local", "tabpfn-rel[local]==0.0.5"),
     ("api", "relarena[tabpfn-rel-api]"),
     ("local", "relarena[tabpfn-rel-local]"),
 )
