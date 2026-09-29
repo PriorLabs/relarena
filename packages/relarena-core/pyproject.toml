@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena-core"
-version = "0.0.4"
+version = "0.0.5"
 description = "Shared contracts, temporal validation and predictive queries for relational models."
 readme = "README.md"
 license = "Apache-2.0"
@@ -24,4 +24,4 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dfs = ["fastdfs>=1.1", "setuptools<82"]
+dfs = ["fastdfs>=1.2", "setuptools<82"]

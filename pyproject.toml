@@ -11,7 +11,7 @@ dev = [
     # Focused adapter tests exercise the public optional-package boundary.
     "kurversc==0.1.1",
     "lightgbm>=4.0,<4.7",
-    "fastdfs>=1.1",
+    "fastdfs>=1.2",
     # Match the woodwork/pkg_resources cap in the core DFS extra.
     "setuptools<82",
 ]

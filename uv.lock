@@ -17,10 +17,11 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-25T16:15:48.935364Z"
+exclude-newer = "2026-09-26T07:36:41.287853Z"
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
+fastdfs = false
 tabpfn-rel = false
 kurversc = false
 graphreduce = false
@@ -644,7 +645,7 @@ wheels = [
 
 [[package]]
 name = "fastdfs"
-version = "1.1"
+version = "1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -665,9 +666,9 @@ dependencies = [
     { name = "sqlglot" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/81/4bd3bb20b75f80a9dd5c34608c1596e6d48547a0dc24064c3a9c65989817/fastdfs-1.1.tar.gz", hash = "sha256:c3142b055cf5d37188f6dedc345ad0b25b06757e0db3bdfddda82b0adb5f9c3c", size = 96787, upload-time = "2026-07-13T08:39:20.154Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/b0/e52124a6b3eeef461c7c2d122d520febba0ef01e2942c3dde7b5d589c1ed/fastdfs-1.2.tar.gz", hash = "sha256:6f9de738f249bc7fac74e05b4170ebddcf1b6b70cc2373107dbee904111b2447", size = 102414, upload-time = "2026-09-28T16:35:44.632Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/a9/a292b4d7e5331cc0a019a1d0179ac7033fec7d7de504bf52f249a0a5f1d6/fastdfs-1.1-py3-none-any.whl", hash = "sha256:4ea3b4813431c40f99fa7dec820da604a0a9366e2a0f90a4a119f2c66084fd59", size = 82903, upload-time = "2026-07-13T08:39:18.919Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/a0/709a54c0c4a20ac694c00c1332b4dfc8099f4ee28896f63dbe532cdbf525/fastdfs-1.2-py3-none-any.whl", hash = "sha256:0086a6f41b2e78595b28f1d8ed858dad55b07fe13fbe3889a1ca445511d0ff83", size = 85528, upload-time = "2026-09-28T16:35:42.976Z" },
 ]
 
 [[package]]
@@ -2407,7 +2408,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.1.2"
+version = "0.1.3"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
@@ -2507,7 +2508,7 @@ provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relg
 
 [[package]]
 name = "relarena-core"
-version = "0.0.4"
+version = "0.0.5"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
@@ -2532,7 +2533,7 @@ requires-dist = [
     { name = "configspace", specifier = ">=1.0" },
     { name = "datasets", specifier = ">=4" },
     { name = "duckdb", specifier = ">=1.2.2" },
-    { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.1" },
+    { name = "fastdfs", marker = "extra == 'dfs'", specifier = ">=1.2" },
     { name = "jsonschema", specifier = ">=4.0" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.3.3,<3.0" },
@@ -2569,7 +2570,7 @@ dev = [
 cpu = [{ name = "torch", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "relarena-workspace", group = "cpu" } }]
 cuda = []
 dev = [
-    { name = "fastdfs", specifier = ">=1.1" },
+    { name = "fastdfs", specifier = ">=1.2" },
     { name = "kurversc", specifier = "==0.1.1" },
     { name = "lightgbm", specifier = ">=4.0,<4.7" },
     { name = "pre-commit", specifier = ">=4.0" },
