@@ -92,6 +92,71 @@ def test_registry_registers_system_without_search_space() -> None:
         reg.search_space("s")
 
 
+def _dated_models() -> tuple[type[RelArenaModel], type[RelArenaModel]]:
+    class Old(RelArenaModel):
+        name = "m-2026-01-01"
+
+        def fit(self, *a, **k) -> None: ...
+
+        def predict(self, *a, **k) -> np.ndarray:
+            return np.zeros(1)
+
+    class New(Old):
+        name = "m-2026-02-01"
+
+    return Old, New
+
+
+def test_registry_alias_resolves_to_the_dated_method() -> None:
+    reg = ModelRegistry()
+    old, new = _dated_models()
+    space = SearchSpace(default_overrides={"x": 1})
+    reg.register(old, SearchSpace(default_overrides={}))
+    reg.register(new, space)
+
+    reg.register_alias("m-latest", new.name)
+
+    assert reg.get("m-latest") is new
+    assert reg.get("m-latest").name == "m-2026-02-01"
+    assert reg.search_space("m-latest") is space
+    assert reg.kind("m-latest") == "model"
+    assert reg.resolve("m-latest") == new.name
+    assert reg.resolve(old.name) == old.name
+    assert reg.alias_for(new.name) == "m-latest"
+    assert reg.alias_for(old.name) is None
+    assert "m-latest" in reg
+    assert reg.names() == [old.name, new.name]
+
+
+def test_registry_alias_rejects_conflicts() -> None:
+    reg = ModelRegistry()
+    old, new = _dated_models()
+    reg.register(old, SearchSpace(default_overrides={}))
+    reg.register(new, SearchSpace(default_overrides={}))
+    reg.register_alias("m-latest", new.name)
+    reg.register_alias("m-latest", new.name)
+
+    with pytest.raises(KeyError, match="unregistered"):
+        reg.register_alias("x-latest", "unknown")
+    with pytest.raises(ValueError, match="method name"):
+        reg.register_alias(old.name, new.name)
+    with pytest.raises(ValueError, match="already points"):
+        reg.register_alias("m-latest", old.name)
+    with pytest.raises(ValueError, match="already has the alias"):
+        reg.register_alias("m-newest", new.name)
+
+    class Clash(RelArenaModel):
+        name = "m-latest"
+
+        def fit(self, *a, **k) -> None: ...
+
+        def predict(self, *a, **k) -> np.ndarray:
+            return np.zeros(1)
+
+    with pytest.raises(ValueError, match="already an alias"):
+        reg.register(Clash, SearchSpace(default_overrides={}))
+
+
 def test_abstract_model_cannot_be_instantiated() -> None:
     with pytest.raises(TypeError):
         RelArenaModel()

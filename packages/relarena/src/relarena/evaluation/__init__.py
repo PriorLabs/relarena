@@ -8,6 +8,7 @@ and `subsets` names the task slices a custom leaderboard can be built on.
 
 from relarena.evaluation.leaderboard import (
     compute_leaderboard,
+    display_name,
     method_kind,
     to_bencheval_frame,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "TaskMask",
     "apply_subset",
     "compute_leaderboard",
+    "display_name",
     "load_reference_results",
     "method_kind",
     "plot_critical_difference",
