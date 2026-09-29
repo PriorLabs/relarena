@@ -35,7 +35,7 @@ pip install "tabpfn-rel[api]"
 
 `tabpfn-rel` re-exports RPI from its `relarena-core` dependency. This workflow
 does not require the `relarena` benchmark package. Use `tabpfn-rel[local]` and
-model name `tabpfn-rel-local` for the local backend.
+model name `tabpfn-rel-local-latest` for the local backend.
 
 Load and run the task:
 
@@ -44,7 +44,7 @@ from relarena_core.userdb import PredictiveContext, PredictiveQuery, PredictiveQ
 
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
 context = PredictiveContext(spec)
-fitted = context.fit(model="tabpfn-rel-client-2026-08-15", n_trials=0)
+fitted = context.fit(model="tabpfn-rel-client-latest", n_trials=0)
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 preds = fitted.predict(query)
 ```
@@ -255,7 +255,7 @@ pip install "relarena[lightgbm,tabpfn-rel-api]"
 spec = PredictiveQuerySpec.from_yaml("task.yaml", data_dir="data/")
 context = PredictiveContext(spec)
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
-for model in ["constant-global", "lightgbm", "tabpfn-rel-client-2026-08-15"]:
+for model in ["constant-global", "lightgbm", "tabpfn-rel-client-latest"]:
     fitted = context.fit(model, n_trials=10)
     preds = fitted.predict(query)
 ```
@@ -289,7 +289,7 @@ models may implement caching independently.
 
 ```python
 context = PredictiveContext(spec)
-pq = context.fit("tabpfn-rel-local", cache_dir="/scratch/my_db_cache")
+pq = context.fit("tabpfn-rel-local-latest", cache_dir="/scratch/my_db_cache")
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 preds = pq.predict(query)   # reuses the cache_dir passed to fit
 ```
@@ -301,7 +301,7 @@ it instead of recomputing:
 ```python
 context = PredictiveContext(spec)
 context.precompute_cache("/scratch/my_db_cache")                          # CPU, no TFM
-pq = context.fit("tabpfn-rel-local", cache_dir="/scratch/my_db_cache")      # GPU, reads the store
+pq = context.fit("tabpfn-rel-local-latest", cache_dir="/scratch/my_db_cache")  # GPU, reads the store
 query = PredictiveQuery(entities="all", at_timestamp="test_timestamp")
 preds = pq.predict(query)
 ```

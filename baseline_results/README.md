@@ -14,7 +14,7 @@ A snapshot of RelArena baseline runs over the RelBench-v1 entity-task grid
   `relarena.evaluation.compute_leaderboard`.
 
 Models: `constant-global`, `constant-per-entity`, `lightgbm`, `graphsage`, `rdblearn`,
-`tabpfn-rel-local`, `tabpfn-rel-client-2026-08-15`, `relgnn-es`, `relgt`, `rt-plurel`.
+`tabpfn-rel-local-2026-08-15`, `tabpfn-rel-client-2026-08-15`, `relgnn-es`, `relgt`, `rt-plurel`.
 (`constant-global` predicts one global optimal constant; `constant-per-entity` predicts each
 entity's own optimal constant, falling back to the global one for entities absent
 from train; `relgnn-es` is RelGNN scored at its best-val checkpoint instead

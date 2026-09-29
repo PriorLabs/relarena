@@ -1,4 +1,8 @@
-"""Generate the README leaderboard tables and joint plot from checked-in results."""
+"""Generate the README leaderboard tables and joint plot from checked-in results.
+
+Every method in the results must be registered, since labels come from registry
+aliases; run it in the dev environment, which installs the TabPFN-Rel plugin.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +17,8 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
 from relarena.evaluation import compute_leaderboard, display_name, method_kind
+from relarena_core.discovery import discover_models
+from relarena_core.registry import registry
 
 ROOT = Path(__file__).resolve().parents[1]
 START = "<!-- BEGIN GENERATED LEADERBOARDS -->"
@@ -181,6 +187,10 @@ def main() -> int:
     args = parser.parse_args()
     plt.switch_backend("Agg")
     results = pd.read_csv(ROOT / "baseline_results/results.csv")
+    discover_models()
+    unregistered = sorted(m for m in results["model"].unique() if m not in registry)
+    if unregistered:
+        parser.error(f"results name unregistered methods: {', '.join(unregistered)}")
     sections = [
         "![Models and models + systems: Elo ratings with 95% bootstrap intervals](docs/leaderboards.png)",
         CAPTION,

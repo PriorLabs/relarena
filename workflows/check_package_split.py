@@ -174,12 +174,12 @@ if {has_model!r}:
     assert tabpfn_rel.PredictiveQuery is PredictiveQuery
 relarena_core.discover_models()
 relarena_core.discover_models()
-assert ('tabpfn-rel-local' in relarena_core.registry) == {has_model!r}
+assert ('tabpfn-rel-local-2026-08-15' in relarena_core.registry) == {has_model!r}
 assert ('rdblearn' in relarena_core.registry) == {host!r}
 assert 'tabpfn' not in sys.modules
 assert 'tabpfn_client' not in sys.modules
 if {has_model!r}:
-    assert relarena_core.registry.get('tabpfn-rel-local') is tabpfn_rel.TabPFNRelLocalModel
+    assert relarena_core.registry.get('tabpfn-rel-local-2026-08-15') is tabpfn_rel.TabPFNRelLocalModel
 print('Verified', sys.executable, sorted(installed))
 """
         run([python, "-c", code], output, env, log)
