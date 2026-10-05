@@ -69,17 +69,18 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 2004.9 | 1921.5–2163.0 |
-| 2 | tabpfn-rel-local-latest | Model | 1925.0 | 1839.3–2059.2 |
-| 3 | tabpfn-rel-client-2026-08-15 | Model | 1809.9 | 1743.8–1897.4 |
-| 4 | tabpfn-rel-local-2026-08-15 | Model | 1705.1 | 1606.6–1822.2 |
-| 5 | graphsage | Model | 1664.5 | 1563.9–1757.6 |
-| 6 | relgt | Model | 1573.6 | 1468.8–1695.3 |
-| 7 | rdblearn | Model | 1531.0 | 1457.1–1602.6 |
-| 8 | relgnn-es | Model | 1510.5 | 1413.1–1600.4 |
-| 9 | lightgbm | Model | 1360.0 | 1215.5–1471.3 |
-| 10 | constant-per-entity | Model | 1265.8 | 1091.3–1407.8 |
-| 11 | constant-global | Model | 1000.0 | 853.9–1071.7 |
+| 1 | tabpfn-rel-client-latest | Model | 2003.3 | 1923.0–2135.0 |
+| 2 | tabpfn-rel-local-latest | Model | 1940.1 | 1867.3–2049.4 |
+| 3 | tabpfn-rel-client-2026-08-15 | Model | 1825.2 | 1767.8–1910.8 |
+| 4 | nori-rel | Model | 1769.6 | 1699.8–1870.9 |
+| 5 | tabpfn-rel-local-2026-08-15 | Model | 1716.4 | 1624.9–1823.8 |
+| 6 | graphsage | Model | 1684.3 | 1576.2–1776.6 |
+| 7 | relgt | Model | 1590.2 | 1487.0–1714.4 |
+| 8 | rdblearn | Model | 1530.2 | 1454.5–1603.7 |
+| 9 | relgnn-es | Model | 1523.8 | 1430.0–1620.0 |
+| 10 | lightgbm | Model | 1362.6 | 1211.2–1481.2 |
+| 11 | constant-per-entity | Model | 1264.3 | 1092.4–1401.4 |
+| 12 | constant-global | Model | 1000.0 | 854.6–1066.1 |
 
 </details>
 
@@ -88,19 +89,20 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 1987.7 | 1909.3–2107.7 |
-| 2 | tabpfn-rel-local-latest | Model | 1925.8 | 1852.1–2033.0 |
-| 3 | rt-plurel | System | 1866.6 | 1745.4–1953.3 |
-| 4 | tabpfn-rel-client-2026-08-15 | Model | 1819.4 | 1756.7–1909.1 |
-| 5 | kurversc | System | 1792.8 | 1720.8–1866.5 |
-| 6 | tabpfn-rel-local-2026-08-15 | Model | 1726.4 | 1630.2–1816.6 |
-| 7 | graphsage | Model | 1668.4 | 1577.2–1759.7 |
-| 8 | relgt | Model | 1577.5 | 1465.3–1688.3 |
-| 9 | rdblearn | Model | 1544.5 | 1454.2–1621.9 |
-| 10 | relgnn-es | Model | 1530.7 | 1434.8–1628.2 |
-| 11 | lightgbm | Model | 1363.8 | 1219.9–1469.0 |
-| 12 | constant-per-entity | Model | 1268.2 | 1096.7–1405.4 |
-| 13 | constant-global | Model | 1000.0 | 857.0–1069.3 |
+| 1 | tabpfn-rel-client-latest | Model | 1991.9 | 1917.4–2106.0 |
+| 2 | tabpfn-rel-local-latest | Model | 1940.6 | 1876.2–2029.6 |
+| 3 | rt-plurel | System | 1879.2 | 1770.3–1956.9 |
+| 4 | tabpfn-rel-client-2026-08-15 | Model | 1833.1 | 1776.8–1917.6 |
+| 5 | kurversc | System | 1812.5 | 1743.1–1882.1 |
+| 6 | nori-rel | Model | 1765.5 | 1694.8–1872.4 |
+| 7 | tabpfn-rel-local-2026-08-15 | Model | 1735.8 | 1644.8–1822.9 |
+| 8 | graphsage | Model | 1686.3 | 1588.9–1776.7 |
+| 9 | relgt | Model | 1592.8 | 1481.8–1704.3 |
+| 10 | rdblearn | Model | 1544.1 | 1453.2–1621.7 |
+| 11 | relgnn-es | Model | 1542.3 | 1442.8–1647.1 |
+| 12 | lightgbm | Model | 1366.3 | 1215.6–1476.9 |
+| 13 | constant-per-entity | Model | 1267.2 | 1097.4–1401.0 |
+| 14 | constant-global | Model | 1000.0 | 858.0–1065.9 |
 
 </details>
 
