@@ -70,7 +70,13 @@ specific snapshot.
 seed 0. They use depth 4, eight estimators, 200,000-row hard-pool contexts,
 pool inflation 4, and automatic hurdle regression at a 0.05 zero-rate threshold.
 The local submission uses native TF-IDF text processing and the API submission
-uses simple text processing. Each evaluates one default configuration.
+uses simple text processing. Each evaluates one default configuration. Both read
+their DFS features from a cache built with fastdfs 1.2 and ran with tabpfn-rel
+0.0.5.
+
+`rel-stack/user-badge` and `rel-stack/user-engagement` exceed the hosted API's
+production limit on training upload size, so the API submission ran those two
+tasks against a pre-release deployment of the same API with a higher limit.
 
 The local runs used TabPFN 9.0.0, tabpfn-extensions 0.6.3, and checkpoint
 `tabpfn-v3.5-20260909.safetensors` (SHA-256

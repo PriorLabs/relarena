@@ -69,18 +69,18 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 2042.0 | 1945.8–2192.1 |
-| 2 | tabpfn-rel-local-latest | Model | 1858.5 | 1764.4–1983.6 |
-| 3 | tabpfn-rel-client-2026-08-15 | Model | 1813.9 | 1761.2–1892.7 |
-| 4 | nori-rel | Model | 1767.7 | 1697.1–1866.7 |
-| 5 | tabpfn-rel-local-2026-08-15 | Model | 1723.3 | 1628.1–1833.5 |
-| 6 | graphsage | Model | 1683.8 | 1586.7–1772.3 |
-| 7 | relgt | Model | 1587.3 | 1486.1–1707.8 |
-| 8 | relgnn-es | Model | 1534.5 | 1434.3–1624.4 |
-| 9 | rdblearn | Model | 1532.4 | 1451.8–1606.9 |
-| 10 | lightgbm | Model | 1361.9 | 1222.2–1458.8 |
-| 11 | constant-per-entity | Model | 1264.1 | 1094.4–1398.7 |
-| 12 | constant-global | Model | 1000.0 | 856.1–1068.9 |
+| 1 | tabpfn-rel-client-latest | Model | 2003.3 | 1923.0–2135.0 |
+| 2 | tabpfn-rel-local-latest | Model | 1940.1 | 1867.3–2049.4 |
+| 3 | tabpfn-rel-client-2026-08-15 | Model | 1825.2 | 1767.8–1910.8 |
+| 4 | nori-rel | Model | 1769.6 | 1699.8–1870.9 |
+| 5 | tabpfn-rel-local-2026-08-15 | Model | 1716.4 | 1624.9–1823.8 |
+| 6 | graphsage | Model | 1684.3 | 1576.2–1776.6 |
+| 7 | relgt | Model | 1590.2 | 1487.0–1714.4 |
+| 8 | rdblearn | Model | 1530.2 | 1454.5–1603.7 |
+| 9 | relgnn-es | Model | 1523.8 | 1430.0–1620.0 |
+| 10 | lightgbm | Model | 1362.6 | 1211.2–1481.2 |
+| 11 | constant-per-entity | Model | 1264.3 | 1092.4–1401.4 |
+| 12 | constant-global | Model | 1000.0 | 854.6–1066.1 |
 
 </details>
 
@@ -89,20 +89,20 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 2030.8 | 1945.1–2152.2 |
-| 2 | tabpfn-rel-local-latest | Model | 1878.2 | 1789.1–1989.4 |
-| 3 | rt-plurel | System | 1870.9 | 1765.0–1949.9 |
-| 4 | tabpfn-rel-client-2026-08-15 | Model | 1825.1 | 1768.3–1900.9 |
-| 5 | kurversc | System | 1804.7 | 1732.3–1876.8 |
-| 6 | nori-rel | Model | 1764.7 | 1693.0–1868.6 |
-| 7 | tabpfn-rel-local-2026-08-15 | Model | 1741.8 | 1646.9–1827.1 |
-| 8 | graphsage | Model | 1686.4 | 1595.9–1773.4 |
-| 9 | relgt | Model | 1590.5 | 1481.6–1700.2 |
-| 10 | relgnn-es | Model | 1551.3 | 1456.1–1650.0 |
-| 11 | rdblearn | Model | 1545.8 | 1449.6–1619.3 |
-| 12 | lightgbm | Model | 1365.7 | 1225.1–1464.5 |
-| 13 | constant-per-entity | Model | 1266.5 | 1095.3–1399.0 |
-| 14 | constant-global | Model | 1000.0 | 859.2–1064.8 |
+| 1 | tabpfn-rel-client-latest | Model | 1991.9 | 1917.4–2106.0 |
+| 2 | tabpfn-rel-local-latest | Model | 1940.6 | 1876.2–2029.6 |
+| 3 | rt-plurel | System | 1879.2 | 1770.3–1956.9 |
+| 4 | tabpfn-rel-client-2026-08-15 | Model | 1833.1 | 1776.8–1917.6 |
+| 5 | kurversc | System | 1812.5 | 1743.1–1882.1 |
+| 6 | nori-rel | Model | 1765.5 | 1694.8–1872.4 |
+| 7 | tabpfn-rel-local-2026-08-15 | Model | 1735.8 | 1644.8–1822.9 |
+| 8 | graphsage | Model | 1686.3 | 1588.9–1776.7 |
+| 9 | relgt | Model | 1592.8 | 1481.8–1704.3 |
+| 10 | rdblearn | Model | 1544.1 | 1453.2–1621.7 |
+| 11 | relgnn-es | Model | 1542.3 | 1442.8–1647.1 |
+| 12 | lightgbm | Model | 1366.3 | 1215.6–1476.9 |
+| 13 | constant-per-entity | Model | 1267.2 | 1097.4–1401.0 |
+| 14 | constant-global | Model | 1000.0 | 858.0–1065.9 |
 
 </details>
 
@@ -478,7 +478,7 @@ share this workspace and lockfile. [TabPFN-Rel](https://github.com/PriorLabs/tab
 is developed separately and installed from PyPI through the model extras.
 
 ```bash
-uv sync --all-packages --group dev --group kurversc --group cpu --extra leaderboard --extra plots
+uv sync --all-packages --group dev --group cpu --extra leaderboard --extra plots
 uv run --all-packages pre-commit install
 ```
 
@@ -508,7 +508,6 @@ registering a method works without its extra installed.
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
-| `nori-rel` | Nori-Rel | DFS (`relarena-core[dfs]`) plus the frozen Nori 30M; GPU recommended |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
 | `rt` | RT-PluRel | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
@@ -629,7 +628,6 @@ as an experimental final-fit variant.
 | `tabpfn-rel-client-2026-09-18` | TabPFN-Rel (API) | depth-4 DFS + hosted TabPFN-3.5 with text, 200k context | model | pending evaluation | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-28` | TabPFN-Rel (API) | TabPFN-3.5 API, hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-local-2026-09-28` | TabPFN-Rel (local) | TabPFN-3.5 OSS (TF-IDF), hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-local` |
-| `nori-rel` | Nori-Rel | DFS + frozen Nori 30M | model | 21 tasks | train + val | `nori-rel` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
