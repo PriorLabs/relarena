@@ -1,56 +1,49 @@
 """Every RT knob this model runs under, written at the call it belongs to.
 
-Transcribed from upstream's fine-tuning submission
-(`expts/fine_tune/submit.py` in rishabh-ranjan/relational-transformer, as of
-`7c97204` for the recipe and `f098abe` for the mixed-context arm): batch 256, lr
-5e-4 constant, weight decay 0.1, Muon, delta fine-tuning from RT-P, an EMA of
+Transcribed from upstream's published fine-tuning pipeline
+(`examples/finetune/run.py` in stanford-star/relational-transformer, as of
+v1.10.0): batch 256, lr 5e-4 constant, weight decay 0.1, Muon, delta
+fine-tuning from a published warm start (`stanford-star/rt-plurel` or
+`stanford-star/rt-j`, the only thing the two systems differ in), an EMA of
 the weights at `swa_momentum=0.9999`, and an eval every 100 steps. Each batch
 draws its context shape from a cross-product of shapes rather than fixing one,
 which is what lets the shape itself be chosen after training, on val, by
 inference alone (`context_grid`).
 
-Upstream is one run: train on train+val, score test as it goes, keep the last
-step. RelArena needs two — `PHASE_INNER` picks the budget on val, `PHASE_OUTER`
-trains that budget on train+val and is what gets reported — so the differences
-are the ones that split makes necessary, each marked `DEPARTURE` where it is
-written:
+Upstream runs the same two arms this wrapper does — a selection run on
+`train` picking a step on val, a context search, a refit on train+val, and an
+8-seed test ensemble — so most values here are copied straight across. The
+differences are the ones RelArena's protocol makes necessary:
 
-1. **The inner arm evaluates on val, not test.** Upstream scores test as it
-   trains — it is charting a curve, and `submit_ens.py` produces the reportable
-   number afterwards over the whole split. RelArena must not: `task.evaluate`
-   owns the test labels, and the model is never handed them. So the inner arm
-   evaluates `val`, and the outer arm evaluates nothing at all
-   (`eval_splits=[]`).
-2. **`db_cutoff` is a timestamp, not a split name** (upstream: `"test"`).
-   Upstream names a split and lets relbench resolve it against the release; a
-   caller-assembled database has no release to ask, so `context_cutoff` reads
-   the horizon off the split's own rows and passes the integer. It is set
-   wherever a split is being *scored* — the val horizon on the inner arm, the
-   test horizon in `predict` — and `None` on the outer arm's training, which
-   scores nothing and exports no split but the one it trains on. This is not a
-   duplicate of RelArena's censoring: that removed post-cutoff *database* rows,
-   while this bounds how far a *context* may reach, and the label tables are
-   exported beside the database. Getting it wrong is invisible in the output —
-   see the README.
-3. **The selection eval reads fewer rows than upstream's**: 1024 against
-   upstream's `2**12`, at upstream's ensemble of 4. The row cap is what is
-   given up to keep a dense curve affordable; the ensemble is not, because it
-   is what separates two checkpoints whose val scores differ by less than one
-   context draw's noise. `eval_freq=100` is upstream's, so the curve is dense,
-   and a fixed shuffle seed makes it read the same rows every time. Which rows
-   and which context draws are *not* upstream's: they are deliberately disjoint
-   from the context search's, so the two val decisions do not compound on one
-   sample (`step_shuffle_seed`, `step_context_seed`).
-4. **The inner arm stops after `patience_steps()` without an improvement**
-   (upstream: no patience). It is looking for a peak, not spending a budget.
-   It also scores only the SWA net (`eval_live=False`), so the patience follows
-   the net that gets reported rather than either of two.
-5. **The context configuration is chosen on val, after training**
-   (upstream: fixed). Training mixes context shapes, so the shape can be ranked
-   afterwards by inference alone; `context_grid` is what is ranked, `tune_rows`
-   and `tune_rows` / `selection_ensemble_size` are what it is ranked over,
-   and `Selection.context` carries the winner to the reporting arm.
-6. `wandb_disabled=True`, `targets={}`, `entity=None`, `project="relarena"`.
+1. **Test is scored by the harness, not by `rt.eval`.** Upstream's final stage
+   scores test through RelBench; RelArena must not — `task.evaluate` owns the
+   test labels, and the model is never handed them. So `predict` runs the test
+   ensemble through `evaluate_raw` and returns the array, and the context
+   search ranks configurations with RelArena's own metrics rather than reading
+   upstream's `tuning.json`.
+2. **`db_cutoff` is a timestamp, not `None`** (upstream: `None`). Upstream's
+   exported label tables carry every split's true labels, and rustler already
+   bounds each context at the seed row's own time, so upstream has nothing
+   more to hide. RelArena's test export carries a constant *placeholder*
+   target instead (see `export.py`), which a context would otherwise quote,
+   teaching the model that every test row is a 0 — so `context_cutoff` puts
+   the whole scored split past the bound. It is set wherever a split is being
+   *scored* — the val horizon on the inner arm, the test horizon in `predict`.
+   This is not a duplicate of RelArena's censoring: that removed post-cutoff
+   *database* rows, while this bounds how far a *context* may reach, and the
+   label tables are exported beside the database. Getting it wrong is
+   invisible in the output — see the README.
+3. **The selection eval reads fewer rows than the context search**: 1024
+   against `2**12`, at upstream's ensemble of 4 — both upstream's own numbers
+   (`eval_rows`, `tune_rows` in `examples/finetune/plan.py`). `eval_freq=100`
+   is upstream's, so the curve is dense, and a fixed shuffle seed makes it
+   read the same rows every time. The step search's rows and context draws are
+   deliberately disjoint from the context search's, so the two val decisions
+   do not compound on one sample (`step_shuffle_seed`, `step_context_seed`) —
+   also upstream's choice (`eval_shuffle_seed=0` with tune `shuffle_seed=1`,
+   `eval_context_seed=1` with tune `context_seed=0`).
+4. `wandb_disabled=True`, `targets={}`, `wandb_entity=None`,
+   `project="relarena"`.
 
 **How the budget is chosen and carried.** `rt.train` already does the picking:
 it tracks the best-val step per (task type, net) and publishes
@@ -78,25 +71,6 @@ PHASE_INNER = "inner"
 PHASE_OUTER = "outer"
 
 
-def warm_start(task_type: TaskType) -> str:
-    """The published weights this task type fine-tunes from.
-
-    One head per task type, each its own subdirectory of the release. Resolved
-    through huggingface_hub, so the ordinary HF cache applies (warm it from a
-    login node and set HF_HUB_OFFLINE=1 on compute nodes without egress).
-
-    Also what `predict` loads when validation chose step 0 — i.e. when
-    fine-tuning never beat the checkpoint it started from.
-    """
-    return (
-        "stanford-star/rt-p/"
-        + {
-            TaskType.BINARY_CLASSIFICATION: "classification",
-            TaskType.REGRESSION: "regression",
-        }[task_type]
-    )
-
-
 # =========================================================================== #
 # rt.train.main -- the fine-tune
 # =========================================================================== #
@@ -104,6 +78,7 @@ def train_args(
     *,
     phase: str,
     task_type: TaskType,
+    warm_start: str,
     pre_dir: str,
     db_name: str,
     task_name: str,
@@ -133,19 +108,23 @@ def train_args(
         d_ff=2048,
         compile=True,
         materialize_attn_masks=True,
-        # The loss is the one this task's metric is scored by, and the warm
-        # start is that task type's head: one per type, each its own
-        # subdirectory of the release. Resolved through huggingface_hub, so the
-        # ordinary HF cache applies (warm it from a login node and set
-        # HF_HUB_OFFLINE=1 on compute nodes without egress).
+        # The loss is the one this task's metric is scored by. The warm start
+        # is one published checkpoint carrying both heads -- the system's
+        # `warm_start` class attribute, the only thing `rt-plurel` and `rt-j`
+        # differ in. Resolved through huggingface_hub, so the ordinary HF cache
+        # applies (warm it from a login node and set HF_HUB_OFFLINE=1 on
+        # compute nodes without egress).
         loss_fn={TaskType.BINARY_CLASSIFICATION: "bce", TaskType.REGRESSION: "l1"}[
             task_type
         ],
-        load_ckpt_path=warm_start(task_type),
+        load_ckpt_path=warm_start,
         # -- data + optimization
         db_task_list=[(db_name, task_name)],
         train_splits=[train_split],
         pre_dir=pre_dir,
+        # No staging: the exported directory is already on node-local disk
+        # (the cache store or this process's scratch).
+        stage_dir=None,
         tokens_per_gpu=tokens_per_gpu(),
         num_workers=num_workers(),
         prefetch_factor=2,
@@ -175,28 +154,22 @@ def train_args(
         grad_norm_max=1.0,
         total_bs=total_bs(),  # global batch (summed over ranks; we run one)
         total_steps=total_steps,
-        # DEPARTURE: upstream runs the whole budget (`None`). The selection arm
-        # stops once ten consecutive evals -- 1000 steps at `eval_freq=100` --
-        # have neither improved on nor matched the best val metric.
-        #
-        # "The best val metric" is either net's, not the one we report.
-        # `rt.train`'s `consider()` walks both the live net and the SWA net and
-        # returns a single improved flag, so `improved_at` -- and with it the
-        # patience -- is refreshed when *either* moves, while `_best_checkpoint`
-        # reads `best_swa_*` alone. The live net can therefore hold the arm open
-        # long after SWA has peaked: on rel-f1/driver-top3 SWA's best was step
-        # 100 and the live net kept improving to 1500, so the arm ran to 2500
-        # instead of 1100 and over half of it bought nothing that gets reported.
-        #
-        # Left as upstream's, because it is only ever wasted time: what is kept
-        # is `best_swa_*` chosen by value, so a longer arm can only give SWA
-        # more chances to improve, never a worse reported step. A tie counts as
+        # The selection arm stops once `patience_steps()` pass without a val
+        # improvement, measured on the SWA net alone (`eval_live=False` below),
+        # so the patience follows the net that gets reported. A tie counts as
         # an improvement too (`better(v, cur) == v` holds on equality), which
         # refreshes patience on a flat metric rather than exhausting it.
         #
         # The reporting arm has no val split and so nothing to stop on;
         # `rt.train` asserts as much.
         early_stop_after_steps=patience_steps() if selecting else None,
+        # Step 0 is still evaluated -- the logged baseline -- but the warm
+        # start is not a selectable candidate: on a task whose fine-tune gain
+        # is small next to eval noise it would win a coin flip and the run
+        # would report the published checkpoint unmodified (rt's v1.8.0
+        # release note). Upstream's pipeline passes False, and so does this
+        # one, which is why `_best_checkpoint` can require a positive step.
+        can_select_init_model=False,
         # An EMA of the weights with a ~10k-step horizon, saved and evaluated
         # beside the live net; upstream's stand-in for a learning-rate decay,
         # and upstream's pairing for mixed-context training. The schedule and
@@ -219,9 +192,10 @@ def train_args(
         # this bounds the horizon a *context* may reach, and the label tables
         # are exported beside the database. Without it the bound is each seed
         # row's own timestamp, so a context may quote earlier rows of the split
-        # being scored -- their labels included. Upstream says "val"/"test" and
-        # lets relbench resolve it; a caller-assembled database has no release
-        # to resolve against, so the timestamp is passed directly.
+        # being scored -- their labels included. Upstream passes None, because
+        # its exported label tables carry every split's true labels; RelArena's
+        # test export carries a placeholder instead (see export.py and the
+        # module docstring, departure 2).
         db_cutoff=db_cutoff,
         resume_save_mins=20.0,
         # -- in-loop validation. The inner arm evaluates on val, and that is
@@ -235,10 +209,10 @@ def train_args(
         eval_prefetch_factor=2,
         eval_num_walks=1_000,
         eval_walk_length=20,
-        # DEPARTURE: 1024 rows, not upstream's 2**12. A cheap, noisy curve is
-        # enough to pick a step; the full split is scored once, afterwards, by
-        # RelArena. `eval_shuffle_seed` below fixes which rows, so the curve
-        # reads the same ones at every eval.
+        # Upstream's `eval_rows`: a cheap, noisy curve is enough to pick a
+        # step; the full split is scored once, afterwards. `eval_shuffle_seed`
+        # below fixes which rows, so the curve reads the same ones at every
+        # eval.
         eval_items_per_task=1024,
         # The in-loop eval that picks the *step* stays at one fixed shape: it is
         # ranking checkpoints of one run, not context configurations.
@@ -264,12 +238,11 @@ def train_args(
         eval_live=False,
         eval_vector_db_path=None,
         eval_lcs_bw_pl_grid=[(1024, 256, False)],
-        # -- logging. DEPARTURE: upstream logs to wandb against published-best
-        # reference lines; a benchmark run reports through RelArena instead.
+        # -- logging. A benchmark run reports through RelArena, not wandb.
         run_id=run_id,
         targets={},
         project="relarena",
-        entity=None,
+        wandb_entity=None,
         run_name=run_id,
         wandb_disabled=True,
         out_root=out_root,
@@ -300,7 +273,7 @@ def eval_args(
     under the winner. `ctx_sizes` widens the build to serve several ctx sizes at
     once: the evaluator builds contexts at the largest and scores every smaller
     size off a prefix, so one build answers for all of them. That is what makes
-    the search 30 builds rather than 60 — and since a build costs setup time
+    the search 24 builds rather than 60 — and since a build costs setup time
     before it reads a row, halving the builds nearly halves the search.
 
     `num_rows` rather than an `items_per_task` the caller computes, because the
@@ -377,8 +350,7 @@ def ensemble_context_seeds(size: int | None = None) -> list[int]:
     """
     from rt.eval import member_context_seed
 
-    # DEPARTURE: upstream ensembles 4 at every in-loop eval, and its reportable
-    # number comes from a separate `submit_ens.py` pass over the whole split.
+    # Upstream's `test_ensemble_size`: 8 seeds, base 0.
     return [member_context_seed(0, member) for member in range(size or 8)]
 
 
@@ -411,19 +383,20 @@ def preprocess_args(*, dataset: str, out_dir: str, embed: bool) -> dict[str, Any
 def context_cutoff(task: "Any", split: str) -> int:
     """The horizon a context may reach while scoring `split`, epoch seconds.
 
-    **relbench's own split timestamp**, which is what upstream means by
-    `db_cutoff="val"` / `db_cutoff="test"`. `task.dataset` carries both, so the
-    number is read from the object the harness already hands the model -- no
-    harness change, and no inference from the data.
+    **relbench's own split timestamp**, which is what rt's `db_cutoff="val"` /
+    `db_cutoff="test"` resolve to. `task.dataset` carries both, so the number
+    is read from the object the harness already hands the model -- no harness
+    change, and no inference from the data. (Upstream's own pipeline passes
+    `None`: its exports carry true labels everywhere, so it needs no bound.
+    RelArena's test export does not -- see the module docstring, departure 2.)
 
     Every arm names the split whose horizon bounds it, including the reporting
     arm's training pass, which scores nothing: its database is censored at
-    `test_timestamp`, so that is the horizon its contexts may reach, and saying
-    so is upstream's `db_cutoff="test"` exactly. The bound is inert there --
-    rustler takes `min(target_ts, cutoff)` and every train+val row precedes
-    `test_timestamp` on all 21 entity tasks (checked) -- but an inert bound
-    stated is better than an absent one inferred, which read as a discrepancy
-    between the arms every time anyone looked at it.
+    `test_timestamp`, so that is the horizon its contexts may reach. The bound
+    is inert there -- rustler takes `min(target_ts, cutoff)` and every
+    train+val row precedes `test_timestamp` on all 21 entity tasks (checked)
+    -- but an inert bound stated is better than an absent one inferred, which
+    read as a discrepancy between the arms every time anyone looked at it.
 
     An earlier version of this derived the horizon from the scored split's own
     rows, as `min(row timestamps) - 1`. That needed the `-1` and was wrong to
@@ -456,11 +429,11 @@ def context_cutoff(task: "Any", split: str) -> int:
 # arguments). Because the checkpoint was trained across the whole shape space,
 # the shape can be *chosen* after training, by scoring a slice of val once per
 # configuration. Nothing is retrained per configuration, which is the only
-# reason a 36-point search is affordable at all.
+# reason a 60-point search is affordable at all.
 #
-# Transcribed from upstream's pair: the training half from `submit.py` at
-# f098abe (the last commit whose `_list` arguments carried more than one entry),
-# the tuning half from `submit_hpo_ens.py` at 9b186e7^.
+# Transcribed from upstream's `examples/finetune/run.py`: the training half
+# from its `train_args` `_list` arguments, the tuning half from the grid its
+# `tune` stage ranks (`lcs_bw_pl_grid` x `ctx_size_list`).
 
 
 def context_grid() -> list[tuple[int, int, int, bool]]:
@@ -468,9 +441,13 @@ def context_grid() -> list[tuple[int, int, int, bool]]:
 
     `ctx_size_list x lcs_bw_pl_grid`, minus the combinations with
     `local_ctx_size > ctx_size`, which are not distinct from
-    `local_ctx_size == ctx_size`. 60 configurations, and 30 context builds --
+    `local_ctx_size == ctx_size`. 60 configurations, and 24 context builds --
     every ctx size for one `(lcs, bw, pl)` is scored off a prefix of the same
-    build, which is why the search costs 18 passes and not 36.
+    build, which is why the search costs 24 passes and not 60.
+
+    The same filter upstream's tune stage applies: `rt.eval.run_ensemble`
+    skips `lcs > ctx` too, so this grid and upstream's rectangular
+    `ctx_size_list x lcs_bw_pl_grid` score the identical 60 configurations.
 
     The sizes are the ones training draws from (`train_args`), so every
     configuration ranked here is one the checkpoint was actually trained across.
@@ -571,12 +548,10 @@ def step_select_grid() -> list[tuple[int, int, int, bool]]:
 def patience_steps() -> int:
     """Steps without a val improvement before the selection arm stops.
 
-    Ten times upstream-of-ours' 1000, because two things changed what
-    "improvement" means. With both nets scored, `rt.train` refreshed the
-    patience when *either* moved, and the live net moves on every step; with
-    only the SWA net scored, the patience follows a weight EMA whose horizon is
-    ~10k steps and which therefore improves in slower, coarser increments. The
-    old number against the new signal would stop arms that were still climbing.
+    Upstream's `patience_steps`. With only the SWA net scored
+    (`eval_live=False`), the patience follows a weight EMA whose horizon is
+    ~10k steps and which therefore improves in slower, coarser increments than
+    a live net -- a shorter patience would stop arms that were still climbing.
 
     An improvement is now "either config in `step_select_grid` beat its own
     best", not "their best-of beat the running best" -- a low ctx and a high ctx
@@ -625,7 +600,7 @@ def compile_inference() -> bool:
 
     Speed: every inference stage loads the net once and then makes many forward
     passes through it -- `predict` is eight context seeds over the whole split,
-    the context search is 72 evaluator builds -- so a compile warms up once and
+    the context search is 96 evaluator builds -- so a compile warms up once and
     is amortized over all of them. The number of distinct graphs stays small
     because the shapes do: `eval_args` sizes its batch from `tokens_per_gpu //
     max(ctx_size_list)`, which is 256 for every build the search walks, and the
@@ -652,21 +627,14 @@ def total_bs() -> int:
 
 
 def selection_steps() -> int:
-    """The selection arm's step ceiling. DEPARTURE: upstream's is 25k.
+    """The selection arm's step ceiling. Upstream's `selection_steps`.
 
     Not an epoch count: upstream trains every task the same number of steps --
     the task-size range spans a few thousand rows to millions, and a fixed step
     budget is the choice it makes about that -- and this keeps that shape.
 
-    Affordable because mixed-context training is much cheaper per step than a
-    fixed 1024 one: measured on rel-f1/driver-position, the selection arm ran
-    1188 s under mixed contexts against 2073 s for the same budget at a fixed
-    It is a ceiling, not a typical run. Every arm observed so far early-stopped
-    between 1200 and 9500 steps -- but every one of those was observed under a
-    *different* regime (both nets driving the patience, patience 1000, ensemble
-    1, a coarser context grid), so none of them is evidence about where this
-    configuration stops. The ceiling is set where it does not bind on anything
-    we have reason to expect, rather than where the old observations sat.
+    It is a ceiling, not a typical run: the patience ends most arms well
+    before it.
     """
     return 50_000
 

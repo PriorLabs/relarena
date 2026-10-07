@@ -32,7 +32,7 @@ tabular benchmarks such as [TabArena](https://tabarena.ai). It benchmarks the se
 - **One data state.** Every method sees the same database state during training, tuning, and
   evaluation.
 - **Strong baselines.** GNNs (GraphSAGE, RelGT, RelGNN), relational foundation models
-  (RT-PluRel), aggregation-based tabular methods (RDBLearn, TabPFN-Rel), and learning-free
+  (RT-PluRel, RT-J), aggregation-based tabular methods (RDBLearn, TabPFN-Rel), and learning-free
   constant predictors.
 - **Shared evaluation.** TabArena's `bencheval` for bootstrapped Elo, ranks,
   critical-difference diagrams, win rates, and normalized scores.
@@ -367,7 +367,7 @@ legitimate outer histories: train-only for RDBLearn and train+val for models tha
 all labeled data. The `tabpfn-rel` and `rdblearn` models share full-anchor, leak-safe-history
 matrices whenever their actual inputs match; model-specific row selection and downstream
 training do not affect the key. On a warm cache the evaluation reads Parquet only, with no RDB
-build and no DFS. RelGNN, RelGT, and RT-PluRel expose independent runnable warmers at
+build and no DFS. RelGNN, RelGT, and the RT systems expose independent runnable warmers at
 `relarena.models.relgnn.warm_cache`, `relarena.models.relgt.warm_cache`, and
 `relarena.models.rt.warm_cache`.
 
@@ -509,7 +509,7 @@ registering a method works without its extra installed.
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
-| `rt` | RT-PluRel | Linux x86-64 wheel, see below |
+| `rt` | RT-PluRel, RT-J | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
 
 **GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
@@ -521,7 +521,7 @@ Install the matching wheels from the PyG index on the GPU machine, see
 [docs/adding-a-model.md §6](docs/adding-a-model.md#6-optional-dependencies). End-to-end runs want
 a GPU.
 
-**RT-PluRel: Linux x86-64 wheel, GPU strongly recommended.** The pinned
+**RT-PluRel and RT-J: Linux x86-64 wheel, GPU strongly recommended.** The pinned
 `relational-transformer` package provides a stable-ABI wheel for Linux x86-64, the platform
 currently supported by RelArena's RT integration, and a GPU is strongly recommended for practical
 fine-tuning runtimes.
@@ -633,14 +633,17 @@ as an experimental final-fit variant.
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
 | `relgt` | RelGT | relational transformer | model | report | best-validation checkpoint | `relgt` |
 | `rt-plurel` | RT-PluRel | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
+| `rt-j` | RT-J | pretrained relational transformer, fine-tuned per task | **system** | pending evaluation | train + val | `rt` |
 
 The report presents `relgnn-es` simply as **RelGNN**, because that published-style
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
 remains available for experiments but is excluded from the default release leaderboard.
 
-RT-PluRel and KurveRSC are registered **systems**. RT-PluRel uses the relational transformer
-pretrained on PluRel-generated synthetic data and fine-tuned on the given task with a custom,
-sequential tuning regime. KurveRSC jointly selects a GraphReduce feature program and downstream
+RT-PluRel, RT-J, and KurveRSC are registered **systems**. RT-PluRel and RT-J are the relational
+transformer fine-tuned on the given task with a sequential tuning regime; they differ only in the
+published checkpoint they warm-start from (`stanford-star/rt-plurel`, pretrained on
+PluRel-generated synthetic data, and `stanford-star/rt-j`, pretrained at scale on the Join
+corpus). KurveRSC jointly selects a GraphReduce feature program and downstream
 learner on the inner split, then freezes and replays that exact operation plan in its reporting
 arm. Their protocols and configured values are documented in
 [`models/rt/model.py`](packages/relarena/src/relarena/models/rt/model.py) and

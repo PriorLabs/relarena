@@ -19,6 +19,7 @@ _BASELINES = {
     "relgnn",
     "relgnn-es",
     "relgt",
+    "rt-j",
     "rt-plurel",
 }
 
@@ -85,7 +86,7 @@ assert registry.get('extra-model') is ExtraModel
 assert registry.search_space('extra-model').default_overrides == {{}}
 relarena.models._register_builtin_models()
 assert registry.get('extra-model') is ExtraModel
-assert len(registry) == 12
+assert len(registry) == 13
 """
     subprocess.run([sys.executable, "-c", code], check=True)
 
