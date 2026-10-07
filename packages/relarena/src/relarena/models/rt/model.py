@@ -341,7 +341,7 @@ class RTSystem(RelArenaSystem):
         cutoff = cfg.context_cutoff(task, "val")
         device = _device()
         offset = _seed_offset(pre_dir, "val")
-        # Loaded once, not once per configuration: 36 loads of an 85M-parameter
+        # Loaded once, not once per configuration: 60 loads of an 85M-parameter
         # net is minutes of nothing.
         net = RelationalTransformer.from_pretrained(
             str(self._checkpoint), device=device, compile=cfg.compile_inference()

@@ -273,7 +273,7 @@ def eval_args(
     under the winner. `ctx_sizes` widens the build to serve several ctx sizes at
     once: the evaluator builds contexts at the largest and scores every smaller
     size off a prefix, so one build answers for all of them. That is what makes
-    the search 30 builds rather than 60 — and since a build costs setup time
+    the search 24 builds rather than 60 — and since a build costs setup time
     before it reads a row, halving the builds nearly halves the search.
 
     `num_rows` rather than an `items_per_task` the caller computes, because the
@@ -429,7 +429,7 @@ def context_cutoff(task: "Any", split: str) -> int:
 # arguments). Because the checkpoint was trained across the whole shape space,
 # the shape can be *chosen* after training, by scoring a slice of val once per
 # configuration. Nothing is retrained per configuration, which is the only
-# reason a 36-point search is affordable at all.
+# reason a 60-point search is affordable at all.
 #
 # Transcribed from upstream's `examples/finetune/run.py`: the training half
 # from its `train_args` `_list` arguments, the tuning half from the grid its
@@ -441,9 +441,13 @@ def context_grid() -> list[tuple[int, int, int, bool]]:
 
     `ctx_size_list x lcs_bw_pl_grid`, minus the combinations with
     `local_ctx_size > ctx_size`, which are not distinct from
-    `local_ctx_size == ctx_size`. 60 configurations, and 30 context builds --
+    `local_ctx_size == ctx_size`. 60 configurations, and 24 context builds --
     every ctx size for one `(lcs, bw, pl)` is scored off a prefix of the same
-    build, which is why the search costs 18 passes and not 36.
+    build, which is why the search costs 24 passes and not 60.
+
+    The same filter upstream's tune stage applies: `rt.eval.run_ensemble`
+    skips `lcs > ctx` too, so this grid and upstream's rectangular
+    `ctx_size_list x lcs_bw_pl_grid` score the identical 60 configurations.
 
     The sizes are the ones training draws from (`train_args`), so every
     configuration ranked here is one the checkpoint was actually trained across.
@@ -596,7 +600,7 @@ def compile_inference() -> bool:
 
     Speed: every inference stage loads the net once and then makes many forward
     passes through it -- `predict` is eight context seeds over the whole split,
-    the context search is 72 evaluator builds -- so a compile warms up once and
+    the context search is 96 evaluator builds -- so a compile warms up once and
     is amortized over all of them. The number of distinct graphs stays small
     because the shapes do: `eval_args` sizes its batch from `tokens_per_gpu //
     max(ctx_size_list)`, which is 256 for every build the search walks, and the
