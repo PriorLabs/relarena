@@ -3,28 +3,28 @@ revision = 3
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
-    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
+    "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
+    "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
-    "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
 ]
 conflicts = [[
@@ -39,7 +39,7 @@ conflicts = [[
 ]]
 
 [options]
-exclude-newer = "2026-09-26T14:26:14.796344Z"
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
@@ -238,15 +238,6 @@ dependencies = [
     { name = "scipy" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e9/5f/c9ae9b86de6681401a2a57510eb581fd593d0897e7e43b4b1c1eede87b20/baycomp-1.0.3.tar.gz", hash = "sha256:32b25ad7b16d5b251ddb9f6110a32d7b3953b987096da1d25ef277935d25daec", size = 15918, upload-time = "2023-07-22T15:55:11.083Z" }
-
-[[package]]
-name = "beartype"
-version = "0.22.9"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c7/94/1009e248bbfbab11397abca7193bea6626806be9a327d399810d523a07cb/beartype-0.22.9.tar.gz", hash = "sha256:8f82b54aa723a2848a56008d18875f91c1db02c32ef6a62319a002e3e25a975f", size = 1608866, upload-time = "2025-12-13T06:50:30.72Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/cc/18245721fa7747065ab478316c7fea7c74777d07f37ae60db2e84f8172e8/beartype-0.22.9-py3-none-any.whl", hash = "sha256:d16c9bbc61ea14637596c5f6fbff2ee99cbe3573e46a716401734ef50c3060c2", size = 1333658, upload-time = "2025-12-13T06:50:28.266Z" },
-]
 
 [[package]]
 name = "bencheval"
@@ -1619,20 +1610,20 @@ version = "1.26.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/65/6e/09db70a523a96d25e115e71cc56a6f9031e7b8cd166c1ac8438307c14058/numpy-1.26.4.tar.gz", hash = "sha256:2a02aba9ed12e4ac4eb3ea9421c420301a0c6460d9830d74a9df87efa4912010", size = 15786129, upload-time = "2024-02-06T00:26:44.495Z" }
@@ -2726,7 +2717,7 @@ requires-dist = [
     { name = "relarena-core", editable = "packages/relarena-core" },
     { name = "relarena-core", extras = ["dfs"], marker = "extra == 'nori-rel'", editable = "packages/relarena-core" },
     { name = "relarena-core", extras = ["dfs"], marker = "extra == 'rdblearn'", editable = "packages/relarena-core" },
-    { name = "relational-transformer", marker = "extra == 'rt'", specifier = "==1.8.0" },
+    { name = "relational-transformer", marker = "extra == 'rt'", specifier = "==1.10.0" },
     { name = "relbench", specifier = "==2.1.2" },
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
@@ -2822,10 +2813,9 @@ kurversc = [{ name = "kurversc", specifier = "==0.1.1" }]
 
 [[package]]
 name = "relational-transformer"
-version = "1.8.0"
+version = "1.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "beartype" },
     { name = "einops" },
     { name = "huggingface-hub" },
     { name = "ml-dtypes" },
@@ -2845,10 +2835,12 @@ dependencies = [
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'group-18-relarena-workspace-cpu') or (extra == 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda') or (extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cuda' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-kurversc')" },
     { name = "wandb" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4f/42/070417ee12df7ed76c86649cff7c5e1de8effc0cf8de00f0beedc841b6a3/relational_transformer-1.8.0.tar.gz", hash = "sha256:e61e72228407551c6c8fe5e118240a0ee36778c49405d7d5c6986f0508786fe2", size = 139563, upload-time = "2026-08-15T18:00:43.207Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/32/31c6a61e54a53fc57455f6e7b19a7ee0e26690b12e48bfa58dcc556a7845/relational_transformer-1.10.0.tar.gz", hash = "sha256:f83c9129c9ebaf4c16d84f7053ecacc7ad84b85684f0f27e28328e88434e07b8", size = 87333, upload-time = "2026-10-05T05:42:12.951Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/64/76c5e4a1bcd5239a24633a1600d141b093cb322587303349fc067137e34e/relational_transformer-1.8.0-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:3a7a0df0a79c0cb79746a7b6aa5ffc3d8f5b71f500173d6120d2f5d6ed7a7992", size = 10922183, upload-time = "2026-08-15T18:00:18.7Z" },
-    { url = "https://files.pythonhosted.org/packages/c8/3e/11f100f14b21a3bf4ef71d13e508566edddd7ba08a67bced99ed8c37714a/relational_transformer-1.8.0-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:20a3e12a885a6ca9fbc2f30935650f792a70cc287130af69d9527e0225d15894", size = 12164083, upload-time = "2026-08-15T18:00:40.866Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/d0/0aa36488a2cf93610587f29d910f9c53ac359834958f2e23be7febb30dbf/relational_transformer-1.10.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:e1ec4cbee72dad979a04efc69d9194bd692ed2ef2257626a9170142b279a983c", size = 11392876, upload-time = "2026-10-05T05:42:05.732Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/f5/b99ab45b2eebdfe87eb1822d5d6c275d0759e176a0d6072d5d3b9047bdc3/relational_transformer-1.10.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:5e481fc2febed2eaebeb1842fbf211ed05e0c8f65f926ec7d2596a1a93ab854d", size = 10895444, upload-time = "2026-10-05T05:42:07.736Z" },
+    { url = "https://files.pythonhosted.org/packages/64/3a/f48114356dc8626ca669b8d4fde443510ebba12ee1d8c1d7b413ef2e4664/relational_transformer-1.10.0-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:aeb706c59227eb2526f79c0f707d4328bace89f3b2ab958557bd2c6e025405ba", size = 13126976, upload-time = "2026-10-05T05:42:09.487Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/74/f50cf468fca6048e6908355180b62b27150ed819e58c6741a0a727f6e235/relational_transformer-1.10.0-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:8a5c9cf4f91aee9d842ea6b37327b60833a0f08f15ec0b5c89c8dddf4cca3a30", size = 12100709, upload-time = "2026-10-05T05:42:11.343Z" },
 ]
 
 [[package]]
@@ -3129,12 +3121,12 @@ version = "80.10.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
-    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
+    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
+    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
-    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
     "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra == 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda' and extra != 'group-18-relarena-workspace-kurversc'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/95/faf61eb8363f26aa7e1d762267a8d602a1b26d4f3a1e758e92cb3cb8b054/setuptools-80.10.2.tar.gz", hash = "sha256:8b0e9d10c784bf7d262c4e5ec5d4ec94127ce206e8738f29a437945fbc219b70", size = 1200343, upload-time = "2026-01-25T22:38:17.252Z" }
@@ -3148,20 +3140,20 @@ version = "81.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version >= '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform != 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and sys_platform == 'darwin' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra == 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
-    "python_full_version >= '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
     "python_full_version < '3.12' and extra != 'extra-8-relarena-kurversc' and extra != 'extra-8-relarena-nori-rel' and extra != 'group-18-relarena-workspace-cpu' and extra != 'group-18-relarena-workspace-cuda'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0d/1c/73e719955c59b8e424d015ab450f51c0af856ae46ea2da83eba51cc88de1/setuptools-81.0.0.tar.gz", hash = "sha256:487b53915f52501f0a79ccfd0c02c165ffe06631443a886740b91af4b7a5845a", size = 1198299, upload-time = "2026-02-06T21:10:39.601Z" }

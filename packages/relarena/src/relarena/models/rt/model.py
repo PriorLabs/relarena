@@ -1,25 +1,27 @@
-"""`rt-plurel` — the Relational Transformer, fine-tuned per task from RT-P.
+"""`rt-plurel` and `rt-j` — the Relational Transformer, fine-tuned per task.
 
 RT (https://arxiv.org/abs/2510.06377) is a relational *foundation* model: it
 predicts directly over a database by attending over a sampled context of rows
 drawn across foreign keys, so one pretrained net transfers to a schema it has
 never seen. This wrapper runs the published fine-tuning recipe — a delta
-fine-tune from RT-P, the PluRel-pretrained checkpoint the name refers to, every
-value of it in [`config.py`](config.py) — on the harness's censored database.
+fine-tune from a published checkpoint, every value of it in
+[`config.py`](config.py) — on the harness's censored database. The two
+registered systems share everything but the warm start: `rt-plurel` starts
+from `stanford-star/rt-plurel` (pretrained on PluRel synthetic data), `rt-j`
+from `stanford-star/rt-j` (pretrained at scale on the Join corpus).
 
 **The two arms.** One system run receives both RelArena splits and executes
 upstream's *selection* and *reporting* arms in sequence:
 
   * **inner** — train on `train` for `config.selection_steps()`, and let
     `rt.train`'s own in-loop validation pick the checkpoint: every 100 steps it
-    scores 1024 val rows at ensemble 1 and keeps the best, publishing
-    `best_swa_*`, stopping once 1000 steps pass without either net improving
-    (patience watches both, the report reads SWA -- see `config.py`). The step
-    it settled on is read back out of that checkpoint — the step the run
-    *stopped* at is not the step it reports. Then, with that checkpoint fixed,
-    the **context configuration** is chosen: 36 points of
-    `config.context_grid()` are scored over a slice of val by inference alone,
-    and the best under the task's primary metric wins.
+    scores 1024 val rows at an ensemble of 4 and keeps the best, publishing
+    `best_swa_*`, stopping once `config.patience_steps()` pass without the SWA
+    net improving (see `config.py`). The step it settled on is read back out of
+    that checkpoint — the step the run *stopped* at is not the step it reports.
+    Then, with that checkpoint fixed, the **context configuration** is chosen:
+    the 60 points of `config.context_grid()` are scored over a slice of val by
+    inference alone, and the best under the task's primary metric wins.
   * **outer** — train on `train + val` at that step rescaled by the row ratio,
     with no in-loop evaluation at all, and report the last step, predicting
     under the context the inner arm chose.
@@ -54,7 +56,7 @@ import json
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from relbench.base import Database, EntityTask, Table, TaskType
@@ -102,7 +104,9 @@ def _seed_offset(pre_dir: Path, split: str) -> int:
     return int(info[key]["node_idx_offset"])
 
 
-def _best_checkpoint(out_dir: Path, task_type: TaskType) -> tuple[Path | str, int]:
+def _best_checkpoint(
+    out_dir: Path, task_type: TaskType, warm_start: str
+) -> tuple[Path | str, int]:
     """The selection arm's best-val checkpoint, and the step it was written at.
 
     `rt.train` tracks two nets and publishes three names per task type:
@@ -148,9 +152,9 @@ def _best_checkpoint(out_dir: Path, task_type: TaskType) -> tuple[Path | str, in
                 path.name,
                 fallback.name,
                 out_dir,
-                cfg.warm_start(task_type),
+                warm_start,
             )
-            return cfg.warm_start(task_type), 0
+            return warm_start, 0
     with safe_open(path, framework="pt") as handle:
         metadata = handle.metadata() or {}
     step = int(metadata["step"])
@@ -186,16 +190,23 @@ def clear_scratch() -> None:
         _SCRATCH = None
 
 
-@register_system
-class RTPluRelSystem(RelArenaSystem):
-    """Relational Transformer, delta-fine-tuned per task from the PluRel RT-P.
+class RTSystem(RelArenaSystem):
+    """Relational Transformer, delta-fine-tuned per task from a published net.
 
-    Named for its warm start: every arm begins from `stanford-star/rt-p`, the
-    checkpoint pretrained under PluRel, and the per-task fine-tune is a delta on
-    top of it. Nothing here is trained from scratch.
+    The registered systems are the subclasses below, and the warm start is the
+    only thing they differ in: every arm begins from the subclass's
+    `warm_start` checkpoint, and the per-task fine-tune is a delta on top of
+    it. Nothing here is trained from scratch.
     """
 
-    name = "rt-plurel"
+    #: The published checkpoint every arm fine-tunes from, as a Hub `org/repo`
+    #: spec carrying both task-type heads. Also what `predict` loads when
+    #: validation chose step 0 -- i.e. when fine-tuning never beat the
+    #: checkpoint it started from. Resolved through huggingface_hub, so the
+    #: ordinary HF cache applies (warm it from a login node and set
+    #: HF_HUB_OFFLINE=1 on compute nodes without egress).
+    warm_start: ClassVar[str]
+
     supported_task_types = frozenset(
         {TaskType.BINARY_CLASSIFICATION, TaskType.REGRESSION}
     )
@@ -292,9 +303,9 @@ class RTPluRelSystem(RelArenaSystem):
                 logger.warning(
                     "rt: validation chose step 0 -- fine-tuning never beat the "
                     "published checkpoint on val. Reporting %s zero-shot.",
-                    cfg.warm_start(task.task_type),
+                    self.warm_start,
                 )
-                self._checkpoint = cfg.warm_start(task.task_type)
+                self._checkpoint = self.warm_start
                 self._context = selection.context
                 return None
 
@@ -317,7 +328,9 @@ class RTPluRelSystem(RelArenaSystem):
         if phase == cfg.PHASE_INNER:
             if val_table is None:
                 raise RuntimeError("rt: selection arm requires a validation table.")
-            self._checkpoint, step = _best_checkpoint(out_dir, task.task_type)
+            self._checkpoint, step = _best_checkpoint(
+                out_dir, task.task_type, self.warm_start
+            )
             self._context = self._tune_context(task, pre_dir, val_table, seed)
             selected = cfg.Selection(step=step, rows=rows, context=self._context)
             logger.info(
@@ -425,7 +438,8 @@ class RTPluRelSystem(RelArenaSystem):
             if best_score is None or is_better(score, best_score, metric):
                 best_score, best_context = score, key
         logger.info(
-            "rt-plurel: %s wins over %d configs in %d builds (%s %.4f on %d val rows)",
+            "%s: %s wins over %d configs in %d builds (%s %.4f on %d val rows)",
+            self.name,
             best_context,
             len(total),
             len(builds) * len(seeds),
@@ -469,6 +483,7 @@ class RTPluRelSystem(RelArenaSystem):
         args = cfg.train_args(
             phase=phase,
             task_type=task.task_type,
+            warm_start=self.warm_start,
             pre_dir=str(pre_dir),
             db_name=DB_NAME,
             task_name=TASK_DIR,
@@ -487,8 +502,8 @@ class RTPluRelSystem(RelArenaSystem):
             args["load_ckpt_path"],
         )
         train_main(**args)
-        # `run_subdir(entity, project, run_id)` with entity=None.
-        return out_root / "no-entity" / args["project"] / run_id
+        # `run_subdir(wandb_entity, project, run_id)` with wandb_entity=None.
+        return out_root / "no-wandb-entity" / args["project"] / run_id
 
     # -- inference machinery, shared by test prediction and context search ---
 
@@ -608,4 +623,20 @@ class RTPluRelSystem(RelArenaSystem):
         return 1.0 / (1.0 + np.exp(-raw))
 
 
-__all__ = ["RTPluRelSystem", "clear_scratch"]
+@register_system
+class RTPluRelSystem(RTSystem):
+    """RT warm-started from the checkpoint pretrained on PluRel synthetic data."""
+
+    name = "rt-plurel"
+    warm_start = "stanford-star/rt-plurel"
+
+
+@register_system
+class RTJSystem(RTSystem):
+    """RT warm-started from the checkpoint pretrained at scale on the Join."""
+
+    name = "rt-j"
+    warm_start = "stanford-star/rt-j"
+
+
+__all__ = ["RTJSystem", "RTPluRelSystem", "RTSystem", "clear_scratch"]
