@@ -42,11 +42,7 @@ differences are the ones RelArena's protocol makes necessary:
    do not compound on one sample (`step_shuffle_seed`, `step_context_seed`) —
    also upstream's choice (`eval_shuffle_seed=0` with tune `shuffle_seed=1`,
    `eval_context_seed=1` with tune `context_seed=0`).
-4. **A step-0 selection is reported zero-shot, not asserted away.** Upstream's
-   `best_checkpoint` asserts the selected step is positive; a benchmark run
-   has to report *something*, so `_best_checkpoint` falls back to the warm
-   start when fine-tuning never beat it on val.
-5. `wandb_disabled=True`, `targets={}`, `wandb_entity=None`,
+4. `wandb_disabled=True`, `targets={}`, `wandb_entity=None`,
    `project="relarena"`.
 
 **How the budget is chosen and carried.** `rt.train` already does the picking:
@@ -169,10 +165,10 @@ def train_args(
         early_stop_after_steps=patience_steps() if selecting else None,
         # Step 0 is still evaluated -- the logged baseline -- but the warm
         # start is not a selectable candidate: on a task whose fine-tune gain
-        # is small next to eval noise it wins a coin flip, and the run reports
-        # the published checkpoint unmodified (rt's v1.8.0 release note;
-        # upstream's pipeline passes False too). `_best_checkpoint`'s
-        # zero-shot fallback stays, as the defensive path it already was.
+        # is small next to eval noise it would win a coin flip and the run
+        # would report the published checkpoint unmodified (rt's v1.8.0
+        # release note). Upstream's pipeline passes False, and so does this
+        # one, which is why `_best_checkpoint` can require a positive step.
         can_select_init_model=False,
         # An EMA of the weights with a ~10k-step horizon, saved and evaluated
         # beside the live net; upstream's stand-in for a learning-rate decay,

@@ -104,60 +104,38 @@ def _seed_offset(pre_dir: Path, split: str) -> int:
     return int(info[key]["node_idx_offset"])
 
 
-def _best_checkpoint(
-    out_dir: Path, task_type: TaskType, warm_start: str
-) -> tuple[Path | str, int]:
+def _best_checkpoint(out_dir: Path, task_type: TaskType) -> tuple[Path, int]:
     """The selection arm's best-val checkpoint, and the step it was written at.
 
-    `rt.train` tracks two nets and publishes three names per task type:
+    `rt.train` can track two nets and publish three names per task type:
     `best_live_{tt}`, `best_swa_{tt}`, and `best_{tt}` — the better of the two
     on val. This takes the SWA net: upstream's recipe uses the weight EMA in
     place of a learning-rate decay, so those are the weights the recipe reports,
     and fixing the net means the reported model is the same *kind* of object on
     every task. Only the step is selected on val, never the net.
+
+    With `can_select_init_model=False` the step-0 warm start is never a
+    selectable candidate, so the first eval always publishes a `best_swa_{tt}`
+    at a positive step — upstream's `best_checkpoint` asserts exactly this,
+    and so does this one. A missing file means the arm never evaluated, which
+    is a broken run, not a selection.
     """
     from safetensors import safe_open
 
     tt = _RT_TASK_TYPE[task_type]
-    first, second = f"best_swa_{tt}", f"best_{tt}"
-    path = out_dir / f"{first}.safetensors"
+    path = out_dir / f"best_swa_{tt}.safetensors"
     if not path.exists():
-        # The step-0 eval runs before the SWA tracker has averaged anything, so
-        # there is no SWA net to save at it. If step 0 is *also* the best val
-        # score the arm ever sees -- a fine-tune that only ever hurt -- no
-        # `best_swa_*` is ever written. `best_{tt}` is then the live net at step
-        # 0, i.e. the published checkpoint unchanged, which is the honest thing
-        # to report for a task where fine-tuning did not help.
-        fallback = out_dir / f"{second}.safetensors"
-        if fallback.exists():
-            logger.warning(
-                "rt: no %s in %s (validation never improved past step 0, where "
-                "SWA has averaged nothing); falling back to %s.",
-                path.name,
-                out_dir,
-                fallback.name,
-            )
-            path = fallback
-        else:
-            # With `eval_live=False` there is no live checkpoint to fall back
-            # to, and no SWA checkpoint exists at step 0 -- the tracker has
-            # averaged nothing yet, so `swa_steps=0.safetensors` is never
-            # written. Both missing therefore means validation never improved
-            # on step 0, i.e. fine-tuning only ever hurt. The honest report is
-            # the warm start itself, which is what step 0 *means*, and the
-            # outer arm already knows to serve it unmodified.
-            logger.warning(
-                "rt: no %s or %s in %s -- validation never improved past step "
-                "0. Reporting %s zero-shot.",
-                path.name,
-                fallback.name,
-                out_dir,
-                warm_start,
-            )
-            return warm_start, 0
+        raise FileNotFoundError(
+            f"rt: the selection arm published no {path.name} in {out_dir}."
+        )
     with safe_open(path, framework="pt") as handle:
         metadata = handle.metadata() or {}
     step = int(metadata["step"])
+    if step <= 0:
+        raise RuntimeError(
+            f"rt: {path} selected step {step}, which the reporting arm cannot "
+            "retrain; with can_select_init_model=False this cannot happen."
+        )
     return path, step
 
 
@@ -200,10 +178,8 @@ class RTSystem(RelArenaSystem):
     """
 
     #: The published checkpoint every arm fine-tunes from, as a Hub `org/repo`
-    #: spec carrying both task-type heads. Also what `predict` loads when
-    #: validation chose step 0 -- i.e. when fine-tuning never beat the
-    #: checkpoint it started from. Resolved through huggingface_hub, so the
-    #: ordinary HF cache applies (warm it from a login node and set
+    #: spec carrying both task-type heads. Resolved through huggingface_hub, so
+    #: the ordinary HF cache applies (warm it from a login node and set
     #: HF_HUB_OFFLINE=1 on compute nodes without egress).
     warm_start: ClassVar[str]
 
@@ -214,9 +190,8 @@ class RTSystem(RelArenaSystem):
     def __init__(self, **kwargs: Any) -> None:
         """Instantiate the system for one complete inner-to-outer run."""
         super().__init__(**kwargs)
-        # A local safetensors path, or a Hub spec when the warm start is what
-        # validation chose (see `_fit_arm`). `from_pretrained` takes either.
-        self._checkpoint: Path | str | None = None
+        # The arm's selected safetensors path; `from_pretrained` loads it.
+        self._checkpoint: Path | None = None
         self._target_stats: tuple[float, float] | None = None
         self._task_type: TaskType | None = None
         # The split this instance trained on. `_predict` exports it beside the
@@ -296,18 +271,8 @@ class RTSystem(RelArenaSystem):
         )
 
         rows = len(train_table.df)
-        if phase == cfg.PHASE_OUTER:
-            if selection is None:
-                raise RuntimeError("rt: reporting arm requires the inner selection.")
-            if selection.step == 0:
-                logger.warning(
-                    "rt: validation chose step 0 -- fine-tuning never beat the "
-                    "published checkpoint on val. Reporting %s zero-shot.",
-                    self.warm_start,
-                )
-                self._checkpoint = self.warm_start
-                self._context = selection.context
-                return None
+        if phase == cfg.PHASE_OUTER and selection is None:
+            raise RuntimeError("rt: reporting arm requires the inner selection.")
 
         total_steps = (
             cfg.selection_steps()
@@ -328,9 +293,7 @@ class RTSystem(RelArenaSystem):
         if phase == cfg.PHASE_INNER:
             if val_table is None:
                 raise RuntimeError("rt: selection arm requires a validation table.")
-            self._checkpoint, step = _best_checkpoint(
-                out_dir, task.task_type, self.warm_start
-            )
+            self._checkpoint, step = _best_checkpoint(out_dir, task.task_type)
             self._context = self._tune_context(task, pre_dir, val_table, seed)
             selected = cfg.Selection(step=step, rows=rows, context=self._context)
             logger.info(

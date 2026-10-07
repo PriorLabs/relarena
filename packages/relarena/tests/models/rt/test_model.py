@@ -471,9 +471,7 @@ def test__best_checkpoint__takes_the_swa_net_not_the_better_one(
         )
     # Only the step is selected on val, never the net: `best_clf` scores better
     # by construction here and is still not what is reported.
-    path, step = _best_checkpoint(
-        tmp_path, TaskType.BINARY_CLASSIFICATION, RTPluRelSystem.warm_start
-    )
+    path, step = _best_checkpoint(tmp_path, TaskType.BINARY_CLASSIFICATION)
     assert path.name == "best_swa_clf.safetensors" and step == 300
 
 
@@ -902,43 +900,30 @@ def test__train_args__scores_only_the_net_it_reports() -> None:
     assert cfg.patience_steps() % args["eval_freq"] == 0
 
 
-def test__best_checkpoint__nothing_published__reports_the_warm_start(
-    tmp_path: Path,
-) -> None:
-    # With eval_live=False there is no live checkpoint to fall back to, and no
-    # SWA checkpoint exists at step 0. Both missing means validation never beat
-    # step 0, so the honest report is the warm start unmodified -- not a crash.
-    pytest.importorskip("safetensors")  # ships with relational-transformer
+def test__best_checkpoint__nothing_published__raises(tmp_path: Path) -> None:
+    # With can_select_init_model=False the warm start is never a selectable
+    # candidate, so the first eval always publishes a best_swa_* at a positive
+    # step. A missing file is a broken run, not a selection -- same contract as
+    # upstream's best_checkpoint.
     from relarena.models.rt.model import _best_checkpoint
 
-    path, step = _best_checkpoint(tmp_path, TaskType.REGRESSION, RTJSystem.warm_start)
-    assert step == 0
-    assert path == RTJSystem.warm_start
+    with pytest.raises(FileNotFoundError, match="published no"):
+        _best_checkpoint(tmp_path, TaskType.REGRESSION)
 
 
-def test__fit_arm__outer_at_step_zero__still_carries_the_chosen_context(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # The step-0 reporting arm reports the warm start unmodified and never
-    # trains, so it never reaches `_refit_steps` -- which normally hands the
-    # context across the arms. Test prediction still has to report under the
-    # context validation chose; leaving it unset unpacks None in `eval_args`.
-    from relarena.models.rt import model as rt_model
+def test__best_checkpoint__step_zero__raises(tmp_path: Path) -> None:
+    # The reporting arm cannot retrain a step-0 selection, and with
+    # can_select_init_model=False rt.train can never publish one; a checkpoint
+    # claiming step 0 is corrupt state, not a result.
+    save_file = pytest.importorskip("safetensors.torch").save_file
+    torch = pytest.importorskip("torch")
 
-    task, db, label = _tiny_source()
-    chosen = (256, 256, 64, True)
+    from relarena.models.rt.model import _best_checkpoint
 
-    model = RTPluRelSystem()
-    monkeypatch.setattr(rt_model, "preprocessed_dir", lambda *a, **k: tmp_path)
-    model._fit_arm(
-        task,
-        db,
-        label,
-        None,
-        phase=cfg.PHASE_OUTER,
-        seed=0,
-        selection=cfg.Selection(step=0, rows=3, context=chosen),
+    save_file(
+        {"w": torch.zeros(1)},
+        str(tmp_path / "best_swa_reg.safetensors"),
+        metadata={"step": "0"},
     )
-
-    assert model._checkpoint == RTPluRelSystem.warm_start
-    assert model._context == chosen
+    with pytest.raises(RuntimeError, match="step 0"):
+        _best_checkpoint(tmp_path, TaskType.REGRESSION)
