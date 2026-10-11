@@ -89,20 +89,21 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 1991.9 | 1917.4–2106.0 |
-| 2 | tabpfn-rel-local-latest | Model | 1940.6 | 1876.2–2029.6 |
-| 3 | rt-plurel | System | 1879.2 | 1770.3–1956.9 |
-| 4 | tabpfn-rel-client-2026-08-15 | Model | 1833.1 | 1776.8–1917.6 |
-| 5 | kurversc | System | 1812.5 | 1743.1–1882.1 |
-| 6 | nori-rel | Model | 1765.5 | 1694.8–1872.4 |
-| 7 | tabpfn-rel-local-2026-08-15 | Model | 1735.8 | 1644.8–1822.9 |
-| 8 | graphsage | Model | 1686.3 | 1588.9–1776.7 |
-| 9 | relgt | Model | 1592.8 | 1481.8–1704.3 |
-| 10 | rdblearn | Model | 1544.1 | 1453.2–1621.7 |
-| 11 | relgnn-es | Model | 1542.3 | 1442.8–1647.1 |
-| 12 | lightgbm | Model | 1366.3 | 1215.6–1476.9 |
-| 13 | constant-per-entity | Model | 1267.2 | 1097.4–1401.0 |
-| 14 | constant-global | Model | 1000.0 | 858.0–1065.9 |
+| 1 | tabpfn-rel-client-latest | Model | 1937.1 | 1865.8–2049.0 |
+| 2 | tabpfn-rel-local-latest | Model | 1892.9 | 1832.2–1983.2 |
+| 3 | rt-j | System | 1839.1 | 1718.7–1998.2 |
+| 4 | tabpfn-rel-client-2026-08-15 | Model | 1795.2 | 1739.4–1875.2 |
+| 5 | rt-plurel | System | 1786.0 | 1690.7–1895.1 |
+| 6 | kurversc | System | 1773.9 | 1707.9–1850.5 |
+| 7 | nori-rel | Model | 1732.2 | 1659.0–1842.1 |
+| 8 | tabpfn-rel-local-2026-08-15 | Model | 1702.7 | 1617.3–1779.5 |
+| 9 | graphsage | Model | 1652.6 | 1551.3–1737.4 |
+| 10 | relgt | Model | 1562.2 | 1437.6–1667.5 |
+| 11 | rdblearn | Model | 1528.0 | 1436.1–1607.3 |
+| 12 | relgnn-es | Model | 1516.3 | 1422.6–1622.6 |
+| 13 | lightgbm | Model | 1361.3 | 1171.5–1490.8 |
+| 14 | constant-per-entity | Model | 1267.5 | 1086.9–1411.2 |
+| 15 | constant-global | Model | 1000.0 | 841.1–1076.7 |
 
 </details>
 
@@ -633,7 +634,7 @@ as an experimental final-fit variant.
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
 | `relgt` | RelGT | relational transformer | model | report | best-validation checkpoint | `relgt` |
 | `rt-plurel` | RT-PluRel | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
-| `rt-j` | RT-J | pretrained relational transformer, fine-tuned per task | **system** | pending evaluation | train + val | `rt` |
+| `rt-j` | RT-J | pretrained relational transformer, fine-tuned per task | **system** | 21 tasks | train + val | `rt` |
 
 The report presents `relgnn-es` simply as **RelGNN**, because that published-style
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier

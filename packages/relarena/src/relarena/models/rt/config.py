@@ -679,25 +679,14 @@ TOKENS_PER_GPU_ENV = "RELARENA_RT_TOKENS_PER_GPU"
 
 
 def tokens_per_gpu() -> int:
-    """Training tokens per forward per GPU: `2**18` on Blackwell, else `2**17`.
+    """Training tokens per forward per GPU: `2**17` unless `TOKENS_PER_GPU_ENV` is set.
 
-    A B200 holds twice what an A100 does, and filling it halves the number of
-    gradient-accumulation micro-steps per optimizer step. Upstream picks the
-    value from the slurm resource it asked for; here it is read off the device,
-    which is the same choice made locally, and `TOKENS_PER_GPU_ENV` overrides
-    both — for a node whose card is not what its capability implies, or to hold
-    the value fixed while timing two machines against each other.
+    `2**18` runs out of memory on a 96 GB RTX PRO 6000 under rt 1.10.0, at the
+    first training step after the step-0 eval; the reported results ran at `2**17`.
     """
     override = os.environ.get(TOKENS_PER_GPU_ENV)
     if override:
         return int(override)
-    try:
-        import torch
-
-        if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 10:
-            return 2**18
-    except Exception:  # pragma: no cover - absent torch/CUDA is not an error
-        pass
     return 2**17
 
 
