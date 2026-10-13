@@ -18,17 +18,33 @@ import pytest
 import yaml
 from relbench.base import Table, TaskType
 
-from relarena.models.rt import RTPluRelSystem
+from relarena.models.rt import RTJSystem, RTPluRelSystem, RTSystem
 from relarena.models.rt import config as cfg
 from relarena.models.rt.export import TASK_DIR, _write_dataset_dir, target_stats
 from relarena_core.registry import registry
 
 
-def test__registry__rt_plurel__is_registered_as_a_system() -> None:
+def test__registry__rt_systems__are_registered_as_systems() -> None:
     assert registry.get("rt-plurel") is RTPluRelSystem
-    assert registry.kind("rt-plurel") == "system"
-    with pytest.raises(TypeError, match="no harness search space"):
-        registry.search_space("rt-plurel")
+    assert registry.get("rt-j") is RTJSystem
+    for name in ("rt-plurel", "rt-j"):
+        assert registry.kind(name) == "system"
+        with pytest.raises(TypeError, match="no harness search space"):
+            registry.search_space(name)
+
+
+def test__rt_systems__differ_only_in_the_warm_start() -> None:
+    # The user-facing contract of having two systems: one recipe, two published
+    # checkpoints. Everything but the registry name and the warm start is the
+    # shared base class's.
+    assert RTPluRelSystem.warm_start == "stanford-star/rt-plurel"
+    assert RTJSystem.warm_start == "stanford-star/rt-j"
+    for system in (RTPluRelSystem, RTJSystem):
+        assert set(vars(system)) - set(vars(RTSystem)) <= {
+            "name",
+            "warm_start",
+            "__doc__",
+        }
 
 
 def test__run__carries_inner_selection_into_outer_arm(
@@ -214,6 +230,7 @@ def _example_train_args(
     return cfg.train_args(
         phase=phase,
         task_type=task_type,
+        warm_start=RTPluRelSystem.warm_start,
         pre_dir="/pre",
         db_name="relarena",
         task_name="task",
@@ -227,12 +244,12 @@ def _example_train_args(
     )
 
 
-def test__train_args__derives_the_head_and_loss_from_the_task_type() -> None:
+def test__train_args__derives_the_loss_from_the_task_type() -> None:
+    # One published checkpoint carries both heads; only the loss is per-type.
     reg = _example_train_args(TaskType.REGRESSION)
     clf = _example_train_args(TaskType.BINARY_CLASSIFICATION)
-    assert reg["load_ckpt_path"].endswith("/regression")
+    assert reg["load_ckpt_path"] == clf["load_ckpt_path"] == RTPluRelSystem.warm_start
     assert reg["loss_fn"] == "l1"
-    assert clf["load_ckpt_path"].endswith("/classification")
     assert clf["loss_fn"] == "bce"
 
 
@@ -267,6 +284,27 @@ def test__train_args__never_logs_and_never_re_censors() -> None:
         args = _example_train_args(phase=phase)
         assert args["wandb_disabled"] is True
         assert args["total_steps"] == 1000
+
+
+def test__train_args__is_the_complete_argument_list_for_rt_train() -> None:
+    # `rt.train.main` has no defaults by design; every argument is part of the
+    # record of the run. A key this misses is a TypeError at the first fit, and
+    # a key rt dropped is one this config believes in for nothing.
+    rt_train = pytest.importorskip(
+        "rt.train", reason="needs relational-transformer installed"
+    )
+    import inspect
+
+    params = set(inspect.signature(rt_train.main).parameters)
+    assert set(_example_train_args()) == params
+
+
+def test__train_args__warm_start_is_not_a_selectable_candidate() -> None:
+    # Step 0 is still evaluated (the logged baseline), but on a task whose
+    # fine-tune gain is small next to eval noise the warm start would win a
+    # coin flip and the run would report the published checkpoint unmodified.
+    for phase in (cfg.PHASE_INNER, cfg.PHASE_OUTER):
+        assert _example_train_args(phase=phase)["can_select_init_model"] is False
 
 
 def test__context_grid__is_covered_by_what_training_draws_from() -> None:
@@ -451,6 +489,7 @@ def test__train_args__mixes_context_shapes() -> None:
     args = cfg.train_args(
         phase=cfg.PHASE_INNER,
         task_type=TaskType.BINARY_CLASSIFICATION,
+        warm_start=RTPluRelSystem.warm_start,
         pre_dir="/pre",
         db_name="relarena",
         task_name="task",
@@ -861,43 +900,30 @@ def test__train_args__scores_only_the_net_it_reports() -> None:
     assert cfg.patience_steps() % args["eval_freq"] == 0
 
 
-def test__best_checkpoint__nothing_published__reports_the_warm_start(
-    tmp_path: Path,
-) -> None:
-    # With eval_live=False there is no live checkpoint to fall back to, and no
-    # SWA checkpoint exists at step 0. Both missing means validation never beat
-    # step 0, so the honest report is the warm start unmodified -- not a crash.
-    pytest.importorskip("safetensors")  # ships with relational-transformer
+def test__best_checkpoint__nothing_published__raises(tmp_path: Path) -> None:
+    # With can_select_init_model=False the warm start is never a selectable
+    # candidate, so the first eval always publishes a best_swa_* at a positive
+    # step. A missing file is a broken run, not a selection -- same contract as
+    # upstream's best_checkpoint.
     from relarena.models.rt.model import _best_checkpoint
 
-    path, step = _best_checkpoint(tmp_path, TaskType.REGRESSION)
-    assert step == 0
-    assert path == cfg.warm_start(TaskType.REGRESSION)
+    with pytest.raises(FileNotFoundError, match="published no"):
+        _best_checkpoint(tmp_path, TaskType.REGRESSION)
 
 
-def test__fit_arm__outer_at_step_zero__still_carries_the_chosen_context(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # The step-0 reporting arm reports the warm start unmodified and never
-    # trains, so it never reaches `_refit_steps` -- which normally hands the
-    # context across the arms. Test prediction still has to report under the
-    # context validation chose; leaving it unset unpacks None in `eval_args`.
-    from relarena.models.rt import model as rt_model
+def test__best_checkpoint__step_zero__raises(tmp_path: Path) -> None:
+    # The reporting arm cannot retrain a step-0 selection, and with
+    # can_select_init_model=False rt.train can never publish one; a checkpoint
+    # claiming step 0 is corrupt state, not a result.
+    save_file = pytest.importorskip("safetensors.torch").save_file
+    torch = pytest.importorskip("torch")
 
-    task, db, label = _tiny_source()
-    chosen = (256, 256, 64, True)
+    from relarena.models.rt.model import _best_checkpoint
 
-    model = RTPluRelSystem()
-    monkeypatch.setattr(rt_model, "preprocessed_dir", lambda *a, **k: tmp_path)
-    model._fit_arm(
-        task,
-        db,
-        label,
-        None,
-        phase=cfg.PHASE_OUTER,
-        seed=0,
-        selection=cfg.Selection(step=0, rows=3, context=chosen),
+    save_file(
+        {"w": torch.zeros(1)},
+        str(tmp_path / "best_swa_reg.safetensors"),
+        metadata={"step": "0"},
     )
-
-    assert model._checkpoint == cfg.warm_start(TaskType.REGRESSION)
-    assert model._context == chosen
+    with pytest.raises(RuntimeError, match="step 0"):
+        _best_checkpoint(tmp_path, TaskType.REGRESSION)
