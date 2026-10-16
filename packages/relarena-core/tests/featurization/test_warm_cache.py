@@ -54,6 +54,47 @@ def test__warm_dfs_cache__uses_one_shared_preprocessor_for_both_phases(
     assert all(kwargs["max_depth"] == 3 for _, kwargs in calls)
 
 
+def test__warm_dfs_cache__one_group__warms_only_its_matrices(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    outer = SimpleNamespace(
+        db_state="outer-db", train_table="ot", val_table="ov", eval_table="oe"
+    )
+
+    def no_inner_split() -> None:
+        raise AssertionError("an outer group must not build the inner split")
+
+    source = SimpleNamespace(
+        task=SimpleNamespace(time_col="time"),
+        inner_split=no_inner_split,
+        outer_split=lambda: outer,
+        run_identity=lambda phase, **kwargs: RunIdentity(
+            "dataset", "db", "task", "labels", phase=phase
+        ),
+    )
+    monkeypatch.setattr(warm_cache, "concat_tables", lambda a, b: "ot+ov")
+    calls: list[tuple[tuple, dict]] = []
+    monkeypatch.setattr(
+        warm_cache,
+        "build_dfs_features",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+
+    warm_cache.warm_dfs_cache(
+        source, CacheConfig(tmp_path, "fill"), groups=["outer-full"]
+    )
+
+    assert [(args[1], args[2], kwargs["history_table"]) for args, kwargs in calls] == [
+        ("outer-db", "ot+ov", "ot+ov"),
+        ("outer-db", "oe", "ot+ov"),
+    ]
+
+
+def test__warm_dfs_cache__unknown_group__raises(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Unknown DFS history groups"):
+        warm_cache.warm_dfs_cache(None, CacheConfig(tmp_path, "fill"), groups=["outer"])
+
+
 def test__warm_dfs_cache__non_fill_config__raises(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="on_miss='fill'"):
         warm_cache.warm_dfs_cache(None, CacheConfig(tmp_path, "raise"))
