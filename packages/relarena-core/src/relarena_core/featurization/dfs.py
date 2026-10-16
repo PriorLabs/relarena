@@ -198,12 +198,17 @@ def _dfs_depth_map_key(
     max_depth: int,
     identity: RunIdentity | None,
 ) -> PurePosixPath:
-    """Complete schema-depth key, intentionally independent of anchor rows."""
+    """Complete schema-depth key, intentionally independent of anchor rows.
+
+    The phase is part of the key: the inner database is censored earlier, so a string
+    column can stay a category there while the outer phase drops it as text.
+    """
     history_mode = "full" if history_table is not None else "none"
     return cache_key(
         "dfs",
         f"v{_DFS_CACHE_VERSION}",
         *_source_identity_segments(db, task, identity),
+        _phase_segment(identity),
         f"history-{history_mode}",
         f"max-depth-{max_depth}",
         "depths.parquet",

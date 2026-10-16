@@ -365,7 +365,11 @@ RELARENA_CACHE_DIR=~/relarena-cache \
 
 It invokes `relarena.featurization.warm_cache` for both protocol splits and warms both
 legitimate outer histories: train-only for RDBLearn and train+val for models that refit on
-all labeled data. The `tabpfn-rel` and `rdblearn` models share full-anchor, leak-safe-history
+all labeled data. The three history groups (`inner`, `outer-train`, `outer-full`) are
+independent. Their matrices never collide, and the two outer groups write the same outer
+depth map. To spread one task over several machines, run the module once per `--group`
+into separate directories and merge them.
+The `tabpfn-rel` and `rdblearn` models share full-anchor, leak-safe-history
 matrices whenever their actual inputs match; model-specific row selection and downstream
 training do not affect the key. On a warm cache the evaluation reads Parquet only, with no RDB
 build and no DFS. RelGNN, RelGT, and the RT systems expose independent runnable warmers at
