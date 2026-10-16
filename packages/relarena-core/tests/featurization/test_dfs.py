@@ -691,12 +691,11 @@ def test__build_dfs_features__task_copy_in_other_row_order__hits_warm_cache(
     served = build(reordered.df, reordered, CacheConfig(tmp_path, "raise"))
     assert calls["n"] == 0
 
-    # One-row builds have only one possible order, so they are the reference.
+    # One-row builds have only one possible order, so they are the reference. The
+    # list keeps every frame alive: the in-process cache keys on `id(frame)`.
+    rows = [reordered.df.iloc[[i]] for i in range(len(reordered.df))]
     expected = pd.concat(
-        [
-            build(reordered.df.iloc[[i]], reordered, CacheConfig(None, "compute"))
-            for i in range(len(reordered.df))
-        ]
+        [build(row, reordered, CacheConfig(None, "compute")) for row in rows]
     )
     pd.testing.assert_frame_equal(served, expected)
     assert served.nunique().max() > 1  # rows differ, so misalignment would show
