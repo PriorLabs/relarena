@@ -646,13 +646,12 @@ def test__build_dfs_features__cache_persists_across_processes(
 def test__build_dfs_features__task_copy_in_other_row_order__hits_warm_cache(
     isolated_cache: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    # RelBench builds task tables with unordered queries, so the warmer's copy and a
-    # later run's copy can hold the same rows in another order and timestamp unit.
+    # Same rows, another order and timestamp unit. Neither copy is in canonical order.
     pytest.importorskip("fastdfs")
     db, task = _toy_db(), _toy_task()
     warmed = _label_table(
         [1, 2, 3, 1, 2],
-        ts=["2020-01-15", "2020-02-15", "2020-03-15", "2020-04-15", "2020-05-15"],
+        ts=["2020-04-15", "2020-01-15", "2020-05-15", "2020-03-15", "2020-02-15"],
         y=[0.0, 1.0, 0.0, 1.0, 1.0],
     )
     permutation = [3, 0, 4, 2, 1]
@@ -666,30 +665,39 @@ def test__build_dfs_features__task_copy_in_other_row_order__hits_warm_cache(
     )
     identity = RunIdentity("rel-test", "dbfp", "task", "taskfp", phase="outer")
 
-    def build(table: Table, cache: CacheConfig) -> pd.DataFrame:
+    def build(
+        anchors: pd.DataFrame, history: Table, cache: CacheConfig
+    ) -> pd.DataFrame:
         features, _ = dfs_mod.build_dfs_features(
             task,
             db,
-            table,
+            Table(
+                df=anchors,
+                fkey_col_to_pkey_table=history.fkey_col_to_pkey_table,
+                pkey_col=history.pkey_col,
+                time_col=history.time_col,
+            ),
             depth=2,
             max_depth=2,
-            history_table=table,
+            history_table=history,
             cache=cache,
             run_identity=identity,
         )
         return features
 
-    expected = (
-        build(warmed, CacheConfig(tmp_path, "fill"))
-        .iloc[permutation]
-        .reset_index(drop=True)
-    )
-
+    build(warmed.df, warmed, CacheConfig(tmp_path, "fill"))
     calls = _count_dfs_calls(monkeypatch)
     monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
-    served = build(reordered, CacheConfig(tmp_path, "raise"))
-
+    served = build(reordered.df, reordered, CacheConfig(tmp_path, "raise"))
     assert calls["n"] == 0
+
+    # One-row builds have only one possible order, so they are the reference.
+    expected = pd.concat(
+        [
+            build(reordered.df.iloc[[i]], reordered, CacheConfig(None, "compute"))
+            for i in range(len(reordered.df))
+        ]
+    )
     pd.testing.assert_frame_equal(served, expected)
     assert served.nunique().max() > 1  # rows differ, so misalignment would show
 

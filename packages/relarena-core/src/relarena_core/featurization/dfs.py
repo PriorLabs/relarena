@@ -128,11 +128,9 @@ def _task_shape(task: EntityTask) -> Table:
 
 
 def _canonical_order(df: pd.DataFrame, task: EntityTask) -> np.ndarray:
-    """Row positions that sort `df` by time, entity, then its other columns.
+    """Row positions that sort `df` by time, entity, then all other columns.
 
-    The same rows in any order map to the same sequence. Rows that tie on every
-    column are identical, so their relative order cannot change a checksum or a
-    DFS feature row.
+    Rows that tie on every column are identical, so their relative order is irrelevant.
     """
     leading = [c for c in (task.time_col, task.entity_col) if c in df.columns]
     by = leading + [c for c in df.columns if c not in leading]
@@ -140,11 +138,7 @@ def _canonical_order(df: pd.DataFrame, task: EntityTask) -> np.ndarray:
 
 
 def _canonical_frame(df: pd.DataFrame, task: EntityTask) -> pd.DataFrame:
-    """`df` in canonical row order, with datetimes at `ns`.
-
-    Neither the row order nor the timestamp unit of a source file then changes a
-    checksum or the DFS input.
-    """
+    """`df` in canonical row order, with datetimes at `ns`."""
     df = df.iloc[_canonical_order(df, task)].reset_index(drop=True)
     for col in df.columns:
         if pd.api.types.is_datetime64_any_dtype(df[col]):
@@ -185,13 +179,12 @@ def _dfs_cache_key(
         if history_table is None
         else f"full-{_canonical_checksum(history_table, task, None):016x}"
     )
-    anchor = _canonical_checksum(table, task, task.target_col)
     return cache_key(
         "dfs",
         f"v{_DFS_CACHE_VERSION}",
         *_source_identity_segments(db, task, identity),
         _phase_segment(identity),
-        f"anchor-{anchor:016x}",
+        f"anchor-{_canonical_checksum(table, task, task.target_col):016x}",
         f"history-{history}",
         f"max-depth-{max_depth}",
         "matrix.parquet",
@@ -671,7 +664,7 @@ def build_dfs_features(
             )
             # Back to the caller's rows: scoring matches predictions to the task
             # table by position.
-            inverse = np.argsort(_canonical_order(anchors, task), kind="stable")
+            inverse = np.argsort(_canonical_order(anchors, task))
             return canonical.iloc[inverse].set_axis(source_df.index)
 
         def _depth_map() -> dict[str, int]:
