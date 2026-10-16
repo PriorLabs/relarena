@@ -46,6 +46,7 @@ import tempfile
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Callable
 
+import numpy as np
 import pandas as pd
 from relbench.base import Database, EntityTask, Table
 
@@ -69,7 +70,7 @@ TARGET_HISTORY_TABLE_NAME = "_RDBL_target_history"
 #: Bumped when DFS-building or the RDB-transform pipeline changes in a way that
 #: should invalidate persisted feature matrices — the disk cache key pins the data
 #: content and build params, not the code that turns one into the other.
-_DFS_CACHE_VERSION = 3
+_DFS_CACHE_VERSION = 4
 
 
 def _source_identity_segments(
@@ -126,13 +127,38 @@ def _task_shape(task: EntityTask) -> Table:
     )
 
 
-def _anchor_checksum(table: Table, target_col: str) -> int:
-    """Checksum the anchor rows DFS consumes, excluding passthrough targets."""
-    columns = [column for column in table.df if column != target_col]
+def _canonical_order(df: pd.DataFrame, task: EntityTask) -> np.ndarray:
+    """Row positions that sort `df` by time, entity, then its other columns.
+
+    The same rows in any order map to the same sequence. Rows that tie on every
+    column are identical, so their relative order cannot change a checksum or a
+    DFS feature row.
+    """
+    leading = [c for c in (task.time_col, task.entity_col) if c in df.columns]
+    by = leading + [c for c in df.columns if c not in leading]
+    return df.reset_index(drop=True).sort_values(by, kind="stable").index.to_numpy()
+
+
+def _canonical_frame(df: pd.DataFrame, task: EntityTask) -> pd.DataFrame:
+    """`df` in canonical row order, with datetimes at `ns`.
+
+    Neither the row order nor the timestamp unit of a source file then changes a
+    checksum or the DFS input.
+    """
+    df = df.iloc[_canonical_order(df, task)].reset_index(drop=True)
+    for col in df.columns:
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].astype("datetime64[ns]")
+    return df
+
+
+def _canonical_checksum(table: Table, task: EntityTask, drop: str | None) -> int:
+    """Checksum `table` without column `drop`, independent of row order and unit."""
+    columns = [column for column in table.df if column != drop]
     return int(
         table_checksum(
             Table(
-                df=table.df[columns],
+                df=_canonical_frame(table.df[columns], task),
                 fkey_col_to_pkey_table=table.fkey_col_to_pkey_table,
                 pkey_col=table.pkey_col,
                 time_col=table.time_col,
@@ -149,18 +175,23 @@ def _dfs_cache_key(
     max_depth: int,
     identity: RunIdentity | None,
 ) -> PurePosixPath:
-    """Complete matrix key from DFS's actual data and semantic inputs."""
+    """Complete matrix key from DFS's actual data and semantic inputs.
+
+    RelBench builds task tables with unordered queries, so two copies of the same
+    task can differ in row order. The anchor and history checksums ignore it.
+    """
     history = (
         "none"
         if history_table is None
-        else f"full-{int(table_checksum(history_table)):016x}"
+        else f"full-{_canonical_checksum(history_table, task, None):016x}"
     )
+    anchor = _canonical_checksum(table, task, task.target_col)
     return cache_key(
         "dfs",
         f"v{_DFS_CACHE_VERSION}",
         *_source_identity_segments(db, task, identity),
         _phase_segment(identity),
-        f"anchor-{_anchor_checksum(table, task.target_col):016x}",
+        f"anchor-{anchor:016x}",
         f"history-{history}",
         f"max-depth-{max_depth}",
         "matrix.parquet",
@@ -569,12 +600,14 @@ def build_dfs_features(
             _rdb_holder["rdb"] = _CACHE.rdb_variant(db, history_key_df, _build_variant)
         return _rdb_holder["rdb"]
 
+    # DFS feature columns depend only on the schema, so dropping the target (a
+    # passthrough column) keeps the cached matrix consistent across splits.
+    anchors = source_df.drop(columns=[task.target_col], errors="ignore")
+
     def _dfs_input() -> pd.DataFrame:
-        # DFS feature columns depend only on the schema, so dropping the target (a
-        # passthrough column) keeps the cached matrix consistent across splits.
-        df = source_df.copy()
-        if task.target_col in df.columns:
-            df = df.drop(columns=[task.target_col])
+        # Canonical order, so a persisted matrix lines up with any copy of the rows
+        # its key matches.
+        df = _canonical_frame(anchors, task)
         if task.entity_col in df.columns:
             df[task.entity_col] = safe_convert_to_string(df[task.entity_col])
         return df
@@ -626,7 +659,7 @@ def build_dfs_features(
                         f"DFS cache has {len(frame)} rows; expected {len(table.df)}"
                     )
 
-            return cached_frame(
+            canonical = cached_frame(
                 cache,
                 lambda: str(
                     _dfs_cache_key(
@@ -636,6 +669,10 @@ def build_dfs_features(
                 _compute_matrix,
                 validate=validate,
             )
+            # Back to the caller's rows: scoring matches predictions to the task
+            # table by position.
+            inverse = np.argsort(_canonical_order(anchors, task), kind="stable")
+            return canonical.iloc[inverse].set_axis(source_df.index)
 
         def _depth_map() -> dict[str, int]:
             return _cached_depth_map(

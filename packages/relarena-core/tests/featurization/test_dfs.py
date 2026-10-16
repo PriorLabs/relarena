@@ -643,6 +643,57 @@ def test__build_dfs_features__cache_persists_across_processes(
     pd.testing.assert_frame_equal(second, first)
 
 
+def test__build_dfs_features__task_copy_in_other_row_order__hits_warm_cache(
+    isolated_cache: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # RelBench builds task tables with unordered queries, so the warmer's copy and a
+    # later run's copy can hold the same rows in another order and timestamp unit.
+    pytest.importorskip("fastdfs")
+    db, task = _toy_db(), _toy_task()
+    warmed = _label_table(
+        [1, 2, 3, 1, 2],
+        ts=["2020-01-15", "2020-02-15", "2020-03-15", "2020-04-15", "2020-05-15"],
+        y=[0.0, 1.0, 0.0, 1.0, 1.0],
+    )
+    permutation = [3, 0, 4, 2, 1]
+    reordered = Table(
+        df=warmed.df.iloc[permutation]
+        .reset_index(drop=True)
+        .astype({"ts": "datetime64[us]"}),
+        fkey_col_to_pkey_table=warmed.fkey_col_to_pkey_table,
+        pkey_col=warmed.pkey_col,
+        time_col=warmed.time_col,
+    )
+    identity = RunIdentity("rel-test", "dbfp", "task", "taskfp", phase="outer")
+
+    def build(table: Table, cache: CacheConfig) -> pd.DataFrame:
+        features, _ = dfs_mod.build_dfs_features(
+            task,
+            db,
+            table,
+            depth=2,
+            max_depth=2,
+            history_table=table,
+            cache=cache,
+            run_identity=identity,
+        )
+        return features
+
+    expected = (
+        build(warmed, CacheConfig(tmp_path, "fill"))
+        .iloc[permutation]
+        .reset_index(drop=True)
+    )
+
+    calls = _count_dfs_calls(monkeypatch)
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    served = build(reordered, CacheConfig(tmp_path, "raise"))
+
+    assert calls["n"] == 0
+    pd.testing.assert_frame_equal(served, expected)
+    assert served.nunique().max() > 1  # rows differ, so misalignment would show
+
+
 def test__build_dfs_features__warm_cache_second_task__slices_to_its_own_depth(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
