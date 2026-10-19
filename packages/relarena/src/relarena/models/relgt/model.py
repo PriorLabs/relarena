@@ -235,7 +235,11 @@ class RelGTModel(RelArenaModel):
         """
         from torch_geometric.seed import seed_everything
 
-        from relarena.models._shared.gnn.graph import GRAPH_CACHE, build_graph
+        from relarena.models._shared.gnn.graph import (
+            GRAPH_CACHE,
+            build_graph,
+            graph_col_to_stype,
+        )
         from relarena.models._shared.gnn.training import default_device, task_setup
         from relarena.models.relgt._vendor import RelGT
         from relarena.models.relgt.tokenize import MAX_NEIGHBOR_HOP, RelGTTokens
@@ -336,13 +340,19 @@ class RelGTModel(RelArenaModel):
         self._device = device
         self._clamp = clamp
         self._batch_size = batch_size
+        # Predict may materialize a different (later-censored) database; reuse the
+        # column layout the encoders were trained on.
+        self._col_to_stype = graph_col_to_stype(data)
 
     def predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
         """Run RelGT over `table`; return the evaluate-contract array."""
-        from relarena.models._shared.gnn.graph import GRAPH_CACHE, build_graph
+        from relarena.models._shared.gnn.graph import GRAPH_CACHE, build_predict_graph
         from relarena.models.relgt.tokenize import RelGTTokens
 
-        data, _ = GRAPH_CACHE.get(db, lambda: build_graph(db, self._device))
+        data, _ = GRAPH_CACHE.get(
+            db,
+            lambda: build_predict_graph(db, self._device, self._col_to_stype),
+        )
         tokens = RelGTTokens(
             data,
             task,
