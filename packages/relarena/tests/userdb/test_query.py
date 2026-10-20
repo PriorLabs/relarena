@@ -187,6 +187,75 @@ def test__fit__constant_global_model__predicts_and_computes_test_labels(
         context.compute_test_labels(data_end_timestamp="2004-12-15")
 
 
+def _activity_spec(
+    tmp_path: Path, drivers: pd.DataFrame, *, val: str, test: str
+) -> PredictiveQuerySpec:
+    """A driver-activity task over monthly events of every driver in `drivers`."""
+    events = pd.concat(
+        pd.DataFrame(
+            {"driverId": d, "date": pd.date_range(start, "2005-06-15", freq="30D")}
+        )
+        for d, start in zip(drivers["driverId"], drivers["start"])
+    )
+    events.insert(0, "eventId", range(len(events)))
+    events.to_parquet(tmp_path / "events.parquet")
+    drivers.drop(columns="start").to_parquet(tmp_path / "drivers.parquet")
+    time_col = "  time_col: created\n" if "created" in drivers else ""
+    db = (
+        f"drivers:\n  pkey: driverId\n{time_col}"
+        "events:\n  pkey: eventId\n  time_col: date\n  fkeys:\n    driverId: drivers\n"
+    )
+    query = (
+        "SELECT t.timestamp AS date, e.driverId AS driverId, 1 AS y\n"
+        "FROM timestamp_df t JOIN events e\n"
+        "  ON e.date > t.timestamp - INTERVAL '{timedelta}' AND e.date <= t.timestamp\n"
+        "GROUP BY t.timestamp, e.driverId\n"
+    )
+    task = (
+        _TASK_YAML.replace("query: SELECT 1\n", f"query: |\n{indent(query, '  ')}")
+        .replace("'2005-01-01'", f"'{val}'")
+        .replace("'2005-01-31'", f"'{test}'")
+    )
+    return PredictiveQuerySpec.from_yaml(
+        _write_pair(tmp_path, task=task, db=db), data_dir=str(tmp_path)
+    )
+
+
+def test__context__validation_window_past_last_row_before_test__raises(
+    tmp_path: Path,
+) -> None:
+    """A validation window ending after the last pre-test row fails with the fix."""
+    drivers = pd.DataFrame({"driverId": [0], "start": ["2004-01-15"]})
+    # Events fall on 2004-11-10 and 2004-12-10, so 2004-11-10 is the last row
+    # before the test cutoff, and the window (2004-10-15, 2004-11-14] runs past it.
+    spec = _activity_spec(tmp_path, drivers, val="2004-10-15", test="2004-12-01")
+
+    with pytest.raises(ValueError, match="Set val_timestamp at least one timedelta"):
+        PredictiveContext(spec)
+
+
+def test__compute_test_labels__entity_after_test_cutoff__dropped_with_warning(
+    tmp_path: Path,
+) -> None:
+    """Later test anchors drop entities that the frozen database does not hold."""
+    drivers = pd.DataFrame(
+        {
+            "driverId": [0, 1],
+            "created": pd.to_datetime(["2004-01-01", "2005-01-01"]),
+            "start": ["2004-01-15", "2005-01-10"],
+        }
+    )
+    spec = _activity_spec(tmp_path, drivers, val="2004-10-01", test="2004-12-01")
+    spec = replace(spec, task=replace(spec.task, num_eval_timestamps=3))
+    context = PredictiveContext(spec)
+
+    # Driver 1 is first active in the third anchor's window, after test_timestamp.
+    with pytest.warns(UserWarning, match="Dropped 1 test label row"):
+        labels = context.compute_test_labels()
+
+    assert labels["driverId"].unique().tolist() == [0]
+
+
 def _schema_only_query(*, data_version: str | None = None) -> PredictiveContext:
     query = PredictiveContext.__new__(PredictiveContext)
     query._identity = RunIdentity(
