@@ -45,8 +45,13 @@ class PredictiveContext:
     ) -> None:
         """Build the split source from a spec's database and SQL task.
 
-        The task owns the split cutoffs, so the dataset is built here from the
-        task's `val_timestamp` / `test_timestamp` rather than passed in separately.
+        Args:
+            spec: The database and task; the task's split cutoffs define the splits.
+            data_version: Label for this copy of the data, recorded in run identities.
+
+        Raises:
+            ValueError: If the validation window ends after the last row at or
+                before `test_timestamp`.
         """
         database, task = spec.database, spec.task
         # Dissonance we live with: RelBench treats the split cutoffs as part of the
@@ -109,18 +114,21 @@ class PredictiveContext:
     ) -> FittedPredictor:
         """Fit a registered model and return its independent fitted state.
 
-        With `n_trials > 0` (default 10): tune the model's search space on the
-        inner split (train→val, DB censored at `val_timestamp`), select the best
-        config by validation score, then perform its final fit on the outer split.
-        For a sampled space, `n_trials` requests that many random samples in
-        addition to the default; for a fixed grid, it caps the ordered grid.
-        With `n_trials == 0`, skip tuning and fit the model's default config.
-        A plan containing only the default config also skips tuning.
+        Args:
+            model: Registered model name, e.g. `"constant-global"` or
+                `"tabpfn-rel-client-latest"`.
+            n_trials: Tuning trials on the inner split (train→val, database
+                censored at `val_timestamp`); the best config is then refit on the
+                outer split. A sampled space draws this many configs besides the
+                default; a fixed grid is capped at this length. `0` fits the
+                default config.
+            seed: Random seed for tuning and fitting.
+            cache_dir: Local directory caching DFS features across tuning, the
+                final fit and `predict`. `None` uses `RELARENA_CACHE_DIR`, or no
+                persistent cache when it is unset.
 
-        `cache_dir` is a local directory that caches DFS features across tuning,
-        the final fit, and later `predict`, useful for repeated runs on a large
-        custom database. Omit it to fall back to `RELARENA_CACHE_DIR`, or to use
-        no persistent cache when that variable is unset. See `relarena_core.cache`.
+        Returns:
+            The fitted predictor, with tuning results in `trials`.
         """
         discover_models(refresh=False)
 
@@ -207,11 +215,18 @@ class PredictiveContext:
     ) -> pd.DataFrame:
         """Compute labels for the historical test windows from the full database.
 
-        Pass `data_end_timestamp` when the database is known to be complete only
-        through a particular date (for example, for a partial or sparse extract).
-        If omitted, the latest timestamp present anywhere in the database is used.
-        Only complete test windows are returned; at least one must be available.
-        Rows for entities missing from the frozen database are dropped with a warning.
+        Only complete test windows are returned. Rows for entities missing from the
+        frozen database are dropped with a warning.
+
+        Args:
+            data_end_timestamp: Last date with complete data. `None` uses the
+                latest timestamp in any table.
+
+        Returns:
+            The test rows: time, entity (original ids) and target columns.
+
+        Raises:
+            ValueError: If the first test window is not fully covered by the data.
         """
         dataset = self._source._dataset
         full_db = dataset.get_db(upto_test_timestamp=False)
@@ -285,7 +300,12 @@ class PredictiveContext:
 
 @dataclass(frozen=True, kw_only=True)
 class PredictiveQuery:
-    """Entities and anchor time to score with a fitted predictor."""
+    """Entities and anchor time to score with a fitted predictor.
+
+    Attributes:
+        entities: `"all"` or a sequence of original entity ids.
+        at_timestamp: Anchor time, or `"test_timestamp"` for the context's test cutoff.
+    """
 
     entities: EntitySelector
     at_timestamp: str | pd.Timestamp
@@ -322,7 +342,15 @@ class FittedPredictor:
     def predict(
         self, query: PredictiveQuery, *, cache_dir: str | Path | None = None
     ) -> pd.DataFrame:
-        """Predict original entity IDs with features frozen at the context cutoff."""
+        """Predict original entity IDs with features frozen at the context cutoff.
+
+        Args:
+            query: The entities and anchor timestamp to predict.
+            cache_dir: Feature cache; `None` reuses the one passed to `fit`.
+
+        Returns:
+            One row per entity: the time and entity columns and `<target_col>_pred`.
+        """
         fitted = self._model
         db = self.context._source._db
         test_timestamp = self.context._source._dataset.test_timestamp
@@ -407,11 +435,11 @@ class PredictiveQuerySpec:
     ) -> PredictiveQuerySpec:
         """Load a spec from a task YAML file.
 
-        The task YAML holds the task fields (label `query`, `entity_col`,
-        `target_col`, `task_type`, `timedelta`), the `val_timestamp` /
-        `test_timestamp` split cutoffs and a `database` field naming the database
-        YAML. The database path is resolved relative to the task file's directory
-        (absolute paths used as-is); its tables' data files resolve against `data_dir`.
+        Args:
+            path: Task YAML with the label `query`, task fields, split cutoffs and
+                a `database` path, relative to this file unless absolute.
+            data_dir: Base directory for the tables' data files. `None` uses the
+                database YAML's directory.
         """
         raw = yaml.safe_load(Path(path).read_text())
         validate(raw, _TASK_SCHEMA, kind="task")
