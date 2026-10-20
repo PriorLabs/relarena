@@ -59,6 +59,17 @@ class PredictiveContext:
             val_timestamp=task.val_timestamp,
             test_timestamp=task.test_timestamp,
         )
+        # Built first so RelBench's own check of the val/test gap reports first.
+        entity_task = UserEntityTask(dataset, task)
+        last_row = dataset.get_db().max_timestamp
+        val_end = task.val_timestamp + task.timedelta
+        if val_end > last_row:
+            raise ValueError(
+                f"The validation window ends at {val_end}, after the last row at or "
+                f"before test_timestamp ({last_row}), so its labels would be "
+                "incomplete. Set val_timestamp at least one timedelta before "
+                f"{last_row}."
+            )
         identity = RunIdentity(
             dataset="user",
             dataset_fingerprint=database_schema_fingerprint(dataset._db),
@@ -68,7 +79,7 @@ class PredictiveContext:
         )
         self._source = TaskSource.from_objects(
             dataset,
-            UserEntityTask(dataset, task),
+            entity_task,
             dataset_name="user",
             run_identity=identity,
         )
@@ -200,6 +211,7 @@ class PredictiveContext:
         through a particular date (for example, for a partial or sparse extract).
         If omitted, the latest timestamp present anywhere in the database is used.
         Only complete test windows are returned; at least one must be available.
+        Rows for entities missing from the frozen database are dropped with a warning.
         """
         dataset = self._source._dataset
         full_db = dataset.get_db(upto_test_timestamp=False)
@@ -226,11 +238,21 @@ class PredictiveContext:
             freq=self.task.timedelta,
         )
         labels = self.task.make_table(full_db, timestamps)
+        num_rows = len(labels.df)
         labels = (
             self.task.filter_dangling_entities(labels)
             .df[[self.task.time_col, self.task.entity_col, self.task.target_col]]
             .copy()
         )
+        if dropped := num_rows - len(labels):
+            warnings.warn(
+                f"Dropped {dropped} test label row(s) whose entities are missing "
+                f"from the database frozen at test_timestamp {dataset.test_timestamp} "
+                "(created after it, or without a timestamp), so the model cannot "
+                "score them.",
+                UserWarning,
+                stacklevel=2,
+            )
         id_map = getattr(self._source._dataset, "pkey_maps", {}).get(
             self.task.entity_table
         )
