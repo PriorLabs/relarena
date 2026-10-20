@@ -36,11 +36,17 @@ _SPEC_DIR = files(__name__)
 def materialize_relbench(dataset: str, dest: str, *, download: bool = True) -> Path:
     """Write a RelBench dataset's tables to parquet under `dest` (one per table).
 
-    The small data-only helper the specs expect: it lays down
-    `<dest>/<table>.parquet`, so a spec loaded with `data_dir=<dest>` finds its
-    tables. It exports the full database, including rows after RelBench's original
-    test cutoff. The RPI task YAML independently chooses the val/test timestamps
-    used to split and freeze those tables. Returns `dest`.
+    A spec loaded with `data_dir=dest` finds these tables. The export holds the
+    full database, including rows after RelBench's original test cutoff; the task
+    YAML chooses the val/test timestamps.
+
+    Args:
+        dataset: RelBench dataset name, e.g. `"rel-f1"`.
+        dest: Output directory for `<table>.parquet` files.
+        download: Fetch RelBench's prepared database; `False` builds it locally.
+
+    Returns:
+        `dest` as a `Path`.
     """
     # Dump get_db's reindexed, time-sorted tables, not raw make_db output: userdb
     # ingest re-sorts them stably to reproduce RelBench's entity ids (see
@@ -74,14 +80,14 @@ def relbench_v1_spec(
 ) -> PredictiveQuerySpec:
     """Load the reference `PredictiveQuerySpec` for a RelBench-v1 task.
 
-    The bundled spec deliberately retains RelBench's original val/test timestamps
-    to reproduce the benchmark. They are properties of this reference task, not a
-    restriction imposed by `materialize_relbench`; copy and edit the task YAML to
-    choose different cutoffs over the same materialized data.
+    The bundled spec keeps RelBench's original val/test timestamps to reproduce
+    the benchmark; copy and edit the task YAML to choose other cutoffs.
 
-    `data_dir` is where the parquet lives (see `materialize_relbench`). If omitted,
-    only the schema/task fields are usable (e.g. `.task`), not a `PredictiveContext`
-    run.
+    Args:
+        dataset: RelBench dataset name, e.g. `"rel-f1"`.
+        task: Task name, e.g. `"driver-dnf"`; `relbench_v1_tasks()` lists them.
+        data_dir: Directory written by `materialize_relbench`. Without it only the
+            schema and task fields are usable, not a `PredictiveContext`.
     """
     path = _SPEC_DIR / dataset / f"{task}.yaml"
     return PredictiveQuerySpec.from_yaml(str(path), data_dir=data_dir)

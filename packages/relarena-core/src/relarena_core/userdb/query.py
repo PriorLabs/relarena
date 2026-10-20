@@ -100,7 +100,13 @@ class PredictiveContext:
         data_dir: str | Path | None = None,
         data_version: str | None = None,
     ) -> PredictiveContext:
-        """Load a database and training task from YAML."""
+        """Load a database and training task from YAML.
+
+        Args:
+            path: Task YAML; see `PredictiveQuerySpec.from_yaml`.
+            data_dir: Base directory for the tables' data files.
+            data_version: Label for this copy of the data, recorded in run identities.
+        """
         spec = PredictiveQuerySpec.from_yaml(path, data_dir=data_dir)
         return cls(spec, data_version=data_version)
 
@@ -197,11 +203,12 @@ class PredictiveContext:
         """Build the shared DFS feature cache on CPU; return `cache_dir`.
 
         Featurizes exactly what `fit` reads (the inner split for tuning, the outer
-        refit split) in fill mode, so a later `fit(model, cache_dir=...)` reads the DFS
-        instead of recomputing it. For a large custom database, run this on a big CPU
-        node, then `fit` on the GPU pointing at the same `cache_dir`; `predict` fills
-        its own anchor features on top. The resulting artifacts are shared by all DFS
-        models.
+        refit split), so a later `fit(model, cache_dir=...)` reads the DFS instead of
+        recomputing it. For a large custom database, run this on a big CPU node, then
+        `fit` on the GPU. The artifacts are shared by all DFS models.
+
+        Args:
+            cache_dir: Local directory to fill; pass the same one to `fit`.
         """
         from relarena_core.featurization.warm_cache import warm_dfs_cache
 
@@ -279,7 +286,14 @@ class PredictiveContext:
     def group_test_entities(
         self, labels: pd.DataFrame
     ) -> Iterator[tuple[pd.Timestamp, list[Any]]]:
-        """Yield each test timestamp and its labeled entity IDs."""
+        """Yield each test timestamp and its labeled entity IDs.
+
+        Args:
+            labels: Test rows from `compute_test_labels`.
+
+        Yields:
+            `(timestamp, entity_ids)` pairs, ready for one `PredictiveQuery` each.
+        """
         for timestamp, rows in labels.groupby(self.task.time_col, sort=True):
             yield pd.Timestamp(timestamp), rows[self.task.entity_col].tolist()
 
