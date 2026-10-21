@@ -34,7 +34,7 @@ exclude-newer = "3 days"
 # without weakening the cutoff for unrelated dependencies.
 # fastdfs has a fixed cutoff that admits 1.2, the core DFS floor, before the 3-day
 # window ends; remove it after 2026-10-01 to restore the rolling cutoff.
-exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false, tabpfn-rel = false, tabpfn-client = false, fastdfs = "2026-09-29T00:00:00Z" }
+exclude-newer-package = { relational-transformer = false, graphreduce = false, kurversc = false, tabpfn-rel = false, tabpfn-client = false, fastdfs = "2026-09-29T00:00:00Z", certifi = "0 days" }
 conflicts = [
     # Specifying this conflict avoids uv trying to resolve the pypi and cpu versions
     # of torch simultaneously.
