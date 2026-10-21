@@ -1,0 +1,67 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  product_code:
+    type: hash
+    n_hashes: 4
+  product_name:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 16
+    cache: false
+  product_type:
+    type: category
+  product_group:
+    type: category
+  graphical_appearance:
+    type: category
+  colour_group:
+    type: category
+  perceived_colour_value:
+    type: category
+  perceived_colour_master:
+    type: category
+  department:
+    type: category
+  index_code:
+    type: category
+  index_group:
+    type: category
+  section:
+    type: category
+  garment_group:
+    type: category
+  detail_description:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 16
+    cache: false
+  transactions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      customer_id:
+        type: hash
+        n_hashes: 4
+      price:
+        type: number
+      sales_channel:
+        type: category
+  target:
+    type: number
+    mask: true
+ffnx: 8
+dropout: 0.1
+embed: false
+batch_size: 2048

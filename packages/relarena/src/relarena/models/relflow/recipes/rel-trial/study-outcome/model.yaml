@@ -1,0 +1,459 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  start_date:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+  target_duration:
+    type: category
+  study_type:
+    type: category
+  acronym:
+    type: hash
+    n_hashes: 4
+  baseline_population:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 64
+  brief_title:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 64
+  official_title:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 96
+  phase:
+    type: category
+  enrollment:
+    type: number
+  enrollment_type:
+    type: category
+  source:
+    type: category
+  source_class:
+    type: category
+  number_of_arms:
+    type: number
+  number_of_groups:
+    type: number
+  has_dmc:
+    type: category
+  regulated_drug:
+    type: category
+  regulated_device:
+    type: category
+  unapproved_device:
+    type: category
+  ppsd:
+    type: category
+  us_export:
+    type: category
+  biospec_retention:
+    type: category
+  biospec_description:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 64
+  baseline_type_units_analyzed:
+    type: category
+  fdaaa801_violation:
+    type: category
+  plan_to_share_ipd:
+    type: category
+  detailed_description:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 128
+  brief_summary:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 128
+  outcome_analyses:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      outcome_id: &id003
+        type: hash
+        n_hashes: 4
+      p_value: &id001
+        type: number
+      param_value: *id001
+      dispersion_value: *id001
+      ci_percent: *id001
+      ci_lower_limit: *id001
+      ci_upper_limit: *id001
+      p_value_modifier: &id002
+        type: category
+      param_type: *id002
+      dispersion_type: *id002
+      method: *id002
+      method_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      outcome_type: *id002
+      outcome_title:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      outcome_units: *id002
+  outcomes:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      outcome_id: *id003
+      outcome_type: *id002
+      units: *id002
+      units_analyzed: *id002
+      dispersion_type: *id002
+      parameter_type: *id002
+      title:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      outcome_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 128
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      time_frame:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      population:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      analysis_p_value: *id001
+      analysis_param_value: *id001
+      analysis_dispersion_value: *id001
+      analysis_ci_percent: *id001
+      analysis_ci_lower_limit: *id001
+      analysis_ci_upper_limit: *id001
+      analysis_method: *id002
+      analysis_age_days: *id001
+  target:
+    type: boolean
+    mask: true
+  as_of:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+    - hour_of_day
+  as_of_year:
+    type: number
+  entity_available:
+    type: boolean
+  study_age_days:
+    type: number
+  duration_days:
+    type: number
+  outcome_analyses_count:
+    type: number
+  outcome_analyses_count_30d:
+    type: number
+  outcome_analyses_count_90d:
+    type: number
+  outcome_analyses_count_365d:
+    type: number
+  outcome_analyses_last_age_days:
+    type: number
+  outcome_analyses_distinct_outcome_id:
+    type: number
+  outcome_analyses_valid_p_count:
+    type: number
+  outcome_analyses_min_p_value:
+    type: number
+  outcomes_count:
+    type: number
+  outcomes_count_30d:
+    type: number
+  outcomes_count_90d:
+    type: number
+  outcomes_count_365d:
+    type: number
+  outcomes_last_age_days:
+    type: number
+  outcomes_distinct_outcome_id:
+    type: number
+  outcomes_distinct_outcome_type:
+    type: number
+  designs:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      allocation: *id002
+      intervention_model: *id002
+      observational_model: *id002
+      primary_purpose: *id002
+      time_perspective: *id002
+      masking: *id002
+      subject_masked: *id002
+      caregiver_masked: *id002
+      investigator_masked: *id002
+      outcomes_assessor_masked: *id002
+      masking_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      intervention_model_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  designs_count:
+    type: number
+  designs_count_30d:
+    type: number
+  designs_count_90d:
+    type: number
+  designs_count_365d:
+    type: number
+  designs_last_age_days:
+    type: number
+  eligibilities:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      sampling_method: *id002
+      gender: *id002
+      minimum_age: *id002
+      maximum_age: *id002
+      healthy_volunteers: *id002
+      adult: *id002
+      child: *id002
+      older_adult: *id002
+      minimum_age_days: *id001
+      maximum_age_days: *id001
+      population:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      criteria:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 128
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      gender_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      gender_based:
+        type: category
+  eligibilities_count:
+    type: number
+  eligibilities_count_30d:
+    type: number
+  eligibilities_count_90d:
+    type: number
+  eligibilities_count_365d:
+    type: number
+  eligibilities_last_age_days:
+    type: number
+  conditions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      condition_id: *id003
+      term:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  conditions_count:
+    type: number
+  conditions_count_30d:
+    type: number
+  conditions_count_90d:
+    type: number
+  conditions_count_365d:
+    type: number
+  conditions_last_age_days:
+    type: number
+  conditions_distinct_condition_id:
+    type: number
+  interventions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      intervention_id: *id003
+      term:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  interventions_count:
+    type: number
+  interventions_count_30d:
+    type: number
+  interventions_count_90d:
+    type: number
+  interventions_count_365d:
+    type: number
+  interventions_last_age_days:
+    type: number
+  interventions_distinct_intervention_id:
+    type: number
+  sponsors:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      sponsor_id: *id003
+      role: *id002
+      name:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 48
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      agency_class: *id002
+  sponsors_count:
+    type: number
+  sponsors_count_30d:
+    type: number
+  sponsors_count_90d:
+    type: number
+  sponsors_count_365d:
+    type: number
+  sponsors_last_age_days:
+    type: number
+  sponsors_distinct_sponsor_id:
+    type: number
+  facilities:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      facility_id: *id003
+      name:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 48
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      city: *id002
+      state: *id002
+      postal_code: *id003
+      country: *id002
+  facilities_count:
+    type: number
+  facilities_count_30d:
+    type: number
+  facilities_count_90d:
+    type: number
+  facilities_count_365d:
+    type: number
+  facilities_last_age_days:
+    type: number
+  facilities_distinct_facility_id:
+    type: number
+  facilities_distinct_country:
+    type: number
+  peer_context:
+    type: branch
+    length: 4
+    overflow: error
+    fields:
+      relation:
+        type: category
+      candidate_studies:
+        type: number
+      retained_studies:
+        type: number
+      completed_studies:
+        type: number
+      completed_studies_365d:
+        type: number
+      adverse_report_studies:
+        type: number
+      adverse_affected_known_studies:
+        type: number
+      adverse_affected_mean:
+        type: number
+      adverse_affected_median:
+        type: number
+      subjects_at_risk_mean:
+        type: number
+      primary_report_studies:
+        type: number
+      primary_any_success_rate:
+        type: number
+      primary_all_success_rate:
+        type: number
+      withdrawal_report_studies:
+        type: number
+      withdrawal_count_known_studies:
+        type: number
+      withdrawal_count_mean:
+        type: number
+      last_report_age_days:
+        type: number
+      enrollment_mean:
+        type: number
+ffnx: 8
+dropout: 0.1
+batch_size: 64

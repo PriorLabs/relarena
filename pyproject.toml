@@ -23,6 +23,8 @@ dev = [
 # caps numpy<2, so it sits in its own group rather than in `dev`: extras whose
 # runtime needs numpy>=2 cannot otherwise be installed alongside the test tools.
 kurversc = ["kurversc==0.1.1"]
+# RelFlow needs Arrow >=21; the default DFS development tools cap Arrow <21.
+relflow-dev = ["pytest>=9.1.1", "pre-commit>=4.0", "ruff==0.15.13"]
 cuda = []
 # The CPU-only build avoids downloading CUDA when not required.
 cpu = ["torch"]
@@ -45,6 +47,33 @@ conflicts = [
         { package = "relarena", extra = "nori-rel" },
     ],
     [{ group = "kurversc" }, { package = "relarena", extra = "nori-rel" }],
+    # RelFlow uses NumPy >=2; KurveRSC requires NumPy <2.
+    [
+        { package = "relarena", extra = "kurversc" },
+        { package = "relarena", extra = "relflow" },
+    ],
+    [{ group = "kurversc" }, { package = "relarena", extra = "relflow" }],
+    [{ group = "dev" }, { package = "relarena", extra = "relflow" }],
+    [
+        { package = "relarena-core", extra = "dfs" },
+        { package = "relarena", extra = "relflow" },
+    ],
+    [
+        { package = "relarena", extra = "rdblearn" },
+        { package = "relarena", extra = "relflow" },
+    ],
+    [
+        { package = "relarena", extra = "tabpfn-rel-local" },
+        { package = "relarena", extra = "relflow" },
+    ],
+    [
+        { package = "relarena", extra = "tabpfn-rel-api" },
+        { package = "relarena", extra = "relflow" },
+    ],
+    [
+        { package = "relarena", extra = "nori-rel" },
+        { package = "relarena", extra = "relflow" },
+    ],
 ]
 
 [tool.uv.sources]

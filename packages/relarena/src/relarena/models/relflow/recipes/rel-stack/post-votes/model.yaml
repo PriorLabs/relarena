@@ -1,0 +1,119 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  created_at:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+  post_type:
+    type: category
+  owner_user_id:
+    type: hash
+    n_hashes: 4
+  parent_id:
+    type: hash
+    n_hashes: 4
+  title:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 48
+    cache: false
+  body:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 128
+    cache: false
+  tags:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 48
+    cache: false
+  votes:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      user_id:
+        type: hash
+        n_hashes: 4
+      vote_type:
+        type: category
+    reduction: null
+  comments:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      user_id:
+        type: hash
+        n_hashes: 4
+      comment_text:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 1280
+        encoder_pooling: mean
+        max_length: 64
+        cache: false
+    reduction: null
+  revisions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      user_id:
+        type: hash
+        n_hashes: 4
+      revision_type:
+        type: category
+      revision_comment:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 1280
+        encoder_pooling: mean
+        max_length: 48
+        cache: false
+      revision_text:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 1280
+        encoder_pooling: mean
+        max_length: 96
+        cache: false
+    reduction: null
+  links:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      related_post_id:
+        type: hash
+        n_hashes: 4
+      link_type:
+        type: category
+    reduction: null
+  target:
+    type: number
+    mask: true
+dropout: 0.1
+batch_size: 2048
+embed: false
+ffnx: 8

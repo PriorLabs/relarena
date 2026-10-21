@@ -66,6 +66,13 @@ Paper = "https://arxiv.org/abs/2608.16319"
 relarena = "relarena.cli:main"
 
 [project.optional-dependencies]
+# Schema-defined relational models and the pinned frozen text encoder backend.
+relflow = [
+    "relflow[text] @ git+https://github.com/relflow/relflow.git@65fec85a1193c4e8a44c59e16ba05046e3c00d0b",
+    "duckdb==1.5.0",
+    "huggingface-hub==1.16.1",
+    "transformers==5.9.0",
+]
 # Per-method extras (lazy-import + optional-dependency pattern; imported when run).
 lightgbm = ["lightgbm>=4.0,<4.7"]
 # KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a

@@ -1,0 +1,110 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  locale:
+    type: category
+  birthyear:
+    type: number
+  gender:
+    type: category
+  location:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 48
+    encoder_batch_size: 320
+    encoder_pooling: mean
+  timezone:
+    type: number
+  joined_at:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+  attendance:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_id:
+        type: hash
+        n_hashes: 4
+      event_start:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      status:
+        type: category
+  interests:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_id:
+        type: hash
+        n_hashes: 4
+      response_time:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      invited:
+        type: category
+      interested:
+        type: category
+      not_interested:
+        type: category
+  organized_events:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_id:
+        type: hash
+        n_hashes: 4
+      event_start:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      city:
+        type: category
+      state:
+        type: category
+      zip_code:
+        type: hash
+        n_hashes: 4
+      country:
+        type: category
+      latitude:
+        type: number
+      longitude:
+        type: number
+  friends:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      friend_id:
+        type: hash
+        n_hashes: 4
+  target:
+    type: boolean
+    mask: true
+dropout: 0.1
+batch_size: 64
+embed: false
+ffnx: 8

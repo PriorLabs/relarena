@@ -1,0 +1,46 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  facility_name:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 48
+    cache: false
+  city:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    max_length: 32
+    cache: false
+  state:
+    type: category
+  postal_code:
+    type: hash
+    n_hashes: 4
+  country:
+    type: category
+  studies:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      study_id:
+        type: hash
+        n_hashes: 4
+    reduction: null
+  target:
+    type: number
+    mask: true
+dropout: 0.1
+batch_size: 512
+embed: false
+ffnx: 8

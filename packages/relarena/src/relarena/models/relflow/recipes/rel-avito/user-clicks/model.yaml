@@ -1,0 +1,305 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  searches:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      search_id:
+        type: hash
+        n_hashes: 4
+      category_id:
+        type: category
+      location_id:
+        type: category
+      search_query:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      category_level:
+        type: category
+      parent_category_id:
+        type: category
+      subcategory_id:
+        type: category
+      location_level:
+        type: category
+      region_id:
+        type: category
+      city_id:
+        type: category
+      is_user_logged_on:
+        type: boolean
+      ip_id:
+        type: hash
+        n_hashes: 4
+  visits:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      ad_id:
+        type: hash
+        n_hashes: 4
+      ad_category_id:
+        type: category
+      ad_location_id:
+        type: category
+      ad_title:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 320
+        encoder_pooling: mean
+        max_length: 64
+      ad_price:
+        type: number
+      ad_is_context:
+        type: boolean
+      ad_category_level:
+        type: category
+      ad_parent_category_id:
+        type: category
+      ad_subcategory_id:
+        type: category
+      ad_location_level:
+        type: category
+      ad_region_id:
+        type: category
+      ad_city_id:
+        type: category
+      ip_id:
+        type: hash
+        n_hashes: 4
+  phone_requests:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      ad_id:
+        type: hash
+        n_hashes: 4
+      ad_category_id:
+        type: category
+      ad_location_id:
+        type: category
+      ad_title:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 320
+        encoder_pooling: mean
+        max_length: 64
+      ad_price:
+        type: number
+      ad_is_context:
+        type: boolean
+      ad_category_level:
+        type: category
+      ad_parent_category_id:
+        type: category
+      ad_subcategory_id:
+        type: category
+      ad_location_level:
+        type: category
+      ad_region_id:
+        type: category
+      ad_city_id:
+        type: category
+      ip_id:
+        type: hash
+        n_hashes: 4
+  as_of:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+    - hour_of_day
+  as_of_days:
+    type: number
+  searches_count:
+    type: number
+  searches_count_4d:
+    type: number
+  searches_count_7d:
+    type: number
+  searches_count_30d:
+    type: number
+  searches_recent_change:
+    type: number
+  searches_active_days_30d:
+    type: number
+  searches_distinct_categories:
+    type: number
+  searches_last_age_days:
+    type: number
+  searches_first_age_days:
+    type: number
+  impressions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      search_id:
+        type: hash
+        n_hashes: 4
+      ad_id:
+        type: hash
+        n_hashes: 4
+      clicked:
+        type: boolean
+      category_id:
+        type: category
+      location_id:
+        type: category
+      search_query:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 320
+        encoder_pooling: mean
+        max_length: 64
+      ad_category_id:
+        type: category
+      ad_location_id:
+        type: category
+      ad_title:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        encoder_batch_size: 320
+        encoder_pooling: mean
+        max_length: 64
+      ad_price:
+        type: number
+      ad_is_context:
+        type: boolean
+      ad_category_level:
+        type: category
+      ad_parent_category_id:
+        type: category
+      ad_subcategory_id:
+        type: category
+      ad_location_level:
+        type: category
+      ad_region_id:
+        type: category
+      ad_city_id:
+        type: category
+      category_level:
+        type: category
+      parent_category_id:
+        type: category
+      subcategory_id:
+        type: category
+      location_level:
+        type: category
+      region_id:
+        type: category
+      city_id:
+        type: category
+      position:
+        type: number
+      object_type:
+        type: category
+      historical_ctr:
+        type: number
+      is_user_logged_on:
+        type: boolean
+      ip_id:
+        type: hash
+        n_hashes: 4
+  impressions_count:
+    type: number
+  impressions_count_4d:
+    type: number
+  impressions_count_7d:
+    type: number
+  impressions_count_30d:
+    type: number
+  impressions_recent_change:
+    type: number
+  impressions_active_days_30d:
+    type: number
+  impressions_distinct_ads:
+    type: number
+  impressions_click_count:
+    type: number
+  impressions_known_click_count:
+    type: number
+  impressions_last_age_days:
+    type: number
+  impressions_first_age_days:
+    type: number
+  impressions_ctr:
+    type: number
+  impressions_smoothed_ctr:
+    type: number
+  impressions_ctr_4d:
+    type: number
+  impressions_ctr_30d:
+    type: number
+  visits_count:
+    type: number
+  visits_count_4d:
+    type: number
+  visits_count_7d:
+    type: number
+  visits_count_30d:
+    type: number
+  visits_recent_change:
+    type: number
+  visits_active_days_30d:
+    type: number
+  visits_distinct_ads:
+    type: number
+  visits_last_age_days:
+    type: number
+  visits_first_age_days:
+    type: number
+  phone_requests_count:
+    type: number
+  phone_requests_count_4d:
+    type: number
+  phone_requests_count_7d:
+    type: number
+  phone_requests_count_30d:
+    type: number
+  phone_requests_recent_change:
+    type: number
+  phone_requests_active_days_30d:
+    type: number
+  phone_requests_distinct_ads:
+    type: number
+  phone_requests_last_age_days:
+    type: number
+  phone_requests_first_age_days:
+    type: number
+  phone_to_visit_ratio:
+    type: number
+  target:
+    type: boolean
+    mask: true
+  user_agent_id:
+    type: hash
+    n_hashes: 4
+  user_agent_os_id:
+    type: category
+  user_device_id:
+    type: category
+  user_agent_family_id:
+    type: category
+ffnx: 8
+dropout: 0.1
+batch_size: 64

@@ -1,0 +1,68 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  description:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 64
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    cache: false
+  entity_id:
+    type: hash
+    n_hashes: 4
+  category:
+    type: set
+  brand:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 16
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    cache: false
+  title:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 32
+    encoder_batch_size: 1280
+    encoder_pooling: mean
+    cache: false
+  price:
+    type: number
+  reviews:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      customer_id:
+        type: hash
+        n_hashes: 4
+      rating:
+        type: number
+      verified:
+        type: category
+      summary:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 32
+        encoder_batch_size: 1280
+        encoder_pooling: mean
+        cache: false
+      review_text:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 1280
+        encoder_pooling: mean
+        cache: false
+    reduction: null
+  target:
+    type: number
+    mask: true
+ffnx: 8
+dropout: 0.1
+embed: false
+batch_size: 2048

@@ -1,0 +1,54 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  searches:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      search_id:
+        type: hash
+        n_hashes: 4
+      category_id:
+        type: category
+      location_id:
+        type: category
+      search_query:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  visits:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      ad_id:
+        type: hash
+        n_hashes: 4
+  phone_requests:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      ad_id:
+        type: hash
+        n_hashes: 4
+  target:
+    type: boolean
+    mask: true
+dropout: 0.1
+batch_size: 64
+embed: false
+ffnx: 8

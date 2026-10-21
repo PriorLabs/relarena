@@ -1,0 +1,496 @@
+d_model: 68
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  start_date:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+  target_duration:
+    type: category
+  study_type:
+    type: category
+  acronym:
+    type: hash
+    n_hashes: 4
+  baseline_population:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 64
+  brief_title:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 64
+  official_title:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 96
+  phase:
+    type: category
+  enrollment:
+    type: number
+  enrollment_type:
+    type: category
+  source:
+    type: category
+  source_class:
+    type: category
+  number_of_arms:
+    type: number
+  number_of_groups:
+    type: number
+  has_dmc:
+    type: category
+  regulated_drug:
+    type: category
+  regulated_device:
+    type: category
+  unapproved_device:
+    type: category
+  ppsd:
+    type: category
+  us_export:
+    type: category
+  biospec_retention:
+    type: category
+  biospec_description:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 64
+  baseline_type_units_analyzed:
+    type: category
+  fdaaa801_violation:
+    type: category
+  plan_to_share_ipd:
+    type: category
+  detailed_description:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 128
+  brief_summary:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    encoder_batch_size: 320
+    encoder_pooling: mean
+    max_length: 128
+  adverse_events:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_type:
+        type: category
+      classification:
+        type: category
+      subjects_affected:
+        type: number
+      subjects_at_risk:
+        type: number
+      affected_rate:
+        type: number
+  outcomes:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      outcome_id:
+        type: hash
+        n_hashes: 4
+      outcome_type:
+        type: category
+      units:
+        type: category
+      units_analyzed:
+        type: category
+      dispersion_type:
+        type: category
+      parameter_type:
+        type: category
+      title:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      outcome_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 128
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      time_frame:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      population:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      analysis_p_value:
+        type: number
+      analysis_param_value:
+        type: number
+      analysis_dispersion_value:
+        type: number
+      analysis_ci_percent:
+        type: number
+      analysis_ci_lower_limit:
+        type: number
+      analysis_ci_upper_limit:
+        type: number
+      analysis_method:
+        type: category
+      analysis_age_days:
+        type: number
+  target:
+    type: number
+    mask: true
+  as_of:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+    - hour_of_day
+  as_of_year:
+    type: number
+  entity_available:
+    type: boolean
+  study_age_days:
+    type: number
+  duration_days:
+    type: number
+  adverse_events_count:
+    type: number
+  adverse_events_count_30d:
+    type: number
+  adverse_events_count_90d:
+    type: number
+  adverse_events_count_365d:
+    type: number
+  adverse_events_last_age_days:
+    type: number
+  adverse_events_distinct_event_type:
+    type: number
+  adverse_events_distinct_classification:
+    type: number
+  adverse_events_subjects_affected_known_count:
+    type: number
+  adverse_events_subjects_affected_sum:
+    type: number
+  adverse_events_subjects_at_risk_known_count:
+    type: number
+  adverse_events_subjects_at_risk_sum:
+    type: number
+  outcomes_count:
+    type: number
+  outcomes_count_30d:
+    type: number
+  outcomes_count_90d:
+    type: number
+  outcomes_count_365d:
+    type: number
+  outcomes_last_age_days:
+    type: number
+  outcomes_distinct_outcome_id:
+    type: number
+  outcomes_distinct_outcome_type:
+    type: number
+  designs:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      allocation:
+        type: category
+      intervention_model:
+        type: category
+      observational_model:
+        type: category
+      primary_purpose:
+        type: category
+      time_perspective:
+        type: category
+      masking:
+        type: category
+      subject_masked:
+        type: category
+      caregiver_masked:
+        type: category
+      investigator_masked:
+        type: category
+      outcomes_assessor_masked:
+        type: category
+      masking_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      intervention_model_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  designs_count:
+    type: number
+  designs_count_30d:
+    type: number
+  designs_count_90d:
+    type: number
+  designs_count_365d:
+    type: number
+  designs_last_age_days:
+    type: number
+  eligibilities:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      sampling_method:
+        type: category
+      gender:
+        type: category
+      minimum_age:
+        type: category
+      maximum_age:
+        type: category
+      healthy_volunteers:
+        type: category
+      adult:
+        type: category
+      child:
+        type: category
+      older_adult:
+        type: category
+      minimum_age_days:
+        type: number
+      maximum_age_days:
+        type: number
+      population:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 96
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      criteria:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 128
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      gender_description:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      gender_based:
+        type: category
+  eligibilities_count:
+    type: number
+  eligibilities_count_30d:
+    type: number
+  eligibilities_count_90d:
+    type: number
+  eligibilities_count_365d:
+    type: number
+  eligibilities_last_age_days:
+    type: number
+  conditions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      condition_id:
+        type: hash
+        n_hashes: 4
+      term:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  conditions_count:
+    type: number
+  conditions_count_30d:
+    type: number
+  conditions_count_90d:
+    type: number
+  conditions_count_365d:
+    type: number
+  conditions_last_age_days:
+    type: number
+  conditions_distinct_condition_id:
+    type: number
+  interventions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      intervention_id:
+        type: hash
+        n_hashes: 4
+      term:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 64
+        encoder_batch_size: 320
+        encoder_pooling: mean
+  interventions_count:
+    type: number
+  interventions_count_30d:
+    type: number
+  interventions_count_90d:
+    type: number
+  interventions_count_365d:
+    type: number
+  interventions_last_age_days:
+    type: number
+  interventions_distinct_intervention_id:
+    type: number
+  sponsors:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      sponsor_id:
+        type: hash
+        n_hashes: 4
+      role:
+        type: category
+      name:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 48
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      agency_class:
+        type: category
+  sponsors_count:
+    type: number
+  sponsors_count_30d:
+    type: number
+  sponsors_count_90d:
+    type: number
+  sponsors_count_365d:
+    type: number
+  sponsors_last_age_days:
+    type: number
+  sponsors_distinct_sponsor_id:
+    type: number
+  facilities:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      facility_id:
+        type: hash
+        n_hashes: 4
+      name:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 48
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      city:
+        type: category
+      state:
+        type: category
+      postal_code:
+        type: hash
+        n_hashes: 4
+      country:
+        type: category
+  facilities_count:
+    type: number
+  facilities_count_30d:
+    type: number
+  facilities_count_90d:
+    type: number
+  facilities_count_365d:
+    type: number
+  facilities_last_age_days:
+    type: number
+  facilities_distinct_facility_id:
+    type: number
+  facilities_distinct_country:
+    type: number
+  peer_context:
+    type: branch
+    length: 4
+    overflow: error
+    fields:
+      relation:
+        type: category
+      candidate_studies:
+        type: number
+      retained_studies:
+        type: number
+      completed_studies:
+        type: number
+      completed_studies_365d:
+        type: number
+      adverse_report_studies:
+        type: number
+      adverse_affected_known_studies:
+        type: number
+      adverse_affected_mean:
+        type: number
+      adverse_affected_median:
+        type: number
+      subjects_at_risk_mean:
+        type: number
+      primary_report_studies:
+        type: number
+      primary_any_success_rate:
+        type: number
+      primary_all_success_rate:
+        type: number
+      withdrawal_report_studies:
+        type: number
+      withdrawal_count_known_studies:
+        type: number
+      withdrawal_count_mean:
+        type: number
+      last_report_age_days:
+        type: number
+      enrollment_mean:
+        type: number
+ffnx: 8
+dropout: 0.1
+batch_size: 64

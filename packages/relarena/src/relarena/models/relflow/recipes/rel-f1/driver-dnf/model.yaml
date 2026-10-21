@@ -1,0 +1,82 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+embed: false
+fields:
+  nationality:
+    type: category
+  results:
+    type: branch
+    length: 128
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      constructor_id:
+        type: category
+      grid:
+        type: number
+      position_order:
+        type: number
+      points:
+        type: number
+      laps:
+        type: number
+      status_id:
+        type: category
+    n_layers: 2
+    n_heads: 4
+    dropout: 0.2
+    reduction:
+      type: mean
+    attention: mha
+  qualifying_results:
+    type: branch
+    length: 128
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      constructor_id:
+        type: category
+      position:
+        type: number
+    n_layers: 2
+    n_heads: 4
+    dropout: 0.2
+    reduction:
+      type: mean
+    attention: mha
+  standings:
+    type: branch
+    length: 128
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      points:
+        type: number
+      position:
+        type: number
+      wins:
+        type: number
+    n_layers: 2
+    n_heads: 4
+    dropout: 0.2
+    reduction:
+      type: mean
+    attention: mha
+  target:
+    dropout: 0.2
+    mask: true
+    n_heads: 4
+    n_linear: 1
+    pooling: mean
+    type: boolean
+dropout: 0.2
+reduction:
+  type: attention
+  position: true
+attention: mha
+ffnx: 8
+batch_size: 64

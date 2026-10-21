@@ -38,6 +38,17 @@ copied into this package:
     https://github.com/rishabh-ranjan/relational-transformer
     src/relarena/models/rt/ -- installed from the `rt` extra, not vendored.
 
+RelFlow integration and task recipes
+------------------------------------
+
+The RelFlow adapter and task-specific SQL/YAML recipes are contributed under
+Apache-2.0 by Grantham Taylor. RelFlow itself is an optional dependency from
+https://github.com/relflow/relflow, pinned to revision
+65fec85a1193c4e8a44c59e16ba05046e3c00d0b. It is not vendored here. Text fields
+use the separately downloaded Apache-2.0 sentence-transformers/all-MiniLM-L6-v2
+checkpoint at revision 1110a243fdf4706b3f48f1d95db1a4f5529b4d41; no pretrained
+weights or benchmark datasets are included in the package.
+
 Datasets are not distributed with this package. They are downloaded at runtime by
 relbench and remain subject to their own upstream terms.
 

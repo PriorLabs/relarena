@@ -1,0 +1,260 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  locale:
+    type: category
+  birthyear:
+    type: number
+  gender:
+    type: category
+  location:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 48
+    encoder_batch_size: 320
+    encoder_pooling: mean
+  timezone:
+    type: number
+  joined_at:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+  attendance:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_id:
+        type: hash
+        n_hashes: 4
+      event_start:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      status:
+        type: category
+      organizer_id:
+        type: hash
+        n_hashes: 4
+      city:
+        type: category
+      state:
+        type: category
+      zip_code:
+        type: hash
+        n_hashes: 4
+      country:
+        type: category
+      latitude:
+        type: number
+      longitude:
+        type: number
+      content_counts:
+        type: vector
+        n_dim: 101
+  interests:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_id:
+        type: hash
+        n_hashes: 4
+      response_time:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      event_start:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      invited:
+        type: category
+      interested:
+        type: category
+      not_interested:
+        type: category
+      organizer_id:
+        type: hash
+        n_hashes: 4
+      city:
+        type: category
+      state:
+        type: category
+      zip_code:
+        type: hash
+        n_hashes: 4
+      country:
+        type: category
+      latitude:
+        type: number
+      longitude:
+        type: number
+      content_counts:
+        type: vector
+        n_dim: 101
+  organized_events:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      event_id:
+        type: hash
+        n_hashes: 4
+      event_start:
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      city:
+        type: category
+      state:
+        type: category
+      zip_code:
+        type: hash
+        n_hashes: 4
+      country:
+        type: category
+      latitude:
+        type: number
+      longitude:
+        type: number
+      content_counts:
+        type: vector
+        n_dim: 101
+  friends:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      friend_id:
+        type: hash
+        n_hashes: 4
+      locale:
+        type: category
+      gender:
+        type: category
+      location:
+        type: text
+        model: sentence-transformers/all-MiniLM-L6-v2
+        max_length: 48
+        encoder_batch_size: 320
+        encoder_pooling: mean
+      timezone:
+        type: number
+      age_years:
+        type: number
+      tenure_days:
+        type: number
+  target:
+    type: number
+    mask: true
+  as_of:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+    - hour_of_day
+  as_of_year:
+    type: number
+  entity_available:
+    type: boolean
+  tenure_days:
+    type: number
+  age_years:
+    type: number
+  attendance_count:
+    type: number
+  attendance_count_30d:
+    type: number
+  attendance_count_90d:
+    type: number
+  attendance_count_365d:
+    type: number
+  attendance_last_age_days:
+    type: number
+  attendance_distinct_event_id:
+    type: number
+  attendance_distinct_organizer_id:
+    type: number
+  attendance_status_known_count:
+    type: number
+  attendance_accepted_count:
+    type: number
+  attendance_invited_count:
+    type: number
+  attendance_accepted_rate:
+    type: number
+  attendance_repeated_event_count:
+    type: number
+  interests_count:
+    type: number
+  interests_count_30d:
+    type: number
+  interests_count_90d:
+    type: number
+  interests_count_365d:
+    type: number
+  interests_last_age_days:
+    type: number
+  interests_distinct_event_id:
+    type: number
+  interests_distinct_organizer_id:
+    type: number
+  interests_invited_known_count:
+    type: number
+  interests_invited_count:
+    type: number
+  interests_invited_rate:
+    type: number
+  interests_interested_known_count:
+    type: number
+  interests_interested_count:
+    type: number
+  interests_interested_rate:
+    type: number
+  interests_not_interested_known_count:
+    type: number
+  interests_not_interested_count:
+    type: number
+  interests_not_interested_rate:
+    type: number
+  organized_events_count:
+    type: number
+  organized_events_count_30d:
+    type: number
+  organized_events_count_90d:
+    type: number
+  organized_events_count_365d:
+    type: number
+  organized_events_last_age_days:
+    type: number
+  organized_events_distinct_event_id:
+    type: number
+  friends_count:
+    type: number
+  friends_distinct_friend_id:
+    type: number
+  friends_profile_known_count:
+    type: number
+ffnx: 8
+dropout: 0.1
+batch_size: 64

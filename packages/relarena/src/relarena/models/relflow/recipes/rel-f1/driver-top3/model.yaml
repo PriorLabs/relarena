@@ -1,0 +1,322 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  driver_ref:
+    type: hash
+    n_hashes: 4
+  code:
+    type: hash
+    n_hashes: 4
+  forename:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 16
+    encoder_batch_size: 320
+    encoder_pooling: mean
+  surname:
+    type: text
+    model: sentence-transformers/all-MiniLM-L6-v2
+    max_length: 24
+    encoder_batch_size: 320
+    encoder_pooling: mean
+  date_of_birth:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_month
+  nationality:
+    type: category
+  target:
+    type: boolean
+    mask: true
+  as_of:
+    type: dateparts
+    dateparts:
+    - month_of_year
+    - day_of_week
+    - hour_of_day
+  as_of_year:
+    type: number
+  entity_available:
+    type: boolean
+  driver_age_days:
+    type: number
+  results:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      result_id: &id001
+        type: hash
+        n_hashes: 4
+      race_date: &id005
+        type: dateparts
+        dateparts:
+        - month_of_year
+        - day_of_week
+        - hour_of_day
+      race_id: *id001
+      constructor_id: &id002
+        type: category
+      circuit_id: *id002
+      car_number: *id002
+      grid: &id003
+        type: number
+      finish_position: *id003
+      position_order: *id003
+      points: *id003
+      laps: *id003
+      milliseconds: *id003
+      fastest_lap: *id003
+      fastest_lap_rank: *id003
+      status_id: *id002
+      qualifying_position: *id003
+      standing_position: *id003
+      standing_points: *id003
+      standing_wins: *id003
+      qualifying_available: &id004
+        type: boolean
+      standing_available: *id004
+      race_year:
+        type: number
+      race_round:
+        type: number
+      race_name:
+        type: category
+      race_time:
+        type: category
+      circuit_ref:
+        type: category
+      circuit_name:
+        type: category
+      circuit_location:
+        type: category
+      circuit_country:
+        type: category
+      circuit_lat:
+        type: number
+      circuit_lng:
+        type: number
+      circuit_alt:
+        type: number
+      constructor_ref:
+        type: category
+      constructor_name:
+        type: category
+      constructor_nationality:
+        type: category
+      constructor_race_points:
+        type: number
+      constructor_standing_points:
+        type: number
+      constructor_standing_position:
+        type: number
+      constructor_standing_wins:
+        type: number
+  results_count:
+    type: number
+  results_count_30d:
+    type: number
+  results_count_90d:
+    type: number
+  results_count_365d:
+    type: number
+  results_last_age_days:
+    type: number
+  results_distinct_race_id:
+    type: number
+  results_distinct_constructor_id:
+    type: number
+  results_distinct_circuit_id:
+    type: number
+  results_points_known_count:
+    type: number
+  results_points_sum:
+    type: number
+  results_laps_known_count:
+    type: number
+  results_laps_sum:
+    type: number
+  results_position_order_known_count:
+    type: number
+  results_position_order_mean:
+    type: number
+  results_grid_known_count:
+    type: number
+  results_grid_mean:
+    type: number
+  results_fastest_lap_rank_known_count:
+    type: number
+  results_fastest_lap_rank_mean:
+    type: number
+  qualifying_results:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      qualifying_id: *id001
+      qualifying_date: *id005
+      race_id: *id001
+      constructor_id: *id002
+      circuit_id: *id002
+      car_number: *id002
+      position: *id003
+      race_year:
+        type: number
+      race_round:
+        type: number
+      race_name:
+        type: category
+      race_time:
+        type: category
+      circuit_ref:
+        type: category
+      circuit_name:
+        type: category
+      circuit_location:
+        type: category
+      circuit_country:
+        type: category
+      circuit_lat:
+        type: number
+      circuit_lng:
+        type: number
+      circuit_alt:
+        type: number
+      constructor_ref:
+        type: category
+      constructor_name:
+        type: category
+      constructor_nationality:
+        type: category
+      constructor_race_points:
+        type: number
+      constructor_standing_points:
+        type: number
+      constructor_standing_position:
+        type: number
+      constructor_standing_wins:
+        type: number
+  qualifying_results_count:
+    type: number
+  qualifying_results_count_30d:
+    type: number
+  qualifying_results_count_90d:
+    type: number
+  qualifying_results_count_365d:
+    type: number
+  qualifying_results_last_age_days:
+    type: number
+  qualifying_results_distinct_race_id:
+    type: number
+  qualifying_results_distinct_constructor_id:
+    type: number
+  qualifying_results_position_known_count:
+    type: number
+  qualifying_results_position_mean:
+    type: number
+  standings:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      standing_id: *id001
+      standing_date: *id005
+      race_id: *id001
+      circuit_id: *id002
+      points: *id003
+      position: *id003
+      wins: *id003
+      race_year:
+        type: number
+      race_round:
+        type: number
+      race_name:
+        type: category
+      race_time:
+        type: category
+      circuit_ref:
+        type: category
+      circuit_name:
+        type: category
+      circuit_location:
+        type: category
+      circuit_country:
+        type: category
+      circuit_lat:
+        type: number
+      circuit_lng:
+        type: number
+      circuit_alt:
+        type: number
+      constructor_ref:
+        type: category
+      constructor_name:
+        type: category
+      constructor_nationality:
+        type: category
+      constructor_race_points:
+        type: number
+      constructor_standing_points:
+        type: number
+      constructor_standing_position:
+        type: number
+      constructor_standing_wins:
+        type: number
+      constructor_id:
+        type: category
+  standings_count:
+    type: number
+  standings_count_30d:
+    type: number
+  standings_count_90d:
+    type: number
+  standings_count_365d:
+    type: number
+  standings_last_age_days:
+    type: number
+  standings_distinct_race_id:
+    type: number
+  standings_position_known_count:
+    type: number
+  standings_position_mean:
+    type: number
+  latest_constructor_id:
+    type: category
+  constructor_results_count:
+    type: number
+  constructor_position_known_count:
+    type: number
+  constructor_position_mean:
+    type: number
+  constructor_points_known_count:
+    type: number
+  constructor_points_sum:
+    type: number
+  constructor_race_results_count:
+    type: number
+  constructor_race_points_known_count:
+    type: number
+  constructor_race_points_sum:
+    type: number
+  constructor_race_points_mean:
+    type: number
+  latest_constructor_standing_points:
+    type: number
+  latest_constructor_standing_position:
+    type: number
+  latest_constructor_standing_wins:
+    type: number
+ffnx: 8
+dropout: 0.1
+batch_size: 64

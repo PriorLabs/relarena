@@ -1,0 +1,41 @@
+d_model: 96
+n_layers: 2
+n_heads: 4
+fields:
+  entity_id:
+    type: hash
+    n_hashes: 4
+  fn:
+    type: category
+  active:
+    type: category
+  club_member_status:
+    type: category
+  fashion_news_frequency:
+    type: category
+  age:
+    type: number
+  postal_code:
+    type: hash
+    n_hashes: 4
+  transactions:
+    type: branch
+    length: 64
+    overflow: tail
+    fields:
+      age_days:
+        type: number
+      article_id:
+        type: hash
+        n_hashes: 4
+      price:
+        type: number
+      sales_channel:
+        type: category
+  target:
+    type: boolean
+    mask: true
+ffnx: 8
+dropout: 0.1
+embed: false
+batch_size: 2048

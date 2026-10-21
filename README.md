@@ -510,6 +510,7 @@ registering a method works without its extra installed.
 |---|---|---|
 | `lightgbm` | LightGBM | CPU only |
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | GraphReduce configuration search + CatBoost; CPU only |
+| `relflow` | [RelFlow](docs/models/relflow.md) | schema-defined relational neural models; isolated Arrow >=21 environment, CUDA recommended |
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
@@ -627,6 +628,7 @@ as an experimental final-fit variant.
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
+| `relflow-2026-10-21` | [RelFlow](docs/models/relflow.md) | schema-defined relational neural models, frozen task recipes | **system** | pending evaluation | best inner-validation checkpoint | `relflow` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local-2026-08-15` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client-2026-08-15` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
