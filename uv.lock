@@ -2624,7 +2624,7 @@ wheels = [
 
 [[package]]
 name = "relarena"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "packages/relarena" }
 dependencies = [
     { name = "configspace" },
@@ -2732,7 +2732,7 @@ provides-extras = ["lightgbm", "kurversc", "rdblearn", "rdl", "graphsage", "relg
 
 [[package]]
 name = "relarena-core"
-version = "0.0.6"
+version = "0.0.7"
 source = { editable = "packages/relarena-core" }
 dependencies = [
     { name = "configspace" },
