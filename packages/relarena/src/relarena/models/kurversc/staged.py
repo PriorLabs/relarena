@@ -46,7 +46,7 @@ class KurveRSC20261022System(RelArenaSystem):
         except ImportError as exc:
             raise ImportError(
                 "Install the candidate relarena[kurversc] extra: the complete "
-                "procedure requires kurversc[staged]>=0.2.0rc1."
+                "procedure requires kurversc[staged]>=0.2.0."
             ) from exc
 
         identity = self.run_identity

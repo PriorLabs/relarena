@@ -842,8 +842,8 @@ wheels = [
 
 [[package]]
 name = "graphreduce"
-version = "1.10.18rc1"
-source = { git = "https://github.com/wesmadrigal/GraphReduce.git?rev=a7f30f1c5d1fa5201a05364a0f511054bc2b19aa#a7f30f1c5d1fa5201a05364a0f511054bc2b19aa" }
+version = "1.10.18"
+source = { git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976#21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" }
 dependencies = [
     { name = "dask", extra = ["dataframe"], marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "httpx" },
@@ -1295,8 +1295,8 @@ wheels = [
 
 [[package]]
 name = "kurversc"
-version = "0.2.0rc1"
-source = { git = "https://github.com/kurveai/kurversc.git?rev=b0c3b5915ac2a51c28df5f85544a813a15dcfadf#b0c3b5915ac2a51c28df5f85544a813a15dcfadf" }
+version = "0.2.0"
+source = { git = "https://github.com/kurveai/kurversc.git?rev=e90fc6107907bae18dad6e423579aff3a06ba9a5#e90fc6107907bae18dad6e423579aff3a06ba9a5" }
 dependencies = [
     { name = "catboost" },
     { name = "duckdb" },
@@ -2767,10 +2767,10 @@ requires-dist = [
     { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
     { name = "configspace", specifier = ">=1.0" },
     { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
-    { name = "graphreduce", marker = "extra == 'kurversc'", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=a7f30f1c5d1fa5201a05364a0f511054bc2b19aa" },
+    { name = "graphreduce", marker = "extra == 'kurversc'", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" },
     { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
     { name = "jsonschema", specifier = ">=4.0" },
-    { name = "kurversc", extras = ["staged"], marker = "extra == 'kurversc'", git = "https://github.com/kurveai/kurversc.git?rev=b0c3b5915ac2a51c28df5f85544a813a15dcfadf" },
+    { name = "kurversc", extras = ["staged"], marker = "extra == 'kurversc'", git = "https://github.com/kurveai/kurversc.git?rev=e90fc6107907bae18dad6e423579aff3a06ba9a5" },
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.3.3,<3.0" },
@@ -2876,8 +2876,8 @@ dev = [
     { name = "tabpfn-rel", specifier = ">=0.0.5" },
 ]
 kurversc = [
-    { name = "graphreduce", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=a7f30f1c5d1fa5201a05364a0f511054bc2b19aa" },
-    { name = "kurversc", extras = ["staged"], git = "https://github.com/kurveai/kurversc.git?rev=b0c3b5915ac2a51c28df5f85544a813a15dcfadf" },
+    { name = "graphreduce", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" },
+    { name = "kurversc", extras = ["staged"], git = "https://github.com/kurveai/kurversc.git?rev=e90fc6107907bae18dad6e423579aff3a06ba9a5" },
 ]
 
 [[package]]
