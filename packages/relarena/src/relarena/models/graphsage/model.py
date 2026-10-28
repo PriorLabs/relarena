@@ -60,7 +60,6 @@ from relbench.base import Database, EntityTask, Table, TaskType
 from relarena.models._shared.gnn.graph import (
     GRAPH_CACHE,
     build_graph,
-    build_predict_graph,
     graph_col_to_stype,
 )
 from relarena.models._shared.gnn.training import (
@@ -360,14 +359,20 @@ class GraphSAGEModel(RelArenaModel):
         self._num_layers = num_layers
         self._batch_size = batch_size
         # Predict may materialize a different (later-censored) database; reuse the
-        # column layout the encoders were trained on.
+        # column layout and stats the encoders were trained on.
         self._col_to_stype = graph_col_to_stype(data)
+        self._col_stats_dict = col_stats_dict
 
     def predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
         """Run GraphSAGE over `table`; return the evaluate-contract array."""
         data, _ = GRAPH_CACHE.get(
             db,
-            lambda: build_predict_graph(db, self._device, self._col_to_stype),
+            lambda: build_graph(
+                db,
+                self._device,
+                col_to_stype_dict=self._col_to_stype,
+                col_stats_dict=self._col_stats_dict,
+            ),
         )
 
         def attempt(batch_size: int) -> np.ndarray:

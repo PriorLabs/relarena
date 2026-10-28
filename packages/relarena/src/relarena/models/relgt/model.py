@@ -341,17 +341,23 @@ class RelGTModel(RelArenaModel):
         self._clamp = clamp
         self._batch_size = batch_size
         # Predict may materialize a different (later-censored) database; reuse the
-        # column layout the encoders were trained on.
+        # column layout and stats the encoders were trained on.
         self._col_to_stype = graph_col_to_stype(data)
+        self._col_stats_dict = col_stats_dict
 
     def predict(self, task: EntityTask, db: Database, table: Table) -> np.ndarray:
         """Run RelGT over `table`; return the evaluate-contract array."""
-        from relarena.models._shared.gnn.graph import GRAPH_CACHE, build_predict_graph
+        from relarena.models._shared.gnn.graph import GRAPH_CACHE, build_graph
         from relarena.models.relgt.tokenize import RelGTTokens
 
         data, _ = GRAPH_CACHE.get(
             db,
-            lambda: build_predict_graph(db, self._device, self._col_to_stype),
+            lambda: build_graph(
+                db,
+                self._device,
+                col_to_stype_dict=self._col_to_stype,
+                col_stats_dict=self._col_stats_dict,
+            ),
         )
         tokens = RelGTTokens(
             data,
