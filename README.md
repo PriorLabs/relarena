@@ -693,11 +693,12 @@ relarena/
 Apache-2.0 ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Two things the license on this code does
 not settle, both worth reading before you rely on relarena:
 
-- TabPFN model weights are licensed separately. The `tabpfn` code is Apache-2.0, but the
-  weights it downloads are not: TabPFN-2 weights are under the Prior Labs License, which
-  requires anyone distributing a product built on them to display "Built with
-  PriorLabs-TabPFN", and TabPFN-2.5 weights are non-commercial. `tabpfn` is confined to the
-  `rdblearn` and `tabpfn-rel-*` extras, so a plain install does not pull it.
+- `tabpfn` and its model weights carry their own licenses. The code is Apache-2.0 from 9.0.0;
+  earlier releases, which the `rdblearn` extra still allows, ship the Prior Labs License. The
+  weights it downloads are licensed separately: TabPFN-2 weights under the Prior Labs License,
+  which requires anyone distributing a product built on them to display "Built with
+  PriorLabs-TabPFN", and TabPFN-2.5 weights under a non-commercial license. `tabpfn` is
+  confined to the `rdblearn` and `tabpfn-rel-*` extras, so a plain install does not pull it.
 - Datasets are not ours to license. RelArena-α redistributes no data, retrieving all databases
   at runtime through `relbench` under their respective upstream terms.
 

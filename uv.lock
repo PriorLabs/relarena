@@ -2711,7 +2711,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "sentence-transformers", marker = "extra == 'rdl'" },
     { name = "synthefy-nori", extras = ["text"], marker = "extra == 'nori-rel'", specifier = "==0.20.1" },
-    { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=9" },
+    { name = "tabpfn", marker = "extra == 'rdblearn'", specifier = ">=8" },
     { name = "tabpfn-rel", extras = ["api"], marker = "extra == 'tabpfn-rel-api'", specifier = ">=0.0.5" },
     { name = "tabpfn-rel", extras = ["local"], marker = "extra == 'tabpfn-rel-local'", specifier = ">=0.0.5" },
     { name = "torch" },

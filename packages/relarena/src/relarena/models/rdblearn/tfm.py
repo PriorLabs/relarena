@@ -22,8 +22,9 @@ def _make_tabpfn(
     `**overrides` (device, random_state, ignore_pretraining_limits, ...) pass through
     to the constructor.
 
-    Lazy import — tabpfn lives in the rdblearn extra. Its code is Apache-2.0; the
-    weights it downloads carry their own licenses (see `docs/licensing.md`).
+    Lazy import — tabpfn lives in the rdblearn extra. Its code is Apache-2.0 from
+    9.0.0 (8.x ships the Prior Labs License); the weights it downloads carry their
+    own licenses (see `docs/licensing.md`).
     """
     from tabpfn import TabPFNClassifier, TabPFNRegressor
     from tabpfn.constants import ModelVersion
