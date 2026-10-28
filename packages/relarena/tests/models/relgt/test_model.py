@@ -173,7 +173,7 @@ def test__relgt_model__fit_predict__synthetic_end_to_end(
     # Patch graph materialization (no download/GloVe) and shrink the architecture +
     # schedule so the real fit/predict path runs in a couple of seconds on CPU.
     monkeypatch.setattr(
-        shared_graph, "build_graph", lambda db, device: (data, col_stats)
+        shared_graph, "build_graph", lambda db, device, **_: (data, col_stats)
     )
     monkeypatch.setattr(shared_graph, "GRAPH_CACHE", DBGraphCache())
     monkeypatch.setattr(relgt, "_CHANNELS", 16)
