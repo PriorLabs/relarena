@@ -104,11 +104,6 @@ BLOCKED_CLAUSE_PATTERNS = (
 #: alone: rows are sorted, so a note deferring to another ("same reasoning as ...")
 #: can be numbered before the one it points at.
 ACCEPTED: dict[str, str] = {
-    "tabpfn": (
-        "Prior Labs License v1.2 — Apache-2.0 plus paragraph 10 (enhanced "
-        "attribution). Not plain Apache-2.0; confined to the rdblearn extra so a "
-        "core install does not acquire its attribution obligation"
-    ),
     "certifi": (
         "MPL-2.0 — file-level weak copyleft; used unmodified, so no source "
         "obligation reaches relarena's own code"
@@ -480,9 +475,7 @@ def render(rows: list[dict]) -> str:
         "No core package carries a strong copyleft or a non-commercial clause. The",
         "entries that are not plain-permissive are all ACCEPTED with a reason below:",
         "MPL-2.0 (file-level, used unmodified) and the NVIDIA CUDA wheels that `torch`",
-        "pulls on Linux. `tabpfn` — the one dependency under the Prior Labs License,",
-        "whose paragraph 10 obliges downstream attribution — is deliberately *not*",
-        "here; it sits in the `rdblearn` extra (see `docs/licensing.md`).",
+        "pulls on Linux.",
         "",
         *table(tiers["core"]),
         "",

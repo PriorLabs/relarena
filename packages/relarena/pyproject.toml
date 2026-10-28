@@ -72,11 +72,11 @@ lightgbm = ["lightgbm>=4.0,<4.7"]
 # native system entry because selection happens inside its end-to-end run.
 kurversc = ["kurversc==0.1.1"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
-# (tabpfn>=8 for the create_default_for_version API, lazily imported in relarena.models.rdblearn.tfm)
-# plus the DFS featurization deps.
+# (tabpfn>=9: the create_default_for_version API and the first Apache-2.0 release; lazily
+# imported in relarena.models.rdblearn.tfm) plus the DFS featurization deps.
 # setuptools<82 because featuretools -> woodwork imports pkg_resources at import
 # time, and setuptools 82 removed it (81 still ships it).
-rdblearn = ["tabpfn>=8", "relarena-core[dfs]==0.0.7"]
+rdblearn = ["tabpfn>=9", "relarena-core[dfs]==0.0.7"]
 # rdl: the shared Relational Deep Learning stack for the GNN baselines — PyG + PyTorch
 # Frame + a text embedder, which relbench.modeling.* needs (all lazy-imported inside
 # fit()). GPU recommended. NOTE: PyG neighbor sampling needs `pyg-lib` or `torch-sparse`
