@@ -841,8 +841,8 @@ wheels = [
 
 [[package]]
 name = "graphreduce"
-version = "1.10.14"
-source = { registry = "https://pypi.org/simple" }
+version = "1.10.18"
+source = { git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976#21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" }
 dependencies = [
     { name = "dask", extra = ["dataframe"], marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or extra == 'group-18-relarena-workspace-kurversc' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "httpx" },
@@ -854,10 +854,6 @@ dependencies = [
     { name = "pyvis" },
     { name = "setuptools", version = "81.0.0", source = { registry = "https://pypi.org/simple" } },
     { name = "structlog" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/91/ea/c334ab33124c2d45efde80150943d6a271fb8a2ba5d113361ee97809732a/graphreduce-1.10.14.tar.gz", hash = "sha256:c41c9bf3cc9f70c311041a32260a5a65625330d63c10f27ca3c03fcc11aff280", size = 138974, upload-time = "2026-09-01T19:49:22.245Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/bc/0e7a7ebf22b28f26c4649b5d3c834a6ea6c7ae5531374c07b36b3206b8eb/graphreduce-1.10.14-py3-none-any.whl", hash = "sha256:58bd0627f5ef44d2afbe485b786166712488d93fd4c4c63e1293001197897e53", size = 86084, upload-time = "2026-09-01T19:49:20.793Z" },
 ]
 
 [[package]]
@@ -1247,8 +1243,8 @@ wheels = [
 
 [[package]]
 name = "kurversc"
-version = "0.1.1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.2.0"
+source = { git = "https://github.com/kurveai/kurversc.git?rev=b2cbeea0c7ee26d22e7076c7424c7ab108b2d060#b2cbeea0c7ee26d22e7076c7424c7ab108b2d060" }
 dependencies = [
     { name = "catboost" },
     { name = "duckdb" },
@@ -1259,9 +1255,18 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "structlog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bf/83/2f5f4b9f59ae26b968c36d8030ffcbba761151470b06f6edc206127ed469/kurversc-0.1.1.tar.gz", hash = "sha256:0ee6da95792b1f3c9a3045cc5525d503600ca0bc829bb905f523d50b3cbc70af", size = 98181, upload-time = "2026-09-01T19:53:41.913Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/18/c8076525955048c94a9c3d2c57df2316e6e6dd60b39386a2201774ea84c1/kurversc-0.1.1-py3-none-any.whl", hash = "sha256:dcfa48ca2208fea9f11a4ca2df8be5b72f7be802e544dbed58a1e5b64586fcb8", size = 69695, upload-time = "2026-09-01T19:53:40.545Z" },
+
+[package.optional-dependencies]
+staged = [
+    { name = "catboost" },
+    { name = "duckdb" },
+    { name = "graphreduce" },
+    { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" } },
+    { name = "pandas" },
+    { name = "psutil" },
+    { name = "pyarrow" },
+    { name = "relbench" },
+    { name = "scikit-learn" },
 ]
 
 [[package]]
@@ -2638,7 +2643,8 @@ graphsage = [
     { name = "torch-geometric" },
 ]
 kurversc = [
-    { name = "kurversc" },
+    { name = "graphreduce" },
+    { name = "kurversc", extra = ["staged"], marker = "extra == 'extra-8-relarena-kurversc' or (extra == 'extra-8-relarena-nori-rel' and extra == 'group-18-relarena-workspace-kurversc') or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 leaderboard = [
     { name = "bencheval" },
@@ -2692,9 +2698,10 @@ requires-dist = [
     { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
     { name = "configspace", specifier = ">=1.0" },
     { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
+    { name = "graphreduce", marker = "extra == 'kurversc'", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" },
     { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
     { name = "jsonschema", specifier = ">=4.0" },
-    { name = "kurversc", marker = "extra == 'kurversc'", specifier = "==0.1.1" },
+    { name = "kurversc", extras = ["staged"], marker = "extra == 'kurversc'", git = "https://github.com/kurveai/kurversc.git?rev=b2cbeea0c7ee26d22e7076c7424c7ab108b2d060" },
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.3.3,<3.0" },
@@ -2735,6 +2742,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "relbench" },
     { name = "scikit-learn" },
+    { name = "six" },
 ]
 
 [package.optional-dependencies]
@@ -2759,6 +2767,7 @@ requires-dist = [
     { name = "relbench", specifier = "==2.1.2" },
     { name = "scikit-learn", specifier = ">=1.3" },
     { name = "setuptools", marker = "extra == 'dfs'", specifier = "<82" },
+    { name = "six", specifier = ">=1.16" },
 ]
 provides-extras = ["dfs"]
 
@@ -2783,7 +2792,8 @@ dev = [
     { name = "tabpfn-rel" },
 ]
 kurversc = [
-    { name = "kurversc" },
+    { name = "graphreduce" },
+    { name = "kurversc", extra = ["staged"], marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or extra == 'group-18-relarena-workspace-kurversc' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
 ]
 
 [package.metadata]
@@ -2800,7 +2810,10 @@ dev = [
     { name = "setuptools", specifier = "<82" },
     { name = "tabpfn-rel", specifier = ">=0.0.5" },
 ]
-kurversc = [{ name = "kurversc", specifier = "==0.1.1" }]
+kurversc = [
+    { name = "graphreduce", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" },
+    { name = "kurversc", extras = ["staged"], git = "https://github.com/kurveai/kurversc.git?rev=b2cbeea0c7ee26d22e7076c7424c7ab108b2d060" },
+]
 
 [[package]]
 name = "relational-transformer"

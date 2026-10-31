@@ -22,7 +22,7 @@ dev = [
 # Focused adapter tests exercise the public optional-package boundary. kurversc
 # caps numpy<2, so it sits in its own group rather than in `dev`: extras whose
 # runtime needs numpy>=2 cannot otherwise be installed alongside the test tools.
-kurversc = ["kurversc==0.1.1"]
+kurversc = ["kurversc[staged]==0.2.0", "graphreduce==1.10.18"]
 cuda = []
 # The CPU-only build avoids downloading CUDA when not required.
 cpu = ["torch"]
@@ -48,6 +48,8 @@ conflicts = [
 ]
 
 [tool.uv.sources]
+kurversc = { git = "https://github.com/kurveai/kurversc.git", rev = "b2cbeea0c7ee26d22e7076c7424c7ab108b2d060" }
+graphreduce = { git = "https://github.com/wesmadrigal/GraphReduce.git", rev = "21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" }
 relarena = { workspace = true }
 relarena-core = { workspace = true }
 # bencheval lives in the autogluon/tabarena uv-workspace under packages/bencheval.
