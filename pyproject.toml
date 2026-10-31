@@ -48,7 +48,7 @@ conflicts = [
 ]
 
 [tool.uv.sources]
-kurversc = { git = "https://github.com/kurveai/kurversc.git", rev = "e90fc6107907bae18dad6e423579aff3a06ba9a5" }
+kurversc = { git = "https://github.com/kurveai/kurversc.git", rev = "78d0c650ea0db67ba29a51d2558c4bf183f2dd6b" }
 graphreduce = { git = "https://github.com/wesmadrigal/GraphReduce.git", rev = "21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" }
 relarena = { workspace = true }
 relarena-core = { workspace = true }
