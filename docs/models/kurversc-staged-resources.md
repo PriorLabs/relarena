@@ -8,8 +8,8 @@
 | rel-f1/driver-position | completed | 18.85 | 3.79 | 7.29 |
 | rel-avito/user-clicks | completed | 17.50 | 0.48 | 20.76 |
 | rel-trial/study-adverse | completed | 10.63 | 10.62 | 21.71 |
-| rel-trial/study-outcome | running | — | — | — |
-| rel-stack/user-engagement | queued | — | — | — |
+| rel-trial/study-outcome | completed | 1.22 | 1.22 | 18.38 |
+| rel-stack/user-engagement | completed | 2.44 | 2.44 | 32.18 |
 
 Wall time includes host sleep, waiting and metadata/resume repairs. Recorded phase time can exclude host sleep; it is not a controlled runtime comparison. Each task retains its original deadline below 24 hours.
 

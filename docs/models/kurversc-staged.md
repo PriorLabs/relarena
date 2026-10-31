@@ -24,7 +24,7 @@ benchmark-test-win campaign gates are absent from the packaged execution closure
 That closure contains 32 stage modules, reduced from 108. The KurveRSC staged
 extra no longer requests the removed pretrained semantic encoder dependencies.
 
-[Component requirements and global defaults](https://github.com/kurveai/kurversc/blob/78d0c650ea0db67ba29a51d2558c4bf183f2dd6b/docs/generic-staged-review.md)
+[Component requirements and global defaults](https://github.com/kurveai/kurversc/blob/b2cbeea0c7ee26d22e7076c7424c7ab108b2d060/docs/generic-staged-review.md)
 are documented with the companion revision in [KurveRSC #4](https://github.com/kurveai/kurversc/pull/4).
 The retained presets are bounded global defaults, not claims that historical
 validation erases prior benchmark-driven development.
@@ -73,10 +73,9 @@ outside RelBench. Native `fit`/`predict` remain lower-level component interfaces
   registered class and actual current-core split types: **48 requests each** on
   fresh unregistered schemas; no hidden targets supplied.
 - Wheel/sdist contents, exclusions and predictive-source parity checks pass.
-- The [six-task local pilot](kurversc-staged-results.md) has **four completed**
-  official RelBench-scored results; study-outcome is running and user-engagement
-  is queued. Scores, admissions and sampled resources are disclosed, including
-  decreases. Initial metadata/resume repairs are recorded.
+- The [six-task local pilot](kurversc-staged-results.md) has **six completed**
+  official RelBench-scored results. Scores, admissions and sampled resources
+  are disclosed, including decreases. Initial metadata/resume repairs are recorded.
 
 These checks use existing numerical dependencies. They do not establish cold
 installation or an independent current-harness 21-task reproduction. No revised
@@ -84,6 +83,6 @@ installation or an independent current-harness 21-task reproduction. No revised
 [October 27 results](archive/kurversc-staged-20261027/kurversc-staged-results.md)
 and resources are explicitly archived as measurements of the superseded recipe.
 
-[Checksummed pilot admission evidence](https://github.com/kurveai/kurversc/blob/78d0c650ea0db67ba29a51d2558c4bf183f2dd6b/docs/generic-staged-pilot-admissions.tar.gz)
+[Checksummed pilot admission evidence](https://github.com/kurveai/kurversc/blob/b2cbeea0c7ee26d22e7076c7424c7ab108b2d060/docs/generic-staged-pilot-admissions.tar.gz)
 contains the saved selections, fold/seed reports and source receipts for the
 completed tasks. It excludes source data, predictions and held-out targets.
