@@ -1,4 +1,8 @@
-# Revised pilot resources
+# Pre-correction narrowed pilot resources
+
+Measured on source `b2cbeea0c7ee26d22e7076c7424c7ab108b2d060`, before the
+source-graph replay correction. These observations are planning context for the
+current reproduction candidate.
 
 48 GB Mac, one task at a time, 8 GiB RAM reserve. RSS is sampled process-tree RSS, not kernel cgroup memory.peak.
 

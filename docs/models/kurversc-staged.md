@@ -18,13 +18,19 @@ narrowed `kurversc-generic-staged-v1` recipe.
    `select_temporal_policy` gate. Earlier admissions do not determine eligibility.
 5. Validation-locked fitting and keyed prediction.
 
+The source adapter constructs the repeated-table source superset declared by
+its candidate menu. Frozen plans bind source limits, aliases, keys, clocks and
+relationships; outer replay restores and verifies those bindings. This repairs
+a mismatch where a repeated-table candidate could receive an acyclic source
+graph. It adds no prediction head or task-specific eligibility rule.
+
 Exposure-role reconstruction, recurrence/semantic teacher/ranker correction,
 conditional-count recovery, production-sequence recovery, bounded views and
 benchmark-test-win campaign gates are absent from the packaged execution closure.
 That closure contains 32 stage modules, reduced from 108. The KurveRSC staged
 extra no longer requests the removed pretrained semantic encoder dependencies.
 
-[Component requirements and global defaults](https://github.com/kurveai/kurversc/blob/b2cbeea0c7ee26d22e7076c7424c7ab108b2d060/docs/generic-staged-review.md)
+[Component requirements and global defaults](https://github.com/kurveai/kurversc/blob/f5bf98a03cdaa2b0798f80b44854f4629aba4eb0/docs/generic-staged-review.md)
 are documented with the companion revision in [KurveRSC #4](https://github.com/kurveai/kurversc/pull/4).
 The retained presets are bounded global defaults, not claims that historical
 validation erases prior benchmark-driven development.
@@ -67,15 +73,19 @@ outside RelBench. Native `fit`/`predict` remain lower-level component interfaces
 
 ## Revised validation status
 
-- Clean companion source: **710 passed, 1 skipped**.
-- Current RelArena adapter/discovery checks: **19 passed**.
+- Clean companion source: **716 passed, 1 skipped**.
+- Current RelArena adapter/discovery checks: **14 passed** (staged adapter,
+  built-in discovery and external plugin discovery).
 - Complete installed-wheel classification and regression smokes through this
   registered class and actual current-core split types: **48 requests each** on
   fresh unregistered schemas; no hidden targets supplied.
 - Wheel/sdist contents, exclusions and predictive-source parity checks pass.
 - The [six-task local pilot](kurversc-staged-results.md) has **six completed**
-  official RelBench-scored results. Scores, admissions and sampled resources
-  are disclosed, including decreases. Initial metadata/resume repairs are recorded.
+  official RelBench-scored results from the preceding narrowed source revision
+  `b2cbeea0c7ee26d22e7076c7424c7ab108b2d060`. Scores, admissions and sampled
+  resources are disclosed, including decreases and initial metadata/resume
+  repairs. These scores predate the source-graph replay correction and are not
+  reassigned to the new source pin.
 
 These checks use existing numerical dependencies. They do not establish cold
 installation or an independent current-harness 21-task reproduction. No revised
@@ -83,6 +93,6 @@ installation or an independent current-harness 21-task reproduction. No revised
 [October 27 results](archive/kurversc-staged-20261027/kurversc-staged-results.md)
 and resources are explicitly archived as measurements of the superseded recipe.
 
-[Checksummed pilot admission evidence](https://github.com/kurveai/kurversc/blob/b2cbeea0c7ee26d22e7076c7424c7ab108b2d060/docs/generic-staged-pilot-admissions.tar.gz)
+[Checksummed pilot admission evidence](https://github.com/kurveai/kurversc/blob/f5bf98a03cdaa2b0798f80b44854f4629aba4eb0/docs/generic-staged-pilot-admissions.tar.gz)
 contains the saved selections, fold/seed reports and source receipts for the
 completed tasks. It excludes source data, predictions and held-out targets.
