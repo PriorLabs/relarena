@@ -80,6 +80,9 @@ outside RelBench. Native `fit`/`predict` remain lower-level component interfaces
   registered class and actual current-core split types: **48 requests each** on
   fresh unregistered schemas; no hidden targets supplied.
 - Wheel/sdist contents, exclusions and predictive-source parity checks pass.
+- Two [fresh current-harness F1 runs](kurversc-current-harness-f1-qualification.md)
+  completed at the current KurveRSC pin, with saved prediction hashes, separate
+  official scoring, recorded regressions and sampled resource receipts.
 - The [six-task local pilot](kurversc-staged-results.md) has **six completed**
   official RelBench-scored results from the preceding narrowed source revision
   `b2cbeea0c7ee26d22e7076c7424c7ab108b2d060`. Scores, admissions and sampled
@@ -96,3 +99,7 @@ and resources are explicitly archived as measurements of the superseded recipe.
 [Checksummed pilot admission evidence](https://github.com/kurveai/kurversc/blob/f5bf98a03cdaa2b0798f80b44854f4629aba4eb0/docs/generic-staged-pilot-admissions.tar.gz)
 contains the saved selections, fold/seed reports and source receipts for the
 completed tasks. It excludes source data, predictions and held-out targets.
+
+The KurveRSC companion PR has merged. The source revision pinned here remains
+frozen for review; ongoing research is separate and does not enter reproduction
+unless this dependency pin is explicitly changed.

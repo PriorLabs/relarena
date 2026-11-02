@@ -1,0 +1,152 @@
+{
+  "format_version": 1,
+  "scope": "Two fresh frozen author runs through the registered current-core system; independent maintainer full-panel reproduction remains pending",
+  "source_pins": {
+    "kurversc_source_pin": "f5bf98a03cdaa2b0798f80b44854f4629aba4eb0",
+    "relarena_source_pin": "0cec60d15e6132e1fc24b7edeffca3c15bd75133",
+    "graphreduce_source_pin": "21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976"
+  },
+  "environment": {
+    "python": "3.11.3",
+    "platform": "Darwin",
+    "machine": "arm64",
+    "physical_ram_gib": 48,
+    "numerical_versions": {
+      "numpy": "1.26.4",
+      "pandas": "2.3.3",
+      "pyarrow": "20.0.0",
+      "duckdb": "1.2.2",
+      "scipy": "1.17.1",
+      "scikit-learn": "1.6.1",
+      "catboost": "1.2.10",
+      "relbench": "2.1.2"
+    }
+  },
+  "official_harness_call": "run_system_experiment(KurveRSC20261022System, dataset, task, seed=0, time_limit=23.75*3600, download=False, evaluate_test=False, cache_dir=fresh_output)",
+  "scoring": "After completed predictions were hashed: EntityTask.evaluate(predictions, None, metrics), matching run_system_experiment",
+  "selected_readouts": [
+    "incumbent",
+    "incumbent"
+  ],
+  "tasks": [
+    {
+      "dataset": "rel-f1",
+      "task": "driver-top3",
+      "metric": "roc_auc",
+      "test_score": 0.8341542119565218,
+      "test_metrics": {
+        "average_precision": 0.4243740372363734,
+        "accuracy": 0.8140495867768595,
+        "f1": 0.3005181347150259,
+        "roc_auc": 0.8341542119565218
+      },
+      "request_rows": 726,
+      "prediction_sha256": "090afc844cb738f017b6a5ce7e68e6a908cb89853baead904875a805adf6c3f5",
+      "context_sha256": "4eacc308fd988d184e3ec859697b778d68b0dd6d6bd020413942f9d00d863297",
+      "elapsed_seconds": 9751.460450500017,
+      "peak_process_tree_rss_gib": 11.4423828125,
+      "minimum_system_available_gib": 17.906402587890625,
+      "memory_guard_triggered": false,
+      "time_limit_triggered": false,
+      "selected_config": {
+        "feature_families": [
+          "base",
+          "state"
+        ],
+        "depth": 2,
+        "auto_annotate_features": true,
+        "feature_family_max_columns": 4,
+        "feature_family_max_features_per_column": 32,
+        "feature_propagation_max_functions_per_column": 1,
+        "auto_text_features": false,
+        "auto_annotate_max_text_columns": null,
+        "categorical_cardinality_threshold": 20,
+        "categorical_top_k": 5,
+        "high_cardinality_policy": "top_k",
+        "categorical_low_cardinality_policy": "top_k",
+        "text_categorical_fallback": true,
+        "include_target_history": false,
+        "max_base_table_occurrences": 1,
+        "published_cutoff_compatibility": false,
+        "categorical_tie_break": "value",
+        "categorical_tie_break_seed": 0,
+        "legacy_training_row_order": false,
+        "base_distribution_features": true,
+        "materialization_batch_rows": null,
+        "root_reachable_materialization": true
+      },
+      "selected_readout": "incumbent",
+      "timed_source_instances": 30,
+      "all_explicit_timed_source_boundaries_strict": true,
+      "compatibility_cutoff_shift_effective": false,
+      "compatibility_shift_reason": "Explicit source clocks disable legacy cutoff shifting",
+      "original_request_order_verified": true,
+      "model_refit_for_scoring": false,
+      "scoring_used_for_model_or_campaign_admission": false
+    },
+    {
+      "dataset": "rel-f1",
+      "task": "driver-position",
+      "metric": "mae",
+      "test_score": 3.977847395964551,
+      "test_metrics": {
+        "r2": 0.16236265270559302,
+        "mae": 3.977847395964551,
+        "rmse": 4.768676617225314
+      },
+      "request_rows": 760,
+      "prediction_sha256": "2b2dec4f7abb53f81a11c4410f82842cf0ea67a23232fca47fd11f433dcd81b0",
+      "context_sha256": "ef9f0d9adcfd030d132a4ffb61916a2b33e9ecf37588ee6c7b94924830a2d5f7",
+      "elapsed_seconds": 11287.843581416993,
+      "peak_process_tree_rss_gib": 10.025497436523438,
+      "minimum_system_available_gib": 18.965438842773438,
+      "memory_guard_triggered": false,
+      "time_limit_triggered": false,
+      "selected_config": {
+        "feature_families": [
+          "base",
+          "conditional"
+        ],
+        "depth": 1,
+        "auto_annotate_features": true,
+        "feature_family_max_columns": 4,
+        "feature_family_max_features_per_column": 32,
+        "feature_propagation_max_functions_per_column": 1,
+        "auto_text_features": false,
+        "auto_annotate_max_text_columns": null,
+        "categorical_cardinality_threshold": 20,
+        "categorical_top_k": 5,
+        "high_cardinality_policy": "top_k",
+        "categorical_low_cardinality_policy": "all",
+        "text_categorical_fallback": true,
+        "include_target_history": false,
+        "max_base_table_occurrences": 1,
+        "published_cutoff_compatibility": true,
+        "categorical_tie_break": "value",
+        "categorical_tie_break_seed": 0,
+        "legacy_training_row_order": false,
+        "base_distribution_features": true,
+        "materialization_batch_rows": null,
+        "root_reachable_materialization": true
+      },
+      "selected_readout": "incumbent",
+      "timed_source_instances": 30,
+      "all_explicit_timed_source_boundaries_strict": true,
+      "compatibility_cutoff_shift_effective": false,
+      "compatibility_shift_reason": "Explicit source clocks disable legacy cutoff shifting",
+      "original_request_order_verified": true,
+      "model_refit_for_scoring": false,
+      "scoring_used_for_model_or_campaign_admission": false
+    }
+  ],
+  "full_21_complete": false,
+  "elo_claimed": false,
+  "experimental_heads_used": false,
+  "guard_definition": "Sampled sum of RSS across the process tree; GiB = bytes / 2**30. Shared pages may be double-counted. Not cgroup/PSS accounting.",
+  "installation": "Existing numerical environment; not a cold dependency installation",
+  "evidence_archive": {
+    "file": "kurversc-current-harness-f1-qualification-evidence.tar.gz",
+    "sha256": "f955772441fc26bf2146627ccca930e6f45bb003fe844b2047a2bade82bebdcd",
+    "metadata_only": true
+  }
+}

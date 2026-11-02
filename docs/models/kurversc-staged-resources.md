@@ -1,4 +1,18 @@
-# Pre-correction narrowed pilot resources
+# KurveRSC resource qualification
+
+## Current frozen source: two completed F1 tasks
+
+At `f5bf98a`, fresh current-harness author runs on the same 48 GiB Mac completed
+top3 in 2.709 hours at 11.442 GiB sampled process-tree RSS, and position in
+3.135 hours at 10.025 GiB. Both used the unchanged 23.75-hour deadline and
+finished without a memory/deadline interruption. Minimum system availability
+was 17.906 and 18.965 GiB respectively.
+
+These measurements qualify two tasks only. They do not certify full-panel RAM
+or runtime requirements. [Exact receipts and measurement definitions](kurversc-current-harness-f1-qualification.md)
+include the existing numerical environment and official scoring provenance.
+
+## Pre-correction narrowed pilot resources
 
 Measured on source `b2cbeea0c7ee26d22e7076c7424c7ab108b2d060`, before the
 source-graph replay correction. These observations are planning context for the
