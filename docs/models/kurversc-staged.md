@@ -1,105 +1,68 @@
-# KurveRSC: generic staged revision
+# KurveRSC: generic staged system
 
-`kurversc-2026-10-22` is a versioned system; `kurversc-latest` resolves to it.
-The earlier native `kurversc` registration and historical result identity remain
-distinct. Following maintainer review, the staged source pin now selects the
-narrowed `kurversc-generic-staged-v1` recipe.
+`kurversc-2026-10-22` is the versioned system; `kurversc-latest` resolves to it.
+The earlier native `kurversc` registration remains distinct. The thin adapter
+passes caller-owned censored inner/outer splits to
+`kurversc.protocol_runner.run_protocol_task`; RelArena owns hidden-label scoring.
 
-## Retained procedure
+## Procedure
 
 1. Schema-derived graph search with bounded 10K/50K screening and full-frame
-   finalist evaluation.
-2. Production-faithful finalist comparison and frozen operation-plan replay.
-3. Historical temporal-training-policy selection using up to three origins,
-   validation seeds 0/1/2 and deployment seed 0.
+   finalist evaluation, including CDF/base representations and peer context.
+2. A bounded production-faithful finalist comparison for **both binary
+   classification and regression**, followed by frozen operation-plan replay.
+   The same 1% relative-loss cap uses `1 - AUC` or MAE for candidate screening
+   and every seed/fold. At most one graph with at most half the incumbent's
+   columns is compared. Replacement requires unanimous native-selector
+   decisions across seeds 0/1/2 on two or three temporal origins.
+3. Historical temporal-training-policy selection on up to three origins and
+   seeds 0/1/2; deployment seed 0.
 4. One optional menu: generic parent text, three/five-frame ensembles,
    target-domain projection, zero-aware readout and object breadth. Applicable
-   candidates compare against the same temporal-policy incumbent through one
-   `select_temporal_policy` gate. Earlier admissions do not determine eligibility.
+   candidates use the same incumbent and `select_temporal_policy` gate;
+   eligibility is independent of previous admissions.
 5. Validation-locked fitting and keyed prediction.
 
-The source adapter constructs the repeated-table source superset declared by
-its candidate menu. Frozen plans bind source limits, aliases, keys, clocks and
-relationships; outer replay restores and verifies those bindings. This repairs
-a mismatch where a repeated-table candidate could receive an acyclic source
-graph. It adds no prediction head or task-specific eligibility rule.
+The source graph supplies the repeated-table bounds offered by its candidate
+menu. Frozen replay restores and verifies source limits, aliases, keys, clocks
+and relationships. Source event timestamps are strictly before each query;
+availability and label-maturity clocks retain their declared semantics.
+Masked forecast requests keep their original keys and order, including requests
+whose root payload is unavailable at a strict cutoff.
 
-Exposure-role reconstruction, recurrence/semantic teacher/ranker correction,
-conditional-count recovery, production-sequence recovery, bounded views and
-benchmark-test-win campaign gates are absent from the packaged execution closure.
-That closure contains 32 stage modules, reduced from 108. The KurveRSC staged
-extra no longer requests the removed pretrained semantic encoder dependencies.
-
-[Component requirements and global defaults](https://github.com/kurveai/kurversc/blob/f5bf98a03cdaa2b0798f80b44854f4629aba4eb0/docs/generic-staged-review.md)
-are documented with the companion revision in [KurveRSC #4](https://github.com/kurveai/kurversc/pull/4).
-The retained presets are bounded global defaults, not claims that historical
-validation erases prior benchmark-driven development.
-
-## Inputs and scoring
-
-The thin adapter forwards the caller's actual censored inner/outer splits to
-`kurversc.protocol_runner.run_protocol_task`. It does not download another
-database or obtain hidden targets. RelArena owns holdout scoring.
-
-RelBench timed-table adaptation explicitly uses source event time strictly
-before each query. Independent availability clocks remain inclusive at their
-boundary. Strict filtering precedes annotation/materialization, and missing
-root payloads do not remove forecast requests. Label support requires horizon
-maturity and its declared availability. Saved predictions retain the original
-masked request keys and order.
-
-Preprocessing, search, selection, refitting and prediction share an original
-budget below 24 hours. Resume retains that deadline. Deployment seeds other than
-0 raise; incomplete stages raise rather than returning a native-only fallback.
+Exposure-role reconstruction, recurrence/semantic corrections, conditional-count
+recovery, production-sequence recovery, bounded views and test-win campaign gates
+are excluded from the packaged procedure.
 
 ## Installation and execution
 
-The workspace pins KurveRSC 0.2.0 to the revised source commit and retains
-GraphReduce 1.10.18 at its reviewed commit. A nominal version number alone does
-not identify this revision. No PyPI publication is performed by this PR update.
+The workspace pins KurveRSC 0.2.0 and GraphReduce 1.10.18 to reviewed source
+commits in `pyproject.toml` and `uv.lock`. After maintainer reproduction, both
+dependencies will use their corresponding PyPI releases before merge.
 
 ```bash
 uv sync --all-packages --group cpu --extra kurversc --python 3.12
 KURVERSC_DUCKDB_MEMORY_LIMIT=6GiB KURVERSC_DUCKDB_MAX_TEMP_DIRECTORY_SIZE=128GiB OMP_NUM_THREADS=1 uv run --no-sync relarena --model kurversc-latest --datasets rel-f1 --tasks driver-dnf --seed 0 --output kurversc_driver_dnf.csv
 ```
 
-The engine limits above match the local pilot. They govern spilling, not total
-process memory. Use the [resource report](kurversc-staged-resources.md) to plan
-admission. Independent tasks may execute concurrently with separate output,
-scratch and cache locations; keep internal worker/thread settings fixed.
+The entire procedure shares a deadline below 24 hours, retained across resumes.
+Incomplete stages raise rather than returning partial/native predictions.
+Independent tasks can run concurrently with separate output, scratch and cache
+directories and RAM headroom; preserve the internal worker/thread settings.
+See [resource planning](kurversc-staged-resources.md).
 
-`kurversc.run_staged_task` also accepts an explicit `TaskContext` for a schema
-outside RelBench. Native `fit`/`predict` remain lower-level component interfaces.
+## Reproduction and provenance
 
-## Revised validation status
+The maintainer's 21-task reproduction through this registered adapter is the
+reference result. No full-panel score or Elo is assigned to the revised pin.
+Historical author results and large evidence bundles are kept outside this
+submission's working tree; they remain available in the prior PR history and
+the KurveRSC repository. `baseline_results/` is unchanged.
 
-- Clean companion source: **716 passed, 1 skipped**.
-- Current RelArena adapter/discovery checks: **14 passed** (staged adapter,
-  built-in discovery and external plugin discovery).
-- Complete installed-wheel classification and regression smokes through this
-  registered class and actual current-core split types: **48 requests each** on
-  fresh unregistered schemas; no hidden targets supplied.
-- Wheel/sdist contents, exclusions and predictive-source parity checks pass.
-- Two [fresh current-harness F1 runs](kurversc-current-harness-f1-qualification.md)
-  completed at the current KurveRSC pin, with saved prediction hashes, separate
-  official scoring, recorded regressions and sampled resource receipts.
-- The [six-task local pilot](kurversc-staged-results.md) has **six completed**
-  official RelBench-scored results from the preceding narrowed source revision
-  `b2cbeea0c7ee26d22e7076c7424c7ab108b2d060`. Scores, admissions and sampled
-  resources are disclosed, including decreases and initial metadata/resume
-  repairs. These scores predate the source-graph replay correction and are not
-  reassigned to the new source pin.
-
-These checks use existing numerical dependencies. They do not establish cold
-installation or an independent current-harness 21-task reproduction. No revised
-21-task Elo is claimed; `baseline_results/` is unchanged. The
-[October 27 results](archive/kurversc-staged-20261027/kurversc-staged-results.md)
-and resources are explicitly archived as measurements of the superseded recipe.
-
-[Checksummed pilot admission evidence](https://github.com/kurveai/kurversc/blob/f5bf98a03cdaa2b0798f80b44854f4629aba4eb0/docs/generic-staged-pilot-admissions.tar.gz)
-contains the saved selections, fold/seed reports and source receipts for the
-completed tasks. It excludes source data, predictions and held-out targets.
-
-The KurveRSC companion PR has merged. The source revision pinned here remains
-frozen for review; ongoing research is separate and does not enter reproduction
-unless this dependency pin is explicitly changed.
+The [component definitions and global defaults](https://github.com/kurveai/kurversc/blob/cf6599bd7de21f32b299c3cdce75f611ad050a06/docs/generic-staged-review.md)
+and [source/package qualification](https://github.com/kurveai/kurversc/blob/cf6599bd7de21f32b299c3cdce75f611ad050a06/docs/generic-staged-validation.json)
+are documented in [KurveRSC #5](https://github.com/kurveai/kurversc/pull/5).
+Qualification: 727 source tests passed with one skip; 19 adapter/discovery checks
+passed; installed-wheel classification/regression runs each completed the whole
+registered procedure on a fresh 48-request schema. The submitted pin keeps
+ongoing experimental feature work outside this reproduction.
