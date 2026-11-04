@@ -842,7 +842,7 @@ wheels = [
 [[package]]
 name = "graphreduce"
 version = "1.10.18"
-source = { git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976#21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dask", extra = ["dataframe"], marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or extra == 'group-18-relarena-workspace-kurversc' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "httpx" },
@@ -854,6 +854,10 @@ dependencies = [
     { name = "pyvis" },
     { name = "setuptools", version = "81.0.0", source = { registry = "https://pypi.org/simple" } },
     { name = "structlog" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bf/6d/1cd827a938399240ffd5bc216f454598c0a1b0b03399e37462bdc591eac5/graphreduce-1.10.18.tar.gz", hash = "sha256:20e7ac6335c6231c836e83339d69c98c895f30800fb83d5f7484fbb57960afc1", size = 130273, upload-time = "2026-11-04T14:20:23.92Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/58/0166d9aeb294effe3783ffec465b429e71c839a00e31668e5c94f1bac589/graphreduce-1.10.18-py3-none-any.whl", hash = "sha256:5d99b358e4ce5f85c3d16fb8a2db072d9c18da6abbd03c4e194aff822410bd81", size = 97666, upload-time = "2026-11-04T14:20:22.118Z" },
 ]
 
 [[package]]
@@ -1244,7 +1248,7 @@ wheels = [
 [[package]]
 name = "kurversc"
 version = "0.2.0"
-source = { git = "https://github.com/kurveai/kurversc.git?rev=cf6599bd7de21f32b299c3cdce75f611ad050a06#cf6599bd7de21f32b299c3cdce75f611ad050a06" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "catboost" },
     { name = "duckdb" },
@@ -1254,6 +1258,10 @@ dependencies = [
     { name = "pytz" },
     { name = "scikit-learn" },
     { name = "structlog" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3a/aa/283f79c17effee5f076c58050385aa5d5fdf2d1ce7f37adbc777e7b7b61a/kurversc-0.2.0.tar.gz", hash = "sha256:6093ba24d9d4fb31252980d816032c1141dab6ea9c50713e797428d458f5fc20", size = 933742, upload-time = "2026-11-04T14:20:26.884Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0d/81/91982d238a5f3267c6007f2c509277931e8bc8e10fce1a6d4b67bcb1c583/kurversc-0.2.0-py3-none-any.whl", hash = "sha256:0d5eae0f9381d0948475352bcae97b85e5fc5dce98ea4cfb1f7d50bceb635ea0", size = 367788, upload-time = "2026-11-04T14:20:25.409Z" },
 ]
 
 [package.optional-dependencies]
@@ -2698,10 +2706,10 @@ requires-dist = [
     { name = "bencheval", extras = ["plot"], marker = "extra == 'plots'", git = "https://github.com/autogluon/tabarena.git?subdirectory=packages%2Fbencheval&rev=9f3878b882439cb885003b5f978676961b059b6d" },
     { name = "configspace", specifier = ">=1.0" },
     { name = "einops", marker = "extra == 'relgt'", specifier = ">=0.8" },
-    { name = "graphreduce", marker = "extra == 'kurversc'", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" },
+    { name = "graphreduce", marker = "extra == 'kurversc'", specifier = "==1.10.18" },
     { name = "h5py", marker = "extra == 'relgt'", specifier = ">=3.0" },
     { name = "jsonschema", specifier = ">=4.0" },
-    { name = "kurversc", extras = ["staged"], marker = "extra == 'kurversc'", git = "https://github.com/kurveai/kurversc.git?rev=cf6599bd7de21f32b299c3cdce75f611ad050a06" },
+    { name = "kurversc", extras = ["staged"], marker = "extra == 'kurversc'", specifier = "==0.2.0" },
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0,<4.7" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.3.3,<3.0" },
@@ -2809,8 +2817,8 @@ dev = [
     { name = "tabpfn-rel", specifier = ">=0.0.5" },
 ]
 kurversc = [
-    { name = "graphreduce", git = "https://github.com/wesmadrigal/GraphReduce.git?rev=21aff2e9ad83d69d7fc468d01e3d56a0dc6ca976" },
-    { name = "kurversc", extras = ["staged"], git = "https://github.com/kurveai/kurversc.git?rev=cf6599bd7de21f32b299c3cdce75f611ad050a06" },
+    { name = "graphreduce", specifier = "==1.10.18" },
+    { name = "kurversc", extras = ["staged"], specifier = "==0.2.0" },
 ]
 
 [[package]]

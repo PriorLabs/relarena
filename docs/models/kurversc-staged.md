@@ -36,9 +36,12 @@ are excluded from the packaged procedure.
 
 ## Installation and execution
 
-The workspace pins KurveRSC 0.2.0 and GraphReduce 1.10.18 to reviewed source
-commits in `pyproject.toml` and `uv.lock`. After maintainer reproduction, both
-dependencies will use their corresponding PyPI releases before merge.
+The workspace installs exact PyPI releases: `kurversc[staged]==0.2.0` and
+`graphreduce==1.10.18`. Neither package uses a Git dependency override.
+
+```bash
+pip install "kurversc[staged]==0.2.0" "graphreduce==1.10.18"
+```
 
 ```bash
 uv sync --all-packages --group cpu --extra kurversc --python 3.12
