@@ -82,3 +82,13 @@ the Deep Feature Synthesis to tabular-foundation-model recipe from
 https://github.com/HKUSHXLab/rdblearn. The closest adaptation is the
 non-stratified train downsampling in `packages/relarena-core/src/relarena_core/tfm.py`; RelArena's DFS
 cache and TabPFN-Rel extensions are original work.
+
+relflow schema derivation and raw SQL rendering were adapted from
+https://github.com/relflow/arena, repository baseline
+09f0c8c0b4c9af9c4a2338156f7609431c32737d. The precise frozen campaign file
+SHA256 values are retained in each copied file's header. Only generator code is
+copied: command-line entrypoints, dataset-cache loaders and unused renderers are
+omitted, imports are relative, profiling samples are repeatable, and formatting
+is normalized. Nested attachment multiplicity is retained unchanged. The files
+are under models/relflow/_vendor; the Apache-2.0 license is included below in
+VENDORED-LICENSES. Neural execution imports the separate relflow dependency.
