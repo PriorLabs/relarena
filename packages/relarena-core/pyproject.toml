@@ -24,4 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dfs = ["fastdfs>=1.2", "setuptools<82"]
+# fastdfs leaves boto3 unpinned. Without a floor, python-dateutil 3 (which every
+# current botocore excludes) makes resolvers backtrack to boto3 0.0.x and six 1.7,
+# whose missing `six.moves` breaks importing pandas.
+dfs = ["fastdfs>=1.2", "setuptools<82", "boto3>=1.34"]

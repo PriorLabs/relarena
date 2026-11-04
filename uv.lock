@@ -2739,6 +2739,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dfs = [
+    { name = "boto3" },
     { name = "fastdfs" },
     { name = "setuptools", version = "80.10.2", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-nori-rel' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
     { name = "setuptools", version = "81.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-8-relarena-kurversc' or extra != 'extra-8-relarena-nori-rel' or extra == 'group-18-relarena-workspace-kurversc' or (extra == 'group-18-relarena-workspace-cpu' and extra == 'group-18-relarena-workspace-cuda')" },
@@ -2746,6 +2747,7 @@ dfs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "boto3", marker = "extra == 'dfs'", specifier = ">=1.34" },
     { name = "configspace", specifier = ">=1.0" },
     { name = "datasets", specifier = ">=4" },
     { name = "duckdb", specifier = ">=1.2.2" },
