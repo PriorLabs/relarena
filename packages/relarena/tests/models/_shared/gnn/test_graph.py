@@ -17,11 +17,13 @@ from relbench.base import Database, Table, TaskType
 
 pytest.importorskip("torch_frame")
 
-from relarena.models._shared.gnn.graph import (  # noqa: E402
+from relarena.models._shared.gnn._vendor.graph import (  # noqa: E402
     STYPE_SAMPLE_SIZE,
+    propose_stypes,
+)
+from relarena.models._shared.gnn.graph import (  # noqa: E402
     build_graph,
     graph_col_to_stype,
-    propose_stypes,
 )
 from relarena.models._shared.gnn.graph_cache import DBGraphCache  # noqa: E402
 
