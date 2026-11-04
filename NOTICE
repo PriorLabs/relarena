@@ -12,6 +12,11 @@ retained alongside the code in this package:
     https://github.com/snap-stanford/relbench
     packages/relarena/src/relarena/models/_shared/gnn/_vendor/gnn.py
 
+  * RelBench stype proposal and primary-foreign key graph construction
+    Copyright (c) 2023 RelBench Team
+    https://github.com/snap-stanford/relbench
+    packages/relarena/src/relarena/models/_shared/gnn/_vendor/graph.py
+
   * RelGNN composite-message-passing GNN
     Copyright (c) 2023 RelBench Team
     https://github.com/snap-stanford/RelGNN
@@ -50,6 +55,14 @@ https://github.com/snap-stanford/relbench at commit 74d4c37
 into `packages/relarena/src/relarena/models/_shared/gnn/_vendor/gnn.py`; only Ruff formatting was
 otherwise normalized. The GNN layers themselves are imported from the installed
 `relbench.modeling.nn` package and are not copied.
+
+RelBench's `get_stype_proposal` (`relbench/modeling/utils.py`) and
+`make_pkey_fkey_graph` (`relbench/modeling/graph.py`) were copied from
+the relbench 2.1.2 release (https://pypi.org/project/relbench/2.1.2/) into
+`packages/relarena/src/relarena/models/_shared/gnn/_vendor/graph.py`. The stype proposal
+samples its rows with a fixed seed, as in snap-stanford/relbench#431, and the
+graph construction can materialize with given column stats; imports were moved
+inside the functions.
 
 RelGNN model building blocks were copied from
 https://github.com/snap-stanford/RelGNN at commit cffdb8b. The upstream example
