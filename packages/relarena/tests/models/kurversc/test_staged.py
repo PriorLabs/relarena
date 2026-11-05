@@ -17,7 +17,7 @@ from relarena_core.registry import registry
 
 
 def test__staged__has_distinct_versioned_registration_and_latest_alias() -> None:
-    assert registry.get("kurversc") is KurveRSCSystem
+    assert registry.get("kurversc-2026-09-03") is KurveRSCSystem
     assert registry.get("kurversc-2026-10-22") is KurveRSC20261022System
     assert registry.get("kurversc-latest") is KurveRSC20261022System
     assert registry.kind("kurversc-latest") == "system"

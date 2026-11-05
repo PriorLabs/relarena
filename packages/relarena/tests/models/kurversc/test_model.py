@@ -36,10 +36,10 @@ def _label_table(*, masked: bool = False) -> Table:
 
 def test__kurversc__is_registered_as_a_native_system() -> None:
 
-    assert registry.get("kurversc") is KurveRSCSystem
-    assert registry.kind("kurversc") == "system"
+    assert registry.get("kurversc-2026-09-03") is KurveRSCSystem
+    assert registry.kind("kurversc-2026-09-03") == "system"
     with pytest.raises(TypeError, match="no harness search space"):
-        registry.search_space("kurversc")
+        registry.search_space("kurversc-2026-09-03")
 
 
 def test__kurversc__report_facing_defaults_are_explicit() -> None:

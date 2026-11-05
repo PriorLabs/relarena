@@ -1,7 +1,7 @@
 # KurveRSC: generic staged system
 
 `kurversc-2026-10-22` is the versioned system; `kurversc-latest` resolves to it.
-The earlier native `kurversc` registration remains distinct. The thin adapter
+The earlier native `kurversc-2026-09-03` registration remains distinct. The thin adapter
 passes caller-owned censored inner/outer splits to
 `kurversc.protocol_runner.run_protocol_task`; RelArena owns hidden-label scoring.
 
