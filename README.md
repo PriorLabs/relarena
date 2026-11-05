@@ -95,7 +95,7 @@ they do not measure variation across training seeds. The plots and tables show t
 | 4 | rt-j | System | 1842.2 | 1721.9–1997.8 |
 | 5 | tabpfn-rel-client-2026-08-15 | Model | 1799.0 | 1740.7–1886.9 |
 | 6 | rt-plurel | System | 1787.7 | 1695.9–1889.4 |
-| 7 | kurversc | System | 1773.8 | 1709.9–1849.6 |
+| 7 | kurversc-2026-09-03 | System | 1773.8 | 1709.9–1849.6 |
 | 8 | nori-rel | Model | 1732.3 | 1660.5–1844.7 |
 | 9 | tabpfn-rel-local-2026-08-15 | Model | 1702.0 | 1613.7–1771.7 |
 | 10 | graphsage | Model | 1660.3 | 1550.8–1747.2 |
@@ -627,7 +627,7 @@ as an experimental final-fit variant.
 | `constant-global` | Constant (global) | global constant | model | report | train + val | core |
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
-| `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
+| `kurversc-2026-09-03` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
 | `kurversc-2026-10-22` | [KurveRSC staged](docs/models/kurversc-staged.md) | generic staged GraphReduce search + CatBoost | **system** | 21 tasks | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local-2026-08-15` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
