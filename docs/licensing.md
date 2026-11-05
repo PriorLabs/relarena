@@ -19,10 +19,15 @@ Two things it does **not** cover:
 
 ## Dependency licenses
 
-`tabpfn` is not Apache-2.0 — it ships the Prior Labs License, which adds an
-attribution requirement. It is confined to the `rdblearn` and `tabpfn-rel-*`
-extras, so a plain install does not acquire it. Read the license itself for what
-it obliges; the README summarizes it for anyone installing those extras.
+`tabpfn` is Apache-2.0 from 9.0.0, the version `uv.lock` pins. The `rdblearn`
+extra also allows 8.x, which ships the Prior Labs License, an Apache-2.0
+derivative with an attribution requirement. The model weights it downloads at
+runtime are licensed separately: TabPFN-2 weights
+under the Prior Labs License, which adds an attribution requirement, and
+TabPFN-2.5 weights under a non-commercial license. `tabpfn` is confined to the
+`rdblearn` and `tabpfn-rel-*` extras, so a plain install does not acquire it.
+Read the weight licenses themselves for what they oblige; the README summarizes
+them for anyone installing those extras.
 
 `workflows/audit_licenses.py --check` fails if a dependency that reaches users is
 copyleft, non-commercial, or declares a license it does not recognize. It runs in
