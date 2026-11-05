@@ -1,11 +1,7 @@
-"""Frozen raw-structure raw algorithm from relflow/arena.
+"""Render nested Arrow observations and model fields from relational structure.
 
-Source: https://github.com/relflow/arena
-Repository snapshot: 09f0c8c0b4c9af9c4a2338156f7609431c32737d
-Frozen campaign source SHA256: bd609d2e4922df7e6592fb4c213c56abab5fc8bab0be1f8eeb92c84c2f6b8e64
-Adaptations: omit campaign CLI/cache access and unused renderers; use relative
-imports, repeatable profiling samples, and explicit Decimal feature projections.
-SQL attachment multiplicity is unchanged.
+``query`` builds point-in-time SQL with bounded histories and timed lookups;
+``model`` converts the same structure into a relflow model specification.
 """
 
 from __future__ import annotations
@@ -25,7 +21,7 @@ DATEPARTS = ["month_of_year", "day_of_week"]
 
 @dataclass(frozen=True)
 class Col:
-    """One output column: ``name`` in the model, ``expr`` in SQL (``{t}`` is the table alias), and its field."""
+    """One typed output column with its model name and SQL expression."""
 
     name: str
     expr: str
@@ -34,6 +30,7 @@ class Col:
     source: tuple[str, ...] = ()
 
     def spec(self) -> dict:
+        """Return the relflow field specification for this column."""
         if self.kind == "text":
             return {**TEXT, "max_length": self.options.get("max_length", 64)}
         if self.kind == "dateparts":
@@ -50,16 +47,19 @@ class Col:
 
 
 def number(column: str, name: str | None = None) -> Col:
+    """Describe a numeric source column."""
     return Col(name or column.lower(), f'{{t}}."{column}"', "number", source=(column,))
 
 
 def category(column: str, name: str | None = None) -> Col:
+    """Describe a categorical source column."""
     return Col(
         name or column.lower(), f'{{t}}."{column}"', "category", source=(column,)
     )
 
 
 def boolean(column: str, name: str | None = None) -> Col:
+    """Describe a boolean source column."""
     return Col(name or column.lower(), f'{{t}}."{column}"', "boolean", source=(column,))
 
 
@@ -75,11 +75,16 @@ def text(column: str, name: str | None = None, max_length: int = 64) -> Col:
 
 
 def hashed(column: str, namespace: str, name: str | None = None) -> Col:
-    expr = f"""CASE WHEN {{t}}."{column}" IS NULL THEN NULL ELSE '{namespace}:' || CAST({{t}}."{column}" AS VARCHAR) END"""
+    """Describe a nullable identifier with its table namespace."""
+    expr = (
+        f"""CASE WHEN {{t}}."{column}" IS NULL THEN NULL ELSE '{namespace}:' || """
+        f"""CAST({{t}}."{column}" AS VARCHAR) END"""
+    )
     return Col(name or column.lower(), expr, "hash", source=(column,))
 
 
 def setvalued(column: str, name: str | None = None) -> Col:
+    """Describe a set-valued source column."""
     return Col(name or column.lower(), f'{{t}}."{column}"', "set", source=(column,))
 
 
@@ -89,7 +94,10 @@ def when(column: str, name: str) -> list[Col]:
         Col(name, f'{{t}}."{column}"', "dateparts", source=(column,)),
         Col(
             f"{name}_age_days",
-            f"""date_diff('microseconds', {{t}}."{column}", {{anchor}}."__as_of") / {DAY}""",
+            (
+                f"""date_diff('microseconds', {{t}}."{column}", """
+                f"""{{anchor}}."__as_of") / {DAY}"""
+            ),
             "number",
             source=(column,),
         ),
@@ -98,36 +106,36 @@ def when(column: str, name: str) -> list[Col]:
 
 @dataclass(frozen=True)
 class Lookup:
-    """A many-to-one join from a row to one related row, censored by ``time`` when the related table has one."""
+    """A many-to-one join, censored when the related table has a timestamp."""
 
     alias: str
     table: str
     on: str  # SQL predicate with {t} (related row) and {row} (the row being enriched)
     columns: tuple[Col, ...]
     time: str | None = None
-    key: tuple[
-        str, ...
-    ] = ()  # related-table columns the predicate uses; the snapshot indexes them
+    # Related-table columns used by the predicate and indexed in the snapshot.
+    key: tuple[str, ...] = ()
     via: tuple[str, ...] = ()  # row-side columns the predicate reads
-    reads: tuple[
-        str, ...
-    ] = ()  # related-table columns that onward lookups join through; persisted, not indexed
+    # Related-table columns needed by onward lookups; persisted, not indexed.
+    reads: tuple[str, ...] = ()
 
     def sql(self, row: str, anchor: str) -> str:
-        """A timed lookup takes the latest row before the anchor; a static one joins its table on its unique key."""
+        """Join a static row by key or the latest timed row before the anchor."""
         predicate = self.on.format(t=self.alias if not self.time else "linked", row=row)
         if not self.time:
             return f'    LEFT JOIN "{self.table}" AS {self.alias} ON {predicate}'
         return (
-            f'    LEFT JOIN LATERAL (SELECT linked.* FROM "{self.table}" AS linked WHERE {predicate} '
+            f'    LEFT JOIN LATERAL (SELECT linked.* FROM "{self.table}" AS linked '
+            f"WHERE {predicate} "
             f'AND linked."{self.time}" <= {anchor}."__as_of" '
-            f'ORDER BY linked."{self.time}" DESC NULLS LAST, linked."__source_row_id" DESC LIMIT 1) AS {self.alias} ON TRUE'
+            f'ORDER BY linked."{self.time}" DESC NULLS LAST, '
+            f'linked."__source_row_id" DESC LIMIT 1) AS {self.alias} ON TRUE'
         )
 
 
 @dataclass(frozen=True)
 class Branch:
-    """Rows of ``table`` related to the parent key, censored by ``time`` and capped by recency."""
+    """Related rows censored by timestamp and capped by recency."""
 
     name: str
     table: str
@@ -143,6 +151,7 @@ class Branch:
     intraday: bool = False  # the row timestamp has a time of day worth an hour part
 
     def __post_init__(self) -> None:
+        """Normalize a single column to the tuple representation."""
         if isinstance(self.columns, Col):
             object.__setattr__(self, "columns", (self.columns,))
 
@@ -160,12 +169,16 @@ class Branch:
             ),
             Col(
                 "age_days",
-                f"""date_diff('microseconds', {{t}}."{self.time}", {{anchor}}."__as_of") / {DAY}""",
+                (
+                    f"""date_diff('microseconds', {{t}}."{self.time}", """
+                    f"""{{anchor}}."__as_of") / {DAY}"""
+                ),
                 "number",
             ),
         )
 
     def spec(self) -> dict:
+        """Return a nested branch field with its own and related columns."""
         fields = {column.name: column.spec() for column in (*self.own(), *self.columns)}
         for lookup in self.lookups:
             fields.update({column.name: column.spec() for column in lookup.columns})
@@ -181,6 +194,8 @@ class Branch:
 
 @dataclass(frozen=True)
 class Task:
+    """Relational structure shared by SQL materialization and model creation."""
+
     dataset: str
     task: str
     task_type: str
@@ -192,9 +207,8 @@ class Task:
     columns: tuple[Col, ...]
     lookups: tuple[Lookup, ...]
     branches: tuple[Branch, ...]
-    keys: tuple[
-        tuple[str, str], ...
-    ] = ()  # internal root columns (``__name``, source column) that branches join through
+    # Internal root columns (model name, source column) used by branch joins.
+    keys: tuple[tuple[str, str], ...] = ()
     d_model: int = 64
     n_layers: int = 2
     n_heads: int = 4
@@ -208,6 +222,7 @@ def selections(
     *,
     decimals: Collection[str] = (),
 ) -> list[str]:
+    """Render typed SQL projections for columns, preserving exact categories."""
     result = []
     for column in columns:
         expression = column.expr.format(t=table, anchor=anchor)
@@ -246,7 +261,10 @@ def branch_ctes(
     )
     keys = ["__row_position", "__child_key"] if nested else ["__row_position"]
     joins = [
-        f'    INNER JOIN "{branch.table}" AS event ON {branch.on.format(t="event", parent="parent")}'
+        (
+            f'    INNER JOIN "{branch.table}" AS event ON '
+            f"{branch.on.format(t='event', parent='parent')}"
+        )
     ]
     if branch.time:
         joins[0] += f' AND event."{branch.time}" <= parent."__as_of"'
@@ -272,7 +290,10 @@ def branch_ctes(
     lines = [
         f"{events} AS (",
         f'    SELECT {carried}, parent."__as_of",',
-        f'        {time_expr} AS "__event_time", event."__source_row_id" AS "__source_order",',
+        (
+            f'        {time_expr} AS "__event_time", event."__source_row_id" AS '
+            f'"__source_order",'
+        ),
     ]
     if branch.nested:
         lines.append(f'        event."{branch.child_key}" AS "__nested_key",')
@@ -284,12 +305,16 @@ def branch_ctes(
     partition = ", ".join(f'"{key}"' for key in keys)
     text.append(
         f"{ranked} AS (\n    SELECT *, row_number() OVER (PARTITION BY {partition} "
-        f'ORDER BY "__event_time" DESC NULLS LAST, "__source_order" DESC) AS "__recency"\n    FROM {events}\n),'
+        'ORDER BY "__event_time" DESC NULLS LAST, "__source_order" DESC) '
+        f'AS "__recency"\n    FROM {events}\n),'
     )
     inner_groups = []
     if branch.nested:
         text.append(
-            f'{events}_keys AS (\n    SELECT "__row_position", "__as_of", "__nested_key" AS "__child_key" FROM {ranked} '
+            (
+                f'{events}_keys AS (\n    SELECT "__row_position", "__as_of", '
+                f'"__nested_key" AS "__child_key" FROM {ranked} '
+            )
             + (
                 f'WHERE "__recency" <= {branch.length * history_overscan}\n'
                 if branch.length is not None
@@ -320,14 +345,18 @@ def branch_ctes(
     for name, inner_grouped in inner_groups:
         packed.append(f'"{name}" := coalesce({inner_grouped}."{name}", [])')
         inner_joins.append(
-            f'    LEFT JOIN {inner_grouped} ON {inner_grouped}."__row_position" = {ranked}."__row_position" '
+            f'    LEFT JOIN {inner_grouped} ON {inner_grouped}."__row_position" '
+            f'= {ranked}."__row_position" '
             f'AND {inner_grouped}."__child_key" = {ranked}."__nested_key"'
         )
     group = ", ".join(f'{ranked}."{key}"' for key in keys)
     text.append(
         f"{grouped} AS (\n    SELECT {group},\n        list(struct_pack(\n            "
         + ",\n            ".join(packed)
-        + f'\n        ) ORDER BY {ranked}."__event_time" ASC NULLS LAST, {ranked}."__source_order" ASC) AS "{branch.name}"\n'
+        + (
+            f'\n        ) ORDER BY {ranked}."__event_time" ASC NULLS LAST, '
+            f'{ranked}."__source_order" ASC) AS "{branch.name}"\n'
+        )
         + f"    FROM {ranked}\n"
         + ("\n".join(inner_joins) + "\n" if inner_joins else "")
         + (
@@ -341,6 +370,7 @@ def branch_ctes(
 
 
 def check_overscan(value: int) -> int:
+    """Validate the positive integer history-pool multiplier."""
     if type(value) is not int or value < 1:
         raise ValueError(f"history_overscan must be a positive integer, got {value!r}")
     return value
@@ -356,8 +386,14 @@ def query(
     check_overscan(history_overscan)
     decimals = decimals or {}
     lines = [
-        "-- Raw structure: the entity row, its related rows nested by recency, and their looked-up context.",
-        "-- No counts, windows, or summaries are computed here; ages measure each timestamp against the anchor.",
+        (
+            "-- Raw structure: the entity row, its related rows nested by recency, and "
+            "their looked-up context."
+        ),
+        (
+            "-- No counts, windows, or summaries are computed here; ages measure each "
+            "timestamp against the anchor."
+        ),
         "WITH",
         "anchors AS (",
         '    SELECT "__row_position", "__entity_key", "__as_of"',
@@ -365,11 +401,17 @@ def query(
         '    WHERE "__row_position" >= $start AND "__row_position" < $stop',
         "),",
     ]
-    root_join = f'    LEFT JOIN "{task.entity_table}" AS root ON anchor."__entity_key" = root."{task.entity_key}"'
+    root_join = (
+        f'    LEFT JOIN "{task.entity_table}" AS root ON anchor."__entity_key" = '
+        f'root."{task.entity_key}"'
+    )
     order = 'root."__source_row_id" DESC NULLS LAST'
     if task.root_time:
         root_join += f' AND root."{task.root_time}" <= anchor."__as_of"'
-        order = f'root."{task.root_time}" DESC NULLS LAST, root."__source_row_id" DESC NULLS LAST'
+        order = (
+            f'root."{task.root_time}" DESC NULLS LAST, root."__source_row_id" DESC '
+            f"NULLS LAST"
+        )
     fields = [f'        root."{column}" AS "{name}"' for name, column in task.keys]
     fields.extend(
         selections(
@@ -395,7 +437,10 @@ def query(
     lines.append(root_join)
     lines.extend(lookup.sql("root", "anchor") for lookup in task.lookups)
     lines.append(
-        f'    QUALIFY row_number() OVER (PARTITION BY anchor."__row_position" ORDER BY {order}) = 1'
+        (
+            f'    QUALIFY row_number() OVER (PARTITION BY anchor."__row_position" '
+            f"ORDER BY {order}) = 1"
+        )
     )
     lines.append("),")
     grouped_names = []
@@ -426,6 +471,7 @@ def query(
 
 
 def model(task: Task) -> dict:
+    """Build the relflow model specification for a derived task."""
     fields: dict = {"as_of": {"type": "dateparts", "dateparts": list(DATEPARTS)}}
     fields.update({column.name: column.spec() for column in task.columns})
     for lookup in task.lookups:

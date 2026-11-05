@@ -1,6 +1,6 @@
 """Derive and materialize nested Arrow observations from harness-supplied data.
 
-Profiling always uses the validation-censored database. The frozen experiment's
+Profiling always uses the validation-censored database. The train+validation
 outer refit keeps validation anchors' histories frozen at that same boundary.
 """
 
@@ -19,7 +19,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from relbench.base import Database, EntityTask, Table, TaskType
 
-from ._vendor import derive, raw
+from . import derive, raw
 
 
 @dataclass

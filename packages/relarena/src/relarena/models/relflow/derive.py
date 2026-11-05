@@ -1,10 +1,7 @@
-"""Frozen raw-structure derive algorithm from relflow/arena.
+"""Infer nested model structure from keys and label-free column measurements.
 
-Source: https://github.com/relflow/arena
-Repository snapshot: 09f0c8c0b4c9af9c4a2338156f7609431c32737d
-Frozen campaign source SHA256: 87918d9e495eeedff8cb2f49cbb9ef511f923af0104c0e50f14d1120c7752072
-Adaptations: omit campaign CLI/cache access and unused renderers; use relative
-imports and repeatable profiling samples. SQL attachment multiplicity is unchanged.
+``profile`` measures the supplied, censored tables; ``derive`` chooses typed
+fields and bounded relational branches for the original training-set size.
 """
 
 from __future__ import annotations
@@ -19,7 +16,7 @@ from . import raw
 from .raw import Branch, Col, Lookup, Task
 
 SAMPLE = 200_000
-# Size tiers by training anchors, as the sweep defines them; every budget below is a tier property.
+# Every structural budget is fixed by the original training-anchor count.
 TIERS = ((20_000, "small"), (500_000, "medium"), (None, "large"))
 BUDGETS = {
     "small": {"branch": 128, "nested": 16, "fields": 48, "root": 64},
@@ -81,8 +78,11 @@ class Column:
 
 @dataclass(frozen=True)
 class Table:
+    """Schema and column measurements for one supplied relational table."""
+
     name: str
-    source: str  # SQL relation the profiler reads, such as read_parquet('...') or a view name
+    # SQL relation the profiler reads, such as read_parquet('...') or a view name
+    source: str
     pkey: str | None
     time: str | None
     fkeys: dict[str, str]
@@ -92,6 +92,8 @@ class Table:
 
 @dataclass(frozen=True)
 class Meta:
+    """Task columns and original training size used to derive model structure."""
+
     dataset: str
     task: str
     task_type: str
@@ -113,6 +115,7 @@ def tier(training_rows: int | None) -> str:
 
 
 def quote(name: str) -> str:
+    """Quote a SQL identifier, escaping embedded double quotes."""
     return '"' + name.replace('"', '""') + '"'
 
 
@@ -127,7 +130,10 @@ def profile(
         spec = schema[name]
         sample = f"sample_{index}"
         con.execute(
-            f"CREATE OR REPLACE TEMP TABLE {sample} AS SELECT * FROM {source} USING SAMPLE reservoir({SAMPLE} ROWS) REPEATABLE (0)"
+            (
+                f"CREATE OR REPLACE TEMP TABLE {sample} AS SELECT * FROM {source} "
+                f"USING SAMPLE reservoir({SAMPLE} ROWS) REPEATABLE (0)"
+            )
         )
         rows = con.execute(f"SELECT count(*) FROM {source}").fetchone()[0]
         dtypes = con.execute(f"DESCRIBE {sample}").fetchall()
@@ -142,8 +148,10 @@ def profile(
             measured = Column(column, dtype, n, nonnull, distinct)
             if dtype.startswith("VARCHAR") and not dtype.endswith("[]"):
                 row = con.execute(
-                    f"SELECT avg(length({v})), avg(CASE WHEN regexp_matches({v}, '\\p{{L}}{{2,}}') THEN 1 ELSE 0 END), "
-                    f"avg(CASE WHEN {v} LIKE '% %' THEN 1 ELSE 0 END), min(length({v})) = max(length({v})) "
+                    f"SELECT avg(length({v})), avg(CASE WHEN "
+                    f"regexp_matches({v}, '\\p{{L}}{{2,}}') THEN 1 ELSE 0 END), "
+                    f"avg(CASE WHEN {v} LIKE '% %' THEN 1 ELSE 0 END), "
+                    f"min(length({v})) = max(length({v})) "
                     f"FROM {sample} WHERE {v} IS NOT NULL"
                 ).fetchone()
                 measured = Column(
@@ -159,14 +167,20 @@ def profile(
                 )
             elif dtype in ("DOUBLE", "FLOAT") or dtype.startswith("DECIMAL"):
                 integral = con.execute(
-                    f"SELECT avg(CASE WHEN {v} = floor({v}) THEN 1 ELSE 0 END) FROM {sample} WHERE {v} IS NOT NULL AND isfinite({v})"
+                    (
+                        f"SELECT avg(CASE WHEN {v} = floor({v}) THEN 1 ELSE 0 END) "
+                        f"FROM {sample} WHERE {v} IS NOT NULL AND isfinite({v})"
+                    )
                 ).fetchone()[0]
                 measured = Column(
                     column, dtype, n, nonnull, distinct, integral=integral
                 )
             elif dtype.startswith("TIMESTAMP"):
                 daytime = con.execute(
-                    f"SELECT avg(CASE WHEN date_trunc('day', {v}) <> {v} THEN 1 ELSE 0 END) FROM {sample} WHERE {v} IS NOT NULL"
+                    (
+                        f"SELECT avg(CASE WHEN date_trunc('day', {v}) <> {v} THEN 1 "
+                        f"ELSE 0 END) FROM {sample} WHERE {v} IS NOT NULL"
+                    )
                 ).fetchone()[0]
                 measured = Column(column, dtype, n, nonnull, distinct, daytime=daytime)
             columns[column] = measured
@@ -189,17 +203,23 @@ def fanout(
     group = ", ".join(quote(key) for key in keys)
     present = " AND ".join(f"{quote(key)} IS NOT NULL" for key in keys)
     value = con.execute(
-        f"SELECT quantile_cont(n, 0.9) FROM (SELECT count(*) AS n FROM {table.source} WHERE {present} GROUP BY {group})"
+        (
+            f"SELECT quantile_cont(n, 0.9) FROM (SELECT count(*) AS n FROM "
+            f"{table.source} WHERE {present} GROUP BY {group})"
+        )
     ).fetchone()[0]
     return float(value or 0)
 
 
 def peak(con: duckdb.DuckDBPyConnection, table: Table, keys: tuple[str, ...]) -> int:
-    """The most rows any key tuple has; one means the table is a one-to-one extension of its key."""
+    """Return the maximum number of rows sharing a key tuple."""
     group = ", ".join(quote(key) for key in keys)
     present = " AND ".join(f"{quote(key)} IS NOT NULL" for key in keys)
     value = con.execute(
-        f"SELECT max(n) FROM (SELECT count(*) AS n FROM {table.source} WHERE {present} GROUP BY {group})"
+        (
+            f"SELECT max(n) FROM (SELECT count(*) AS n FROM {table.source} WHERE "
+            f"{present} GROUP BY {group})"
+        )
     ).fetchone()[0]
     return int(value or 0)
 
@@ -210,28 +230,28 @@ def alignment(
     branch: Table,
     pairs: tuple[tuple[str, str], ...],
 ) -> tuple[float, float]:
-    """How well a sibling's rows align one-to-one with a branch's rows on their shared keys.
-
-    Returns the share of sibling rows with a unique key tuple and the share of the
-    sibling's distinct key tuples that occur in the branch.
-    """
+    """Measure sibling uniqueness and overlap on shared keys."""
     own = ", ".join(quote(s) for s, _ in pairs)
     other = ", ".join(f"{quote(b)} AS {quote(s)}" for s, b in pairs)
     own_present = " AND ".join(f"{quote(s)} IS NOT NULL" for s, _ in pairs)
     other_present = " AND ".join(f"{quote(b)} IS NOT NULL" for _, b in pairs)
     unique = con.execute(
-        f"SELECT count(DISTINCT ({own})) / greatest(count(*), 1) FROM {sibling.source} WHERE {own_present}"
+        (
+            f"SELECT count(DISTINCT ({own})) / greatest(count(*), 1) FROM "
+            f"{sibling.source} WHERE {own_present}"
+        )
     ).fetchone()[0]
     coverage = con.execute(
         f"WITH s AS (SELECT DISTINCT {own} FROM {sibling.source} WHERE {own_present}), "
         f"b AS (SELECT DISTINCT {other} FROM {branch.source} WHERE {other_present}) "
-        f"SELECT (SELECT count(*) FROM s JOIN b USING ({own})) / greatest((SELECT count(*) FROM s), 1)"
+        f"SELECT (SELECT count(*) FROM s JOIN b USING ({own})) / "
+        f"greatest((SELECT count(*) FROM s), 1)"
     ).fetchone()[0]
     return float(unique or 0), float(coverage or 0)
 
 
 def references(tables: Mapping[str, Table], name: str) -> int:
-    """Rows in other tables that point at this table: how often one of its rows recurs."""
+    """Count incoming references to rows of this table."""
     return sum(
         t.rows for t in tables.values() for target in t.fkeys.values() if target == name
     )
@@ -288,6 +308,7 @@ def kind(
 
 
 def budget(mean_len: float | None) -> int:
+    """Choose the bounded token length for a text field."""
     length = mean_len or 0
     return 16 if length < 40 else 32 if length < 160 else 64 if length < 700 else 96
 
@@ -300,15 +321,15 @@ def same_time(
     dimension: Table,
     on: str | None = None,
 ) -> bool:
-    """Whether a dimension's timestamp repeats the row's own time column on the joined rows.
-
-    The join reaches the dimension's primary key unless ``on`` names another of its columns.
-    """
+    """Check whether a dimension repeats the row timestamp."""
     rate = con.execute(
-        f"SELECT avg(CASE WHEN r.{quote(row_time)} = d.{quote(dimension.time)} THEN 1 ELSE 0 END) "
-        f"FROM (SELECT {quote(column)}, {quote(row_time)} FROM {table.source} USING SAMPLE reservoir({SAMPLE} ROWS) REPEATABLE (0)) r "
-        f"JOIN {dimension.source} d ON r.{quote(column)} = d.{quote(on or dimension.pkey)} "
-        f"WHERE r.{quote(row_time)} IS NOT NULL AND d.{quote(dimension.time)} IS NOT NULL"
+        f"SELECT avg(CASE WHEN r.{quote(row_time)} = d.{quote(dimension.time)} "
+        f"THEN 1 ELSE 0 END) FROM (SELECT {quote(column)}, {quote(row_time)} "
+        f"FROM {table.source} USING SAMPLE reservoir({SAMPLE} ROWS) "
+        f"REPEATABLE (0)) r JOIN {dimension.source} d "
+        f"ON r.{quote(column)} = d.{quote(on or dimension.pkey)} "
+        f"WHERE r.{quote(row_time)} IS NOT NULL "
+        f"AND d.{quote(dimension.time)} IS NOT NULL"
     ).fetchone()[0]
     return (rate or 0) >= 0.99
 
@@ -316,7 +337,7 @@ def same_time(
 def trim(
     columns: tuple[Col, ...], groups: list[list[Lookup]], budget: int
 ) -> tuple[tuple[Col, ...], list[Lookup]]:
-    """Keep at most ``budget`` fields on one node: own columns first, then each lookup group in order."""
+    """Keep own columns first, then lookup groups, within the field budget."""
     own = columns[:budget]
     remaining = budget - len(own)
     kept: list[Lookup] = []
@@ -332,6 +353,7 @@ def trim(
 
 
 def snake(name: str) -> str:
+    """Convert a field name to lowercase underscore-separated words."""
     text = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name).lower()
     text = re.sub(r"[^a-z0-9]+", "_", text).strip("_")
     if not text or text[0].isdigit():
@@ -340,7 +362,7 @@ def snake(name: str) -> str:
 
 
 def stem(column: str) -> str:
-    """A lookup alias from its foreign-key column: ``raceId`` and ``race_id`` become ``race``."""
+    """Derive a lookup alias from its foreign-key column."""
     name = re.sub(r"(?i)[_ ]?id$", "", column) or column
     return snake(name)
 
@@ -349,10 +371,12 @@ class Names:
     """Unique field names within one node; reserved and internal names get a prefix."""
 
     def __init__(self, reserved: frozenset[str] = frozenset(RESERVED)) -> None:
+        """Reserve existing names before allocating derived field names."""
         self.used: set[str] = set()
         self.reserved = reserved
 
     def take(self, name: str) -> str:
+        """Allocate a unique, non-reserved field or SQL alias name."""
         name = snake(name)
         if name in self.reserved or name.startswith("__"):
             name = "col_" + name.lstrip("_")
@@ -365,7 +389,7 @@ class Names:
 
 
 def vector_blocks(table: Table) -> dict[str, list[str]]:
-    """Runs of eight or more numeric columns that differ only by a trailing number form one vector."""
+    """Group runs of at least eight numbered numeric columns into vectors."""
     groups: dict[str, list[str]] = {}
     for column in table.columns.values():
         match = VECTOR_BLOCK.match(column.name)
@@ -389,7 +413,7 @@ def typed(
     root: bool = False,
     text: bool = True,
 ) -> tuple[Col, ...]:
-    """Every column of a table as tensorfield columns, in table order; ``text`` allows prose fields."""
+    """Describe table columns in order, optionally including text."""
     blocks = vector_blocks(table)
     member_of = {
         member: block for block, members in blocks.items() for member in members
@@ -460,11 +484,7 @@ def lookups_for(
     text: bool = True,
     row_time: str | None = None,
 ) -> tuple[list[Lookup], list[Lookup]]:
-    """Forward foreign keys as lookups: a first hop into any dimension, a second hop only into vocabulary tables.
-
-    A timed dimension is read as of the anchor. A dimension timestamp that repeats
-    the row's own time column is left out, since the row already carries it.
-    """
+    """Follow foreign keys, with a second hop only into vocabulary tables."""
     aliases = Names(frozenset(RESERVED_ALIASES))
     first: list[Lookup] = []
     second: list[Lookup] = []
@@ -497,8 +517,10 @@ def lookups_for(
             and tables[target2].pkey is not None
             and vocabulary(tables[target2])
         ]
-        # The second hop joins through the first hop's columns, so the snapshot keeps them whatever the budget keeps.
-        # They are not part of the key: a composite index over them is useless and aborts DuckDB on wide tables.
+        # The second hop joins through the first hop's columns, so the snapshot keeps
+        # them whatever the budget keeps.
+        # They are not part of the key: a composite index over them is useless and
+        # aborts DuckDB on wide tables.
         first.append(
             Lookup(
                 alias,
@@ -537,7 +559,7 @@ def lookups_for(
 
 
 def shared_keys(sibling: Table, branch: Table) -> tuple[tuple[str, str], ...]:
-    """One (sibling column, branch column) pair per foreign-key target the two tables share."""
+    """Pair sibling and branch columns pointing to shared foreign-key targets."""
     pairs = []
     seen = set()
     for s_column, target in sibling.fkeys.items():
@@ -549,12 +571,12 @@ def shared_keys(sibling: Table, branch: Table) -> tuple[tuple[str, str], ...]:
 
 
 def vocabulary(table: Table) -> bool:
-    """A dimension with no time column and no keys of its own, such as a list of conditions or circuits."""
+    """Identify a static dimension without foreign keys."""
     return table.time is None and not table.fkeys
 
 
 def belongs_solely(child: Table, dimension: str, tables: Mapping[str, Table]) -> bool:
-    """Whether a child's other foreign keys all point at vocabulary tables, so its rows are details of the dimension."""
+    """Check whether other child foreign keys lead only to vocabulary tables."""
     return all(
         target == dimension or (target in tables and vocabulary(tables[target]))
         for target in child.fkeys.values()
@@ -586,13 +608,7 @@ def nested_for(
     absorbed: set[str],
     budgets: Mapping[str, int],
 ) -> tuple[str | None, tuple[Branch, ...], tuple[tuple[Table, str], ...]]:
-    """Children of the branch's rows or of one dimension it points at, keyed by the branch column that reaches them.
-
-    Returns the key, the nested branches, and the children that never hold more than one row
-    per key as ``(table, column)`` pairs: those are one-to-one extensions of the branch row,
-    which the caller folds into its lookups under the field budget instead of nesting as
-    collections (rel-trial's ``designs`` and ``eligibilities`` are one row per study).
-    """
+    """Build nested branches and one-to-one extensions of branch rows."""
     options: dict[str, list[tuple[Table, str]]] = {}
     link = own_columns(branch) <= LINK_COLUMNS
     for name, candidate in tables.items():

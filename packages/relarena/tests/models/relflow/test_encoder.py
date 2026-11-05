@@ -7,8 +7,7 @@ from typing import Any
 
 import pytest
 
-from relarena.models.relflow import search_space
-from relarena.models.relflow._vendor import raw
+from relarena.models.relflow import raw, search_space
 from relarena_core.search_space import TaskStats
 
 

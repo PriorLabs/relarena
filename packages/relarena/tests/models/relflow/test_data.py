@@ -14,8 +14,7 @@ import pyarrow.parquet as pq
 import pytest
 from relbench.base import Database, Table, TaskType
 
-from relarena.models.relflow import RelFlowModel, search_space
-from relarena.models.relflow._vendor import raw
+from relarena.models.relflow import RelFlowModel, raw, search_space
 from relarena.models.relflow.context import Context, infer, materialize
 from relarena_core.search_space import TaskStats
 
@@ -272,6 +271,107 @@ def test__context__configured_resources__sets_explicit_limits(tmp_path: Path) ->
         }
     finally:
         context.close()
+
+
+@pytest.mark.parametrize("timestamp", ["2020-01-03", "2020-01-04"])
+def test__materialize__anchor_cutoff__censors_each_relational_depth(
+    tmp_path: Path, timestamp: str
+) -> None:
+    task, db, anchors = decimal_fixture()
+    db.table_dict["entities"].df.loc[1, "amount"] = Decimal("3.00")
+    db.table_dict["entities"].df["created"] = pd.to_datetime(
+        ["2020-01-02", "2020-01-04", "2020-01-02"]
+    )
+    db.table_dict["entities"].time_col = "created"
+    db.table_dict["events"].df.loc[1, "timestamp"] = pd.Timestamp("2020-01-04")
+    db.table_dict["events"].df.loc[1, "value"] = Decimal("99.00")
+    db.table_dict["dimensions"] = Table(
+        pd.DataFrame(
+            {
+                "entity_id": [0, 0],
+                "timestamp": pd.to_datetime(["2020-01-02", "2020-01-04"]),
+                "rate": [10.0, 99.0],
+            }
+        ),
+        {"entity_id": "entities"},
+        time_col="timestamp",
+    )
+    db.table_dict["lines"] = Table(
+        pd.DataFrame(
+            {
+                "event_id": [0, 0],
+                "timestamp": pd.to_datetime(["2020-01-02", "2020-01-04"]),
+                "price": [20.0, 99.0],
+            }
+        ),
+        {"event_id": "events"},
+        time_col="timestamp",
+    )
+    frame = anchors.df.iloc[:2].copy()
+    frame[task.time_col] = pd.Timestamp(timestamp)
+    anchors = Table(frame, anchors.fkey_col_to_pkey_table, time_col=task.time_col)
+    structure = raw.Task(
+        dataset="fixture",
+        task="anchor-cutoff",
+        task_type="regression",
+        entity_table="entities",
+        entity_key="entity_id",
+        anchor_entity_column="entity_id",
+        target_column="label",
+        root_time="created",
+        columns=(raw.number("amount"),),
+        lookups=(
+            raw.Lookup(
+                "dimension",
+                "dimensions",
+                '{t}."entity_id" = {row}."entity_id"',
+                (raw.number("rate"),),
+                time="timestamp",
+            ),
+        ),
+        branches=(
+            raw.Branch(
+                name="events",
+                table="events",
+                on='{t}."entity_id" = {parent}."__entity_key"',
+                time="timestamp",
+                length=8,
+                columns=(raw.number("value"),),
+                child_key="event_id",
+                nested=(
+                    raw.Branch(
+                        name="lines",
+                        table="lines",
+                        on='{t}."event_id" = {parent}."__child_key"',
+                        time="timestamp",
+                        length=8,
+                        columns=(raw.number("price"),),
+                    ),
+                ),
+            ),
+        ),
+    )
+    context = Context.open(db, task.dataset.val_timestamp, tmp_path)
+    try:
+        path = materialize(
+            context,
+            structure,
+            task,
+            anchors,
+            tmp_path / "cutoff.parquet",
+            labelled=True,
+        )
+    finally:
+        context.close()
+    observations = pq.read_table(path)
+    at_boundary = timestamp == "2020-01-04"
+    assert observations["amount"].to_pylist() == [1.25, 3.0 if at_boundary else None]
+    assert observations["rate"].to_pylist() == [99.0 if at_boundary else 10.0, None]
+    events = observations["events"].to_pylist()[0]
+    assert [row["value"] for row in events] == ([2.25, 99.0] if at_boundary else [2.25])
+    assert [row["price"] for row in events[0]["lines"]] == (
+        [20.0, 99.0] if at_boundary else [20.0]
+    )
 
 
 @pytest.mark.skipif(

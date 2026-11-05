@@ -97,7 +97,6 @@ convention = "google"
 ignore-decorators = ["typing.override", "typing_extensions.override"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/models/relflow/_vendor/*.py" = ["E501"]
 "**/workflows/**/*.py" = [
     "E501",
 ]

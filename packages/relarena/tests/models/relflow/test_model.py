@@ -121,7 +121,7 @@ def test__context__outer_database__profiles_only_validation_time(
     pytest.importorskip("duckdb")
     import pyarrow.parquet as pq
 
-    from relarena.models.relflow._vendor import raw
+    from relarena.models.relflow import raw
     from relarena.models.relflow.context import Context, infer, materialize
 
     task, db, anchors = fixture()
@@ -175,7 +175,7 @@ def test__fit_predict__tiny_supplied_database__satisfies_contract(
 
 
 def test__context__pandas_categories__retains_string_fields(tmp_path: Path) -> None:
-    from relarena.models.relflow._vendor import raw
+    from relarena.models.relflow import raw
     from relarena.models.relflow.context import Context, infer
 
     task, db, _ = fixture()
@@ -221,27 +221,38 @@ def test__context__timestamp_ties__uses_stable_input_ordinals(tmp_path: Path) ->
     "rows,dataset,task,expected",
     [
         (19_239, "rel-event", "user-attendance", 64),
-        (59_454, "rel-avito", "user-clicks", 256),
-        (86_619, "rel-avito", "user-visits", 256),
-        (151_407, "rel-trial", "site-success", 256),
+        (59_454, "rel-avito", "user-clicks", 512),
+        (86_619, "rel-avito", "user-visits", 512),
+        (151_407, "rel-trial", "site-success", 512),
         (43_335, "rel-trial", "study-adverse", 512),
         (3_386_276, "rel-stack", "user-badge", 512),
         (50_000, "unseen", "new-task", 512),
     ],
 )
-def test__execution__recorded_task_batch__does_not_change_recipe(
-    rows: int, dataset: str, task: str, expected: int
+def test__fit__task_identity__uses_only_tier_batch(
+    rows: int,
+    dataset: str,
+    task: str,
+    expected: int,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from relarena.models.relflow.model import execution
+    from unittest.mock import Mock
+
     from relarena_core.identity import RunIdentity
 
     config = search_space(TaskStats(rows)).default_overrides
-    original = config["recipe"].copy()
-    resolved = execution(config, RunIdentity(dataset, None, task, None))
-    assert resolved["batch_size"] == expected
-    assert config["recipe"] == original
-    assert resolved["text_resident_mib"] == (256 if rows < 500_000 else 2048)
-    assert execution(config, None)["batch_size"] == (64 if rows < 20_000 else 512)
+    backend = SimpleNamespace(fit=Mock())
+    monkeypatch.setitem(sys.modules, "relarena.models.relflow.training", backend)
+    task_spec, db, anchors = fixture()
+    for identity in (RunIdentity(dataset, None, task, None), None):
+        model = RelFlowModel(config, run_identity=identity)
+        model.fit(task_spec, db, anchors, None, seed=0)
+        resolved = backend.fit.call_args.args[3]
+        assert resolved["execution"]["batch_size"] == expected
+        assert resolved == config
+        assert resolved["execution"]["text_resident_mib"] == (
+            256 if rows < 500_000 else 2048
+        )
 
 
 def test__execution__large_loader_and_text__retains_bounded_memory(

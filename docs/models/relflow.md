@@ -1,125 +1,80 @@
-# Relflow
+# RelFlow
 
-## Build and adapt foundation models for your own structured data.
+[RelFlow](https://github.com/relflow/relflow) builds a neural model over typed,
+nested records. This adapter derives fields and joins from the supplied
+relational database and trains one fixed recipe per training-set size tier.
 
-https://www.relflow.ai/en/latest/
+## Installation
 
-https://github.com/relflow/relflow
+The optional backend requires Python 3.12:
 
-Relflow is an open source model factory for typed, nested data.
-Describe your records and prediction targets, and it generates
-a custom neural architecture, trains the model, and
-serves predictions and learned representations.
+```bash
+uv sync --python 3.12 --all-packages --extra relflow
+```
 
-`relflow` fits one frozen shared recipe per size tier. The harness controls
-validation, the train+validation refit and hidden-label scoring. There is no
-per-task architecture search, deduplication change, mixed cropping or unreduced
-context. The optional backend requires Python 3.12 and `relflow[text]==0.4.4`.
+For CPU execution, add `--group cpu`. The `relflow` extra cannot be combined
+with KurveRSC 0.1.1, which requires NumPy 1; RelFlow requires NumPy 2.
 
-Shared size-tier presets kept research compute to approximately **US$1,500** in Modal compute
-while producing competitive research results across the task
-suite. Presets are frozen for submission.
+## Running RelFlow
 
-## Fixed modeling policy
+Run one task through the RelArena CLI:
 
-Tier depends only on the original inner training-anchor count and is carried
-through the final refit: SMALL below 20,000, MEDIUM below 500,000, LARGE otherwise.
-Fields, joins and datatypes are derived from the supplied relational structure
-and validation-censored column measurements. Raw values and timestamp ages are
-retained; no manually engineered aggregate features are supplied.
+```bash
+OMP_NUM_THREADS=1 uv run --all-packages --extra relflow relarena \
+    --model relflow-2026-11-04 \
+    --datasets rel-f1 --tasks driver-dnf \
+    --output relflow_driver_dnf.csv
+```
+
+Omit `--datasets` and `--tasks` to run all 21 RelBench v1 entity tasks.
+The registered search space contains one configuration per tier, so
+`--n-trials` does not add candidate configurations.
+
+## Model and training
+
+The original inner training-anchor count selects the tier and remains fixed
+during the train+validation refit. Fields, datatypes and bounded join paths are
+derived from keys and validation-censored column measurements. The model consumes
+raw values and timestamp ages, with per-anchor censoring of histories and timed
+lookups.
 
 | Setting | SMALL | MEDIUM | LARGE |
 | --- | ---: | ---: | ---: |
+| Inner training anchors | <20,000 | 20,000–499,999 | ≥500,000 |
 | Width / root layers / heads | 128 / 2 / 4 | 64 / 2 / 8 | 64 / 2 / 8 |
-| Root feed-forward multiplier | 2 | 4 | 4 |
-| Branch layers / heads / multiplier | 1 / 4 / 8 | 2 / 4 / 8 | 2 / 4 / 8 |
-| Branch summary vectors | 4 | 1 | 1 |
-| Decoder layers / heads / multiplier | 1 / 4 / 8 | 1 / 4 / 8 | 1 / 4 / 8 |
-| Learning rate | 0.0001504508367492947 | 0.00021681002964478338 | 0.00021681002964478338 |
-| Weight decay | 0.01 | 0 | 0 |
-| EMA | 0.995 | 0.995 | 0.995 |
-| Leaf / branch masking | 0.30 / 0.10 | 0.30 / 0.05 | 0.30 / 0.05 |
-| Additive jitter | 0.05 | 0 | 0 |
-| Model outer / inner caps | 128 / 32 | 64 / 32 | 32 / 16 |
-| SQL outer / inner pools | 512 / 64 | 256 / 64 | 128 / 32 |
+| Branch layers / heads / summary vectors | 1 / 4 / 4 | 2 / 4 / 1 | 2 / 4 / 1 |
+| Model outer / inner history caps | 128 / 32 | 64 / 32 | 32 / 16 |
+| Training batch size | 64 | 512 | 512 |
+| Loader workers on CUDA | 0 | 0 | 2 |
+| Shuffle buffer rows | 16,384 | 16,384 | 2,048 |
+| DuckDB memory / spill limits | 4 / 64 GB | 16 / 128 GB | 32 / 256 GB |
 
-All nodes have zero neural dropout. AdamW uses a constant learning rate,
-gradient clipping 0.25 and EMA inference weights. Training runs eight complete
-pass-equivalents; MAE is the regression objective. `overflow="random"` samples
-contiguous training windows and keeps deterministic tails during validation and
-prediction. Attachment multiplicity remains unchanged.
+The complete settings live in
+[`recipes.json`](../../packages/relarena/src/relarena/models/relflow/recipes.json).
+All tiers use eight pass-equivalents, AdamW at a constant learning rate,
+gradient clipping at 0.25, zero neural dropout and EMA with decay 0.995.
+Regression optimizes MAE. Training randomly crops contiguous history windows;
+prediction uses deterministic tails. Text fields use frozen
+`sentence-transformers/all-MiniLM-L6-v2` weights at revision
+`1110a243fdf4706b3f48f1d95db1a4f5529b4d41`.
 
-## Operational policy
+The final refit intentionally places shuffled training anchors before
+validation-period anchors on every source pass. The bounded shuffle buffer
+retains this recency bias, so the final EMA weights emphasize validation-period
+rows. Those anchors retain histories frozen at the validation boundary;
+prediction uses the harness-supplied evaluation database.
 
-These settings are fixed resource choices, not model-selection candidates.
-They preserve the recorded effective batch sizes from the singleton campaign:
+## Runtime and resources
 
-| Tier / task | Training batch | Loader workers | Training shuffle rows |
-| --- | ---: | ---: | ---: |
-| All SMALL | 64 | 0 | 16,384 |
-| MEDIUM user-clicks, user-visits, site-success | 256 | 0 | 16,384 |
-| MEDIUM study-adverse; unseen MEDIUM tasks | 512 | 0 | 16,384 |
-| All LARGE | 512 | 2 | 2,048 |
-
-LARGE CUDA loaders use persistent spawned workers, one prefetched batch per
-worker and no pinning. SMALL and MEDIUM use the main process. CPU execution
-always uses zero workers. Every source pass reopens Parquet as 8,192-row
-record batches without Arrow threading, preserving the archived source/shuffle
-geometry; the restartable factory is safe to send to spawned workers. Text
-token caches are bounded to 16,384 strings per field/process on LARGE and 4,096
-on other tiers, with relflow's 64 MiB payload bound. Frozen encoder vectors use
-the extension-owned disk store with explicit resident-vector budgets of 256 MiB
-for SMALL/MEDIUM and 2,048 MiB for LARGE, per store view. The task-name exceptions
-affect only batch size, not schema, neural architecture or optimizer settings. An OOM
-fails visibly; it does not silently lower a frozen batch, truncate history or substitute an incomplete training run.
-
-Text uses `sentence-transformers/all-MiniLM-L6-v2` at immutable revision
-[`1110a243fdf4706b3f48f1d95db1a4f5529b4d41`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/tree/1110a243fdf4706b3f48f1d95db1a4f5529b4d41).
-Its model/tokenizer snapshot is resolved only when a Text field is present,
-inside the fit budget; every field with that encoder reuses the same snapshot.
-
-DuckDB uses eight threads, with memory caps of 4/16/32 GB and spill caps of
-64/128/256 GB for SMALL/MEDIUM/LARGE. These are maximum allowances, not an
-allocation guarantee; available host memory and scratch space require checking.
-
-The extra is separate from KurveRSC 0.1.1 because relflow requires NumPy 2 while
-that version requires NumPy 1. The root lock declares conflicts with both the
-KurveRSC extra and its development dependency group. Use an isolated environment
-with the `relflow` extra; Python 3.11 and base discovery remain supported without
-the backend.
-
-## Input, output and timing boundaries
-
-The adapter only consumes the `Database` and `Table` objects supplied by the
-harness. It never reloads a raw RelBench cache or calls dataset/task getters.
-Schema profiling uses the validation boundary, including during the outer fit.
-Training anchors use allowed outer history, while validation anchors in the
-final union retain history frozen at the validation boundary, matching the
-original campaign. Per-anchor timestamps further censor histories and lookups.
-
-Prediction returns one finite scalar or positive-class probability in each
-request's original position; empty requests return an empty vector. Missing
-values and empty histories retain native Arrow structure. Decimal numeric
-inputs are projected to double precision for the neural model; Decimal category
-labels are projected to exact strings, preserving distinct identities. Integer
-identifiers and categorical integer values retain their original representation.
-The adapter does not load research checkpoints, observe test labels or choose
-between model scores.
-
-Preparation, text encoding and training occur inside `fit`; prediction is a
-separate harness call. Their full elapsed time must remain in the run record.
-The official benchmark runner still performs an inner diagnostic fit and an
-outer refit for a singleton; published default-only timing excludes that inner
-fit. Both actual elapsed work and published timing must be retained until the
-maintainer confirms how the 24-hour policy applies. CPU memory, scratch capacity,
-GPU kernels, text-store behavior and source/schema equivalence still require
-qualification on the actual reproduction machine. No score or bitwise equality
-with historical campaign runs is asserted.
-
-Cold relational preparation and text encoding remain inside the timed calls.
-A public cache-warming workflow and its accounting require maintainer policy
-clarification; this implementation does not silently move preparation outside
-the measured run. Maintainers own `baseline_results` updates. See the
-[integration guide](../adding-a-model.md),
-[temporal protocol](../temporal-validation.md) and
+Preparation, text encoding and training run inside `fit`; no separate cache
+warmer is required. Default-only benchmark timing includes the final refit and
+prediction; the diagnostic inner fit is recorded separately. The runtime ceiling
+is 24 hours on the largest tasks, including preparation. See the
 [runtime policy](../tuning-regime.md).
+
+GPU execution is recommended for the full suite. DuckDB limits in the table
+bound its own memory and spill use; they are not measured peak host or GPU
+memory for the complete process. CPU loaders always use zero workers. An
+out-of-memory error fails the run without reducing its batch or training budget.
+Maintainers reproduce submissions on their benchmark hardware and add
+`baseline_results` after the rerun.

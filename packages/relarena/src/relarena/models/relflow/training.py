@@ -1,4 +1,4 @@
-"""Native relflow fit/predict execution for the frozen singleton recipe.
+"""Native relflow fit/predict execution for fixed size-tier recipes.
 
 Only this execution module imports relflow and its optional neural dependencies.
 No experiment controller, test evaluator or external data source is included.
@@ -26,7 +26,7 @@ import torch
 import yaml
 from relbench.base import Database, EntityTask, Table
 
-from ._vendor import raw
+from . import raw
 from .context import Context, infer, materialize
 
 ENCODER = "sentence-transformers/all-MiniLM-L6-v2"
@@ -137,7 +137,7 @@ def schema(
 
 
 def batches(path: Path) -> Iterator[pa.RecordBatch]:
-    """Reopen the source with the archived scan geometry for each loader pass."""
+    """Reopen the source in bounded record batches for each loader pass."""
     yield from pq.ParquetFile(path).iter_batches(batch_size=8192, use_threads=False)
 
 
@@ -149,7 +149,7 @@ def loader(
     *,
     predict: bool,
 ) -> Any:
-    """Keep source buffers and worker queues bounded at their measured settings."""
+    """Keep source buffers and worker queues bounded by the tier settings."""
     split = "predict" if predict else "train"
     workers = settings["workers"] if torch.cuda.is_available() else 0
     return rf.ArrowDataModule(
@@ -198,8 +198,9 @@ def fit(
     )
     try:
         structure = infer(context, task, config, namespace=namespace)
-        # Final train+val refits retain original training anchors first, shuffled
-        # once, followed by stale validation anchors. No held-out labels are read.
+        # Intentional recency bias: every source pass ends with validation-period
+        # anchors. The bounded loader shuffle preserves this bias in the EMA.
+        # Their histories stay frozen at the validation boundary.
         frame = train_table.df
         stale = frame[task.time_col] >= cutoff
         parts = []

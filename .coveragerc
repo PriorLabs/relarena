@@ -10,7 +10,6 @@ omit =
     */relarena/models/_shared/gnn/_vendor/graph.py
     */relarena/models/relgnn/_vendor/*
     */relarena/models/relgt/_vendor/*
-    */relarena/models/relflow/_vendor/*
     */examples/*
 
 [report]

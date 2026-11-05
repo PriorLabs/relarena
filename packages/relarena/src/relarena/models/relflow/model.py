@@ -9,12 +9,10 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 from relbench.base import Database, EntityTask, Table
 
-from relarena_core.identity import RunIdentity
 from relarena_core.model import RelArenaModel
 from relarena_core.registry import register_model
 from relarena_core.search_space import SearchSpace, TaskStats
@@ -35,28 +33,9 @@ def search_space(stats: TaskStats) -> SearchSpace:
     return SearchSpace(default_overrides=config)
 
 
-def execution(config: dict[str, Any], identity: RunIdentity | None) -> dict[str, Any]:
-    """Freeze measured batches without selecting architecture or scores by task."""
-    result = dict(config["execution"])
-    # These are the effective batches used in the original singleton runs.
-    # They alter neither the tier recipe nor its history geometry.
-    if (
-        identity is not None
-        and config["tier"] == "medium"
-        and (identity.dataset, identity.task)
-        in {
-            ("rel-avito", "user-clicks"),
-            ("rel-avito", "user-visits"),
-            ("rel-trial", "site-success"),
-        }
-    ):
-        result["batch_size"] = 256
-    return result
-
-
 @register_model(search_space=search_space)
 class RelFlowModel(RelArenaModel):
-    """Fit the original singleton recipe, using only supplied censored data."""
+    """Fit the fixed size-tier recipe, using only supplied censored data."""
 
     name = "relflow-2026-11-04"
     refit_on_full_data = True
@@ -78,7 +57,7 @@ class RelFlowModel(RelArenaModel):
             task,
             db,
             train_table,
-            {**self.config, "execution": execution(self.config, self.run_identity)},
+            self.config,
             seed=seed,
             time_limit=time_limit,
             namespace="database"
