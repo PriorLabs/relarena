@@ -14,8 +14,8 @@ the warm start:
 
 RelArena's RT integration transcribes the published fine-tuning recipe from
 [`examples/finetune`](https://github.com/stanford-star/relational-transformer/tree/main/examples/finetune)
-in [stanford-star/relational-transformer](https://github.com/stanford-star/relational-transformer),
-as of the pinned `relational-transformer==1.10.0`: a delta fine-tune on frozen weights with
+in [stanford-star/relational-transformer](https://github.com/stanford-star/relational-transformer):
+a delta fine-tune on frozen weights with
 Muon, batch 256, a constant learning rate of 5e-4, weight decay 0.1, and an EMA of the weights,
 run in four stages — a selection run on `train` with the step picked on `val`, a context search
 on `val` by inference alone, a refit on `train + val` at the chosen step rescaled by the row
