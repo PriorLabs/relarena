@@ -1,6 +1,44 @@
 # KurveRSC resource planning
 
-Full-panel resource measurements for the revised reproduction pin are pending.
+## Maintainer reproduction
+
+The 21-task reproduction ran one task per host with kurversc 0.2.0. Eight tasks
+ran on 96-vCPU, 739 GB hosts with `KURVERSC_DUCKDB_MEMORY_LIMIT=160GiB` and
+`KURVERSC_DUCKDB_MAX_TEMP_DIRECTORY_SIZE=100GiB`. The other 13 ran on 48-core,
+190 GB hosts with `48GiB` and `20GiB`. Peak RSS is the Slurm `MaxRSS` of the
+job; it grows with the DuckDB limit, so it is an observation under these
+limits, not a lower bound.
+
+| Task | Host RAM, GB | Wall time, h | Peak RSS, GiB |
+|---|---:|---:|---:|
+| rel-amazon/item-churn | 739 | 3.32 | 364 |
+| rel-amazon/item-ltv | 739 | 6.48 | 202 |
+| rel-amazon/user-churn | 739 | 4.98 | 262 |
+| rel-amazon/user-ltv | 739 | 8.86 | 327 |
+| rel-avito/ad-ctr | 190 | 0.71 | 34 |
+| rel-avito/user-clicks | 190 | 1.21 | 51 |
+| rel-avito/user-visits | 190 | 1.14 | 64 |
+| rel-event/user-attendance | 190 | 3.35 | 46 |
+| rel-event/user-ignore | 739 | 1.83 | 283 |
+| rel-event/user-repeat | 190 | 1.72 | 44 |
+| rel-f1/driver-dnf | 190 | 5.88 | 6 |
+| rel-f1/driver-position | 190 | 4.88 | 4 |
+| rel-f1/driver-top3 | 190 | 3.93 | 4 |
+| rel-hm/item-sales | 190 | 3.47 | 27 |
+| rel-hm/user-churn | 190 | 1.64 | 21 |
+| rel-stack/post-votes | 739 | 10.60 | 257 |
+| rel-stack/user-badge | 739 | 10.38 | 370 |
+| rel-stack/user-engagement | 739 | 4.36 | 219 |
+| rel-trial/site-success | 190 | 1.73 | 89 |
+| rel-trial/study-adverse | 190 | 6.36 | 30 |
+| rel-trial/study-outcome | 190 | 2.27 | 23 |
+
+rel-event/user-ignore and rel-stack/user-engagement ran out of memory on the
+190 GB hosts with the 48GiB DuckDB limit, and rel-stack/post-votes reached
+140 GiB there before it was moved; all three completed on the 739 GB hosts.
+
+## Author measurements
+
 The following author measurements are planning context from explicitly older
 source revisions, not resource guarantees for the new all-task S2 check.
 

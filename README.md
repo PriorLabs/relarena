@@ -89,21 +89,22 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 1937.1 | 1865.8–2049.0 |
-| 2 | tabpfn-rel-local-latest | Model | 1892.9 | 1832.2–1983.2 |
-| 3 | rt-j | System | 1839.1 | 1718.7–1998.2 |
-| 4 | tabpfn-rel-client-2026-08-15 | Model | 1795.2 | 1739.4–1875.2 |
-| 5 | rt-plurel | System | 1786.0 | 1690.7–1895.1 |
-| 6 | kurversc | System | 1773.9 | 1707.9–1850.5 |
-| 7 | nori-rel | Model | 1732.2 | 1659.0–1842.1 |
-| 8 | tabpfn-rel-local-2026-08-15 | Model | 1702.7 | 1617.3–1779.5 |
-| 9 | graphsage | Model | 1652.6 | 1551.3–1737.4 |
-| 10 | relgt | Model | 1562.2 | 1437.6–1667.5 |
-| 11 | rdblearn | Model | 1528.0 | 1436.1–1607.3 |
-| 12 | relgnn-es | Model | 1516.3 | 1422.6–1622.6 |
-| 13 | lightgbm | Model | 1361.3 | 1171.5–1490.8 |
-| 14 | constant-per-entity | Model | 1267.5 | 1086.9–1411.2 |
-| 15 | constant-global | Model | 1000.0 | 841.1–1076.7 |
+| 1 | tabpfn-rel-client-latest | Model | 1933.6 | 1864.7–2033.5 |
+| 2 | kurversc-latest | System | 1913.4 | 1832.3–2050.6 |
+| 3 | tabpfn-rel-local-latest | Model | 1887.7 | 1831.3–1974.8 |
+| 4 | rt-j | System | 1842.2 | 1721.9–1997.8 |
+| 5 | tabpfn-rel-client-2026-08-15 | Model | 1799.0 | 1740.7–1886.9 |
+| 6 | rt-plurel | System | 1787.7 | 1695.9–1889.4 |
+| 7 | kurversc | System | 1773.8 | 1709.9–1849.6 |
+| 8 | nori-rel | Model | 1732.3 | 1660.5–1844.7 |
+| 9 | tabpfn-rel-local-2026-08-15 | Model | 1702.0 | 1613.7–1771.7 |
+| 10 | graphsage | Model | 1660.3 | 1550.8–1747.2 |
+| 11 | relgt | Model | 1562.7 | 1430.3–1664.5 |
+| 12 | rdblearn | Model | 1529.8 | 1437.8–1610.5 |
+| 13 | relgnn-es | Model | 1525.0 | 1421.2–1636.6 |
+| 14 | lightgbm | Model | 1363.9 | 1168.9–1501.1 |
+| 15 | constant-per-entity | Model | 1266.5 | 1082.8–1408.5 |
+| 16 | constant-global | Model | 1000.0 | 838.5–1076.9 |
 
 </details>
 
@@ -627,6 +628,7 @@ as an experimental final-fit variant.
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
+| `kurversc-2026-10-22` | [KurveRSC staged](docs/models/kurversc-staged.md) | generic staged GraphReduce search + CatBoost | **system** | 21 tasks | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local-2026-08-15` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client-2026-08-15` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |

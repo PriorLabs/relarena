@@ -93,3 +93,12 @@ runs the frozen public Nori 30M checkpoint (Hugging Face revision
 `818433f8af12c1137b96d9ff47e109b4eef5818d4e52a9656b2e573dbf13b74d`) with
 synthefy-nori 0.20.1, without quantization or context subsampling. Its DFS
 cache was built with fastdfs 1.2.
+
+## KurveRSC 2026-10-22
+
+`kurversc-2026-10-22` (alias `kurversc-latest`) covers all 21 entity tasks at
+seed 0 in the native system schema. It is the maintainer's reproduction with
+kurversc 0.2.0 and graphreduce 1.10.18 from PyPI, one task per CPU host. See
+[KurveRSC staged](../docs/models/kurversc-staged.md) for the procedure and
+[resource planning](../docs/models/kurversc-staged-resources.md) for the
+measured runtime and memory per task.

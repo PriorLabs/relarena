@@ -57,10 +57,12 @@ See [resource planning](kurversc-staged-resources.md).
 ## Reproduction and provenance
 
 The maintainer's 21-task reproduction through this registered adapter is the
-reference result. No full-panel score or Elo is assigned to the revised pin.
+reference result. It ran at seed 0 with kurversc 0.2.0 and graphreduce 1.10.18
+from PyPI, one task per CPU host, and its rows are the `kurversc-2026-10-22`
+rows in [`baseline_results/results.csv`](../../baseline_results/results.csv).
 Historical author results and large evidence bundles are kept outside this
 submission's working tree; they remain available in the prior PR history and
-the KurveRSC repository. `baseline_results/` is unchanged.
+the KurveRSC repository.
 
 The [component definitions and global defaults](https://github.com/kurveai/kurversc/blob/cf6599bd7de21f32b299c3cdce75f611ad050a06/docs/generic-staged-review.md)
 and [source/package qualification](https://github.com/kurveai/kurversc/blob/cf6599bd7de21f32b299c3cdce75f611ad050a06/docs/generic-staged-validation.json)
