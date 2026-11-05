@@ -13,6 +13,7 @@ _BASELINES = {
     "constant-per-entity",
     "graphsage",
     "kurversc",
+    "kurversc-2026-10-22",
     "lightgbm",
     "nori-rel",
     "rdblearn",
@@ -86,7 +87,7 @@ assert registry.get('extra-model') is ExtraModel
 assert registry.search_space('extra-model').default_overrides == {{}}
 relarena.models._register_builtin_models()
 assert registry.get('extra-model') is ExtraModel
-assert len(registry) == 13
+assert len(registry) == 14
 """
     subprocess.run([sys.executable, "-c", code], check=True)
 

@@ -22,7 +22,7 @@ dev = [
 # Focused adapter tests exercise the public optional-package boundary. kurversc
 # caps numpy<2, so it sits in its own group rather than in `dev`: extras whose
 # runtime needs numpy>=2 cannot otherwise be installed alongside the test tools.
-kurversc = ["kurversc==0.1.1"]
+kurversc = ["kurversc[staged]==0.2.0", "graphreduce==1.10.18"]
 cuda = []
 # The CPU-only build avoids downloading CUDA when not required.
 cpu = ["torch"]

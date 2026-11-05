@@ -1,5 +1,9 @@
 # KurveRSC
 
+For the versioned complete staged candidate, see
+[KurveRSC staged](kurversc-staged.md). This page describes the original
+native graph-only `kurversc` registration.
+
 KurveRSC is a CPU-only native RelArena system that jointly selects a GraphReduce relational
 feature program and a CatBoost learner. It does not require or use a GPU.
 
