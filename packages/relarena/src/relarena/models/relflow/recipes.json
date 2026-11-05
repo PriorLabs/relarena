@@ -44,7 +44,7 @@
       "shuffle_rows": 16384,
       "text_token_cache": 4096,
       "duckdb_threads": 8,
-      "duckdb_memory_limit": "4GB",
+      "duckdb_memory_limit": "16GB",
       "duckdb_spill_limit": "64GB",
       "text_resident_mib": 256
     }

@@ -6,7 +6,7 @@ relational database and trains one fixed recipe per training-set size tier.
 
 ## Installation
 
-The optional backend requires Python 3.12:
+The optional backend requires Python 3.12 and DuckDB 1.5 or newer:
 
 ```bash
 uv sync --python 3.12 --all-packages --extra relflow
@@ -47,7 +47,7 @@ lookups.
 | Training batch size | 64 | 512 | 512 |
 | Loader workers on CUDA | 0 | 0 | 2 |
 | Shuffle buffer rows | 16,384 | 16,384 | 2,048 |
-| DuckDB memory / spill limits | 4 / 64 GB | 16 / 128 GB | 32 / 256 GB |
+| DuckDB memory / spill limits | 16 / 64 GB | 16 / 128 GB | 32 / 256 GB |
 
 The complete settings live in
 [`recipes.json`](../../packages/relarena/src/relarena/models/relflow/recipes.json).

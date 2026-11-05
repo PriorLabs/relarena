@@ -247,7 +247,23 @@ def test__materialize__large_decimal_categories__retain_distinct_labels(
     assert db.table_dict["entities"].df["segment_code"].tolist() == labels
 
 
-def test__context__configured_resources__sets_explicit_limits(tmp_path: Path) -> None:
+@pytest.mark.parametrize("reset_spill_limit", [False, True])
+def test__context__configured_resources__sets_explicit_limits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reset_spill_limit: bool
+) -> None:
+    import duckdb
+
+    original_connect = duckdb.connect
+
+    def connect(*, config: dict[str, object]) -> duckdb.DuckDBPyConnection:
+        connection = original_connect(config=config)
+        if reset_spill_limit:
+            # Reproduce initialization overwriting the requested cap, regardless
+            # of whether this platform's DuckDB build exhibits that behavior.
+            connection.execute("SET max_temp_directory_size = '1TiB'")
+        return connection
+
+    monkeypatch.setattr(duckdb, "connect", connect)
     task, db, _ = decimal_fixture()
     context = Context.open(
         db,
@@ -269,6 +285,54 @@ def test__context__configured_resources__sets_explicit_limits(tmp_path: Path) ->
             "memory_limit": "122.0 MiB",
             "max_temp_directory_size": "244.1 MiB",
         }
+    finally:
+        context.close()
+
+
+@pytest.mark.parametrize("dtype", ["bool", "boolean", "int64", "float64"])
+def test__materialize__binary_label_types__writes_boolean_targets(
+    tmp_path: Path, dtype: str
+) -> None:
+    task, db, anchors = decimal_fixture()
+    task.task_type = TaskType.BINARY_CLASSIFICATION
+    anchors.df[task.target_col] = pd.Series([0, 1, 0, 1, 1, 0], dtype=dtype)
+    context = Context.open(db, task.dataset.val_timestamp, tmp_path)
+    try:
+        structure = infer(context, task, search_space(TaskStats(3)).default_overrides)
+        path = materialize(
+            context,
+            structure,
+            task,
+            anchors,
+            tmp_path / "binary.parquet",
+            labelled=True,
+        )
+    finally:
+        context.close()
+    targets = pq.read_table(path)["target"]
+    assert targets.type == pa.bool_()
+    assert targets.to_pylist() == [False, True, False, True, True, False]
+
+
+@pytest.mark.parametrize("invalid", [-1, 2, 0.5])
+def test__materialize__nonbinary_numeric_label__raises(
+    tmp_path: Path, invalid: float
+) -> None:
+    task, db, anchors = decimal_fixture()
+    task.task_type = TaskType.BINARY_CLASSIFICATION
+    anchors.df[task.target_col] = [0.0, 1.0, invalid, 1.0, 0.0, 1.0]
+    context = Context.open(db, task.dataset.val_timestamp, tmp_path)
+    try:
+        structure = infer(context, task, search_space(TaskStats(3)).default_overrides)
+        with pytest.raises(ValueError, match="Binary training labels must be 0 or 1"):
+            materialize(
+                context,
+                structure,
+                task,
+                anchors,
+                tmp_path / "invalid.parquet",
+                labelled=True,
+            )
     finally:
         context.close()
 

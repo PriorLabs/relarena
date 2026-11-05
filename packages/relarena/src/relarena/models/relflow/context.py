@@ -51,11 +51,13 @@ class Context:
             config={
                 "threads": threads,
                 "memory_limit": memory_limit,
-                "max_temp_directory_size": max_temp_directory_size,
                 "temp_directory": str(directory / "spill"),
                 "preserve_insertion_order": True,
             }
         )
+        # Set this after temp_directory: connection initialization can otherwise
+        # replace the requested spill cap with DuckDB's disk-based default.
+        connection.execute("SET max_temp_directory_size = ?", [max_temp_directory_size])
         schema, sources, registered, decimals = {}, {}, {}, {}
         for index, (name, table) in enumerate(sorted(db.table_dict.items())):
             if "__source_row_id" in table.df.columns:
@@ -182,9 +184,10 @@ def materialize(
     targets = pa.Array.from_pandas(frame[task.target_col]) if labelled else None
     if targets is not None:
         if task.task_type == TaskType.BINARY_CLASSIFICATION:
-            invalid = pc.and_(pc.not_equal(targets, 0), pc.not_equal(targets, 1))
-            if pc.any(invalid).as_py():
-                raise ValueError("Binary training labels must be 0 or 1.")
+            if not pa.types.is_boolean(targets.type):
+                invalid = pc.and_(pc.not_equal(targets, 0), pc.not_equal(targets, 1))
+                if pc.any(invalid).as_py():
+                    raise ValueError("Binary training labels must be 0 or 1.")
             targets = pc.cast(targets, pa.bool_())
         else:
             targets = pc.cast(targets, pa.float64())

@@ -111,6 +111,9 @@ def test__space__original_training_rows__freezes_single_default(
     assert space.configs(n_trials=50, seed=0) == [space.default_overrides]
     assert space.default_overrides["tier"] == tier
     assert space.default_overrides["caps"] == caps
+    assert space.default_overrides["execution"]["duckdb_memory_limit"] == (
+        "32GB" if tier == "large" else "16GB"
+    )
     assert space.default_overrides["recipe"]["passes"] == 8
     assert space.default_overrides["recipe"]["overflow"] == "random"
 
