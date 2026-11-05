@@ -66,6 +66,7 @@ Paper = "https://arxiv.org/abs/2608.16319"
 relarena = "relarena.cli:main"
 
 [project.optional-dependencies]
+relflow = ["relflow[text]==0.4.4; python_version >= '3.12'"]
 # Per-method extras (lazy-import + optional-dependency pattern; imported when run).
 lightgbm = ["lightgbm>=4.0,<4.7"]
 # KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a
