@@ -515,7 +515,7 @@ registering a method works without its extra installed.
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
-| `rt` | RT-PluRel, RT-J | Linux x86-64 wheel, see below |
+| `rt` | [RT-PluRel, RT-J](docs/models/rt.md) | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
 
 **GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
@@ -639,18 +639,21 @@ as an experimental final-fit variant.
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
 | `relgt` | RelGT | relational transformer | model | report | best-validation checkpoint | `relgt` |
-| `rt-plurel` | RT-PluRel | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
-| `rt-j` | RT-J | pretrained relational transformer, fine-tuned per task | **system** | 21 tasks | train + val | `rt` |
+| `rt-plurel` | [RT-PluRel](docs/models/rt.md) | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
+| `rt-j` | [RT-J](docs/models/rt.md) | pretrained relational transformer, fine-tuned per task | **system** | 21 tasks | train + val | `rt` |
 
 The report presents `relgnn-es` simply as **RelGNN**, because that published-style
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
 remains available for experiments but is excluded from the default release leaderboard.
 
-RT-PluRel, RT-J, and KurveRSC are registered **systems**. RT-PluRel and RT-J are the relational
-transformer fine-tuned on the given task with a sequential tuning regime; they differ only in the
-published checkpoint they warm-start from (`stanford-star/rt-plurel`, pretrained on
-PluRel-generated synthetic data, and `stanford-star/rt-j`, pretrained at scale on the Join
-corpus). KurveRSC jointly selects a GraphReduce feature program and downstream
+RT-PluRel, RT-J, and KurveRSC are registered **systems**. RT-PluRel and RT-J are the
+[Relational Transformer](https://github.com/stanford-star/relational-transformer) fine-tuned on
+the given task with the published
+[`examples/finetune`](https://github.com/stanford-star/relational-transformer/tree/main/examples/finetune)
+recipe; they differ only in the published checkpoint they warm-start from
+(`stanford-star/rt-plurel`, pretrained on PluRel-generated synthetic data, and
+`stanford-star/rt-j`, pretrained at scale on the Join corpus). See
+[RT-PluRel and RT-J](docs/models/rt.md) for the recipe's source and the papers to cite. KurveRSC jointly selects a GraphReduce feature program and downstream
 learner on the inner split, then freezes and replays that exact operation plan in its reporting
 arm. Their protocols and configured values are documented in
 [`models/rt/model.py`](packages/relarena/src/relarena/models/rt/model.py) and
