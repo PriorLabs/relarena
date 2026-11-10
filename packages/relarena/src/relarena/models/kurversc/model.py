@@ -1,4 +1,4 @@
-"""`kurversc` — validation-guided relational signal compression.
+"""`kurversc-2026-09-03` — validation-guided relational signal compression.
 
 KurveRSC owns its complete prediction procedure, so it implements RelArena's
 system contract rather than presenting its internal GraphReduce candidates as
@@ -72,7 +72,7 @@ class _SelectedGraph:
 class KurveRSCSystem(RelArenaSystem):
     """GraphReduce configuration search plus a CatBoost downstream learner."""
 
-    name = "kurversc"
+    name = "kurversc-2026-09-03"
     schema_depth = 3
 
     def run(

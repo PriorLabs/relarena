@@ -12,7 +12,8 @@ _BASELINES = {
     "constant-global",
     "constant-per-entity",
     "graphsage",
-    "kurversc",
+    "kurversc-2026-09-03",
+    "kurversc-2026-10-22",
     "lightgbm",
     "nori-rel",
     "rdblearn",
@@ -45,7 +46,7 @@ from relarena_core.registry import registry
 assert not registry.names()
 import relarena.models
 assert set(registry.names()) == {_BASELINES!r}
-assert registry.kind('kurversc') == registry.kind('rt-plurel') == 'system'
+assert registry.kind('kurversc-2026-09-03') == registry.kind('rt-plurel') == 'system'
 before = list(registry)
 relarena.models._register_builtin_models()
 assert list(registry) == before

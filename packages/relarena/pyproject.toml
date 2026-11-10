@@ -71,7 +71,7 @@ relflow = ["relflow[text]==0.4.4; python_version >= '3.12'", "duckdb>=1.5.0"]
 lightgbm = ["lightgbm>=4.0,<4.7"]
 # KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a
 # native system entry because selection happens inside its end-to-end run.
-kurversc = ["kurversc==0.1.1"]
+kurversc = ["kurversc[staged]==0.2.0", "graphreduce==1.10.18"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
 # (tabpfn>=8 for the create_default_for_version API, lazily imported in relarena.models.rdblearn.tfm)
 # plus the DFS featurization deps.
