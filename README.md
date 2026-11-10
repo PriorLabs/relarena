@@ -71,7 +71,7 @@ they do not measure variation across training seeds. The plots and tables show t
 |---:|---|---|---:|---:|
 | 1 | tabpfn-rel-client-latest | Model | 1979.4 | 1905.1–2096.6 |
 | 2 | tabpfn-rel-local-latest | Model | 1932.0 | 1865.0–2028.8 |
-| 3 | relflow-2026-11-04 | Model | 1897.1 | 1776.1–2041.9 |
+| 3 | relflow-latest | Model | 1897.1 | 1776.1–2041.9 |
 | 4 | tabpfn-rel-client-2026-08-15 | Model | 1816.8 | 1758.0–1896.8 |
 | 5 | nori-rel | Model | 1778.9 | 1705.0–1881.9 |
 | 6 | tabpfn-rel-local-2026-08-15 | Model | 1716.4 | 1621.0–1814.8 |
@@ -93,7 +93,7 @@ they do not measure variation across training seeds. The plots and tables show t
 | 1 | tabpfn-rel-client-latest | Model | 1926.2 | 1863.7–2024.9 |
 | 2 | kurversc-latest | System | 1917.1 | 1838.8–2050.1 |
 | 3 | tabpfn-rel-local-latest | Model | 1887.8 | 1826.2–1974.1 |
-| 4 | relflow-2026-11-04 | Model | 1865.3 | 1781.3–1984.4 |
+| 4 | relflow-latest | Model | 1865.3 | 1781.3–1984.4 |
 | 5 | rt-j | System | 1843.4 | 1724.8–1993.3 |
 | 6 | tabpfn-rel-client-2026-08-15 | Model | 1795.8 | 1734.5–1882.5 |
 | 7 | rt-plurel | System | 1788.0 | 1692.7–1887.5 |
