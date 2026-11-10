@@ -45,7 +45,7 @@ conflicts = [
         { package = "relarena", extra = "nori-rel" },
     ],
     [{ group = "kurversc" }, { package = "relarena", extra = "nori-rel" }],
-    # relflow needs NumPy>=2.2.6; KurveRSC 0.1.1 requires NumPy<2.
+    # relflow needs NumPy>=2.2.6; kurversc pins numpy<2.
     [
         { package = "relarena", extra = "kurversc" },
         { package = "relarena", extra = "relflow" },

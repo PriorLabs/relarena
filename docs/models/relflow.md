@@ -13,7 +13,7 @@ uv sync --python 3.12 --all-packages --extra relflow
 ```
 
 For CPU execution, add `--group cpu`. The `relflow` extra cannot be combined
-with KurveRSC 0.1.1, which requires NumPy 1; RelFlow requires NumPy 2.
+with KurveRSC, which requires NumPy 1; RelFlow requires NumPy 2.
 
 ## Running RelFlow
 
