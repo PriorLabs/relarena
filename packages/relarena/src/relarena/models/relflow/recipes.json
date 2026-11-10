@@ -1,0 +1,152 @@
+{
+  "small": {
+    "tier": "small",
+    "training_rows": 0,
+    "recipe": {
+      "batch_size": 64,
+      "branch_dropout": 0.0,
+      "branch_ffnx": 8,
+      "branch_heads": 4,
+      "branch_layers": 1,
+      "branch_mask": 0.1,
+      "branch_outputs": 4,
+      "d_model": 128,
+      "decoder_dropout": 0.0,
+      "decoder_ffnx": 8,
+      "decoder_heads": 4,
+      "decoder_layers": 1,
+      "dropout": 0.0,
+      "ema_decay": 0.995,
+      "ffnx": 2,
+      "jitter": 0.05,
+      "learning_rate": 0.0001504508367492947,
+      "mask": 0.3,
+      "n_heads": 4,
+      "n_layers": 2,
+      "objective": "mae",
+      "overflow": "random",
+      "passes": 8,
+      "weight_decay": 0.01
+    },
+    "caps": {
+      "inner": 32,
+      "outer": 128
+    },
+    "pools": {
+      "inner": 64,
+      "outer": 512
+    },
+    "execution": {
+      "batch_size": 64,
+      "workers": 0,
+      "persistent_workers": false,
+      "prefetch_factor": 1,
+      "shuffle_rows": 16384,
+      "text_token_cache": 4096,
+      "duckdb_threads": 8,
+      "duckdb_memory_limit": "16GB",
+      "duckdb_spill_limit": "64GB",
+      "text_resident_mib": 256
+    }
+  },
+  "medium": {
+    "tier": "medium",
+    "training_rows": 20000,
+    "recipe": {
+      "batch_size": 512,
+      "branch_dropout": 0.0,
+      "branch_ffnx": 8,
+      "branch_heads": 4,
+      "branch_layers": 2,
+      "branch_mask": 0.05,
+      "branch_outputs": 1,
+      "d_model": 64,
+      "decoder_dropout": 0.0,
+      "decoder_ffnx": 8,
+      "decoder_heads": 4,
+      "decoder_layers": 1,
+      "dropout": 0.0,
+      "ema_decay": 0.995,
+      "ffnx": 4,
+      "jitter": 0.0,
+      "learning_rate": 0.00021681002964478338,
+      "mask": 0.3,
+      "n_heads": 8,
+      "n_layers": 2,
+      "objective": "mae",
+      "overflow": "random",
+      "passes": 8,
+      "weight_decay": 0.0
+    },
+    "caps": {
+      "inner": 32,
+      "outer": 64
+    },
+    "pools": {
+      "inner": 64,
+      "outer": 256
+    },
+    "execution": {
+      "batch_size": 512,
+      "workers": 0,
+      "persistent_workers": false,
+      "prefetch_factor": 1,
+      "shuffle_rows": 16384,
+      "text_token_cache": 4096,
+      "duckdb_threads": 8,
+      "duckdb_memory_limit": "16GB",
+      "duckdb_spill_limit": "128GB",
+      "text_resident_mib": 256
+    }
+  },
+  "large": {
+    "tier": "large",
+    "training_rows": 500000,
+    "recipe": {
+      "batch_size": 512,
+      "branch_dropout": 0.0,
+      "branch_ffnx": 8,
+      "branch_heads": 4,
+      "branch_layers": 2,
+      "branch_mask": 0.05,
+      "branch_outputs": 1,
+      "d_model": 64,
+      "decoder_dropout": 0.0,
+      "decoder_ffnx": 8,
+      "decoder_heads": 4,
+      "decoder_layers": 1,
+      "dropout": 0.0,
+      "ema_decay": 0.995,
+      "ffnx": 4,
+      "jitter": 0.0,
+      "learning_rate": 0.00021681002964478338,
+      "mask": 0.3,
+      "n_heads": 8,
+      "n_layers": 2,
+      "objective": "mae",
+      "overflow": "random",
+      "passes": 8,
+      "weight_decay": 0.0
+    },
+    "caps": {
+      "inner": 16,
+      "outer": 32
+    },
+    "pools": {
+      "inner": 32,
+      "outer": 128
+    },
+    "execution": {
+      "batch_size": 512,
+      "workers": 2,
+      "persistent_workers": true,
+      "prefetch_factor": 1,
+      "shuffle_rows": 2048,
+      "text_token_cache": 16384,
+      "duckdb_threads": 8,
+      "duckdb_memory_limit": "32GB",
+      "duckdb_spill_limit": "256GB",
+      "text_resident_mib": 2048
+    }
+  }
+}
