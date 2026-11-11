@@ -80,6 +80,7 @@ def fixture(
 
 def test__registry__without_optional_backend__registers() -> None:
     assert registry.get(RelFlowModel.name) is RelFlowModel
+    assert registry.get("relflow-latest") is RelFlowModel
     code = """
 import builtins
 original = builtins.__import__

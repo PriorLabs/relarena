@@ -14,7 +14,7 @@ import numpy as np
 from relbench.base import Database, EntityTask, Table
 
 from relarena_core.model import RelArenaModel
-from relarena_core.registry import register_model
+from relarena_core.registry import register_model, registry
 from relarena_core.search_space import SearchSpace, TaskStats
 
 
@@ -72,3 +72,6 @@ class RelFlowModel(RelArenaModel):
         if not hasattr(self, "fitted"):
             raise RuntimeError("Fit the relflow model before predicting.")
         return predict(self.fitted, task, db, table)
+
+
+registry.register_alias("relflow-latest", RelFlowModel.name)
