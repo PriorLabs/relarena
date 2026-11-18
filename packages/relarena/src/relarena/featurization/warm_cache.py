@@ -8,7 +8,7 @@ from pathlib import Path
 from relarena.dataset import RelBenchDatasetTask
 from relarena_core.cache import resolve_cache_config
 from relarena_core.featurization.dfs import DFS_MAX_DEPTH
-from relarena_core.featurization.warm_cache import warm_dfs_cache
+from relarena_core.featurization.warm_cache import HISTORY_GROUPS, warm_dfs_cache
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -19,12 +19,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cache-dir", type=Path, required=True)
     parser.add_argument("--max-depth", type=int, default=DFS_MAX_DEPTH)
     parser.add_argument("--no-download", action="store_true")
+    parser.add_argument(
+        "--group",
+        choices=HISTORY_GROUPS,
+        action="append",
+        help="history group to warm; repeat for several (default: all)",
+    )
     args = parser.parse_args(argv)
     source = RelBenchDatasetTask(args.dataset, args.task, download=not args.no_download)
     warm_dfs_cache(
         source,
         resolve_cache_config(args.cache_dir, on_miss="fill"),
         max_depth=args.max_depth,
+        groups=args.group or HISTORY_GROUPS,
     )
     return 0
 

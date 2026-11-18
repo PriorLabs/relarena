@@ -576,9 +576,10 @@ Complete these steps on the submission branch before merging:
 | `relgnn-es` (paper-facing RelGNN) | `relgnn/` | `space` (same as `relgnn`) | explicit | `False` | all | `relgnn` | as `relgnn` |
 | `relgt` | `relgt/` | `Callable[[TaskStats], SearchSpace]` → `fixed_grid` | explicit | `False` | binary, regression | `relgt` | `_shared/gnn`, own `_vendor/` + `tokenize.py` |
 
-`rt-plurel` is a `RelArenaSystem`, so model search-space and final-fit columns
-do not apply. It supports binary classification and regression and uses the
-`rt` extra.
+`rt-plurel` and `rt-j` are `RelArenaSystem`s, so model search-space and
+final-fit columns do not apply. They support binary classification and
+regression, use the `rt` extra, and differ only in the published checkpoint
+they warm-start from.
 
 ## External model packages
 

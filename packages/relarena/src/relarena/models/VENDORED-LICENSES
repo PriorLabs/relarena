@@ -11,8 +11,10 @@ vendored file with no directory of its own, and RelBench and RelGNN ship the
 identical MIT text, so per-directory copies would duplicate and drift.
 
 
-relbench -- src/relarena/models/_shared/gnn/_vendor/gnn.py
-Taken from snap-stanford/relbench at commit 74d4c37
+relbench -- src/relarena/models/_shared/gnn/_vendor/gnn.py,
+            src/relarena/models/_shared/gnn/_vendor/graph.py
+Taken from snap-stanford/relbench at commit 74d4c37 (gnn.py) and the 2.1.2
+release on PyPI (graph.py); the license text is the same at both.
 ---------------------------------------------------------------------------
 
 The MIT License (MIT)

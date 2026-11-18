@@ -16,9 +16,11 @@ class _StubClassifier:
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> "_StubClassifier":
         self.classes_ = np.unique(y)
         self.n_train_ = len(X)
+        self.fit_frame_ = X.copy()
         return self
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        self.predict_frame_ = X.copy()
         cols = np.arange(1, len(self.classes_) + 1, dtype=float)
         return np.tile(cols / cols.sum(), (len(X), 1))
 
@@ -72,6 +74,17 @@ def test_fit_predict_roundtrip_reindexes_to_training_columns(stub_tfm: TFMSpec) 
     fitted = fit_tfm(df, y, TaskType.BINARY_CLASSIFICATION, spec=stub_tfm, seed=0)
     pred = predict_tfm(fitted, df[["cat", "num"]])
     assert pred.shape == (20,)
+
+
+def test_all_missing_column_reaches_fit_and_predict(stub_tfm: TFMSpec) -> None:
+    train = _frame(20).assign(sparse=np.nan)
+    y = pd.Series([0, 1] * 10)
+    fitted = fit_tfm(train, y, TaskType.BINARY_CLASSIFICATION, spec=stub_tfm, seed=0)
+    assert fitted.feature_cols == ["num", "cat", "sparse"]
+    pd.testing.assert_frame_equal(fitted.estimator.fit_frame_, train)
+    test = train.assign(sparse="general")
+    predict_tfm(fitted, test[["sparse", "cat", "num"]])
+    pd.testing.assert_frame_equal(fitted.estimator.predict_frame_, test)
 
 
 def test_fit_does_not_pass_categorical_indices() -> None:

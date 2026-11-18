@@ -157,6 +157,14 @@ def test__manual_licenses__covers_kurversc_pep639_metadata_gap(
     assert audit.MANUAL_LICENSES["kurversc"] == "MIT"
 
 
+def test__fetch_pypi_license__bare_osi_classifier__declares_nothing(
+    audit: types.ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stub_pypi(audit, monkeypatch, {"classifiers": ["License :: OSI Approved"]})
+
+    assert audit.fetch_pypi_license("vague", "1.0") == (None, "")
+
+
 def test__fetch_pypi_license__transient_failure__retries_and_recovers(
     audit: types.ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -102,10 +102,10 @@ definitely not reasonable. Currently, all methods but `relgt` use a fixed-size
 search space per dataset, i.e. they don't adjust it to the dataset size. In
 general, methods should not aim to exhaust the 24h allowance. Nearly all run
 for at most 12h of recorded runtime per task, even on the largest tasks
-(excluding cached pre-processing). Only `relgt` and `rt-plurel` currently break
-the 12h barrier, both excluding their pre-processing: `relgt` with up to 41h of
-pure GPU time on `rel-avito/user-visits`, and `rt-plurel` with up to 16.3h on
-the largest `rel-amazon` task.
+(excluding cached pre-processing). Only `relgt`, `rt-plurel` and `rt-j`
+currently break the 12h barrier, all excluding their pre-processing: `relgt`
+with up to 41h of pure GPU time on `rel-avito/user-visits`, and `rt-plurel` and
+`rt-j` with up to 16.1h and 17.3h on `rel-amazon` tasks.
 
 ## What we ran
 
@@ -149,7 +149,8 @@ hours (`rdblearn`, `tabpfn-rel`, RelGNN, `relgt`):_
 | `tabpfn-rel-client-2026-08-15` | 3 | 73.4 min | 15.2 min | 63.3 min | 87.5 min | 93.2 min | 99.8 min |
 | `relgnn-es` (RelGNN) | 10 | 68.1 min | 1.4 min | 5.4 min | 26.6 min | 92.1 min | 313.4 min |
 | `relgt` | 9 | 430.9 min | 36.1 min | 124.1 min | 149.8 min | 463.8 min | 2233.0 min |
-| `rt-plurel` | — | 351.0 min | 109.2 min | 129.1 min | 231.4 min | 515.5 min | 979.1 min |
+| `rt-plurel` | — | 446.6 min | 105.6 min | 139.7 min | 357.9 min | 815.9 min | 966.6 min |
+| `rt-j` | — | 410.0 min | 101.6 min | 140.7 min | 189.0 min | 697.0 min | 1040.5 min |
 
 Total runtime is per (model, dataset, task, seed). For tuned model runs, it sums
 inner fit and prediction time across all trials, plus the selected config's outer
@@ -175,9 +176,9 @@ operator choices. Five caveats on reading them:
   configurations. A sampled space evaluates its default plus `n_trials` random
   samples; a fixed grid evaluates at most its first `n_trials` entries; an
   untunable model evaluates only its default.
-- `rt-plurel` is a system and has no `n_trials`. Its `time_total` includes the
-  training-step search with in-loop validation, the context-configuration grid,
-  the reporting arm, and final prediction.
+- `rt-plurel` and `rt-j` are systems and have no `n_trials`. Their `time_total`
+  includes the training-step search with in-loop validation, the
+  context-configuration grid, the reporting arm, and final prediction.
 - For `rdblearn` and the `tabpfn-rel` variants, the requested budget equals the
   grid size (`rdblearn` 6 = 2 TFMs × 3 depths; `tabpfn-rel` 3 = depths 2–4),
   meaning "run the whole grid" rather than a budget decision. The free choices

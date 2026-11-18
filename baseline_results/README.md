@@ -14,19 +14,21 @@ A snapshot of RelArena baseline runs over the RelBench-v1 entity-task grid
   `relarena.evaluation.compute_leaderboard`.
 
 Models: `constant-global`, `constant-per-entity`, `lightgbm`, `graphsage`, `rdblearn`,
-`tabpfn-rel-local-2026-08-15`, `tabpfn-rel-client-2026-08-15`, `relgnn-es`, `relgt`, `rt-plurel`.
+`tabpfn-rel-local-2026-08-15`, `tabpfn-rel-client-2026-08-15`, `nori-rel`, `relflow-2026-11-04`, `relgnn-es`, `relgt`, `rt-plurel`, `rt-j`.
 (`constant-global` predicts one global optimal constant; `constant-per-entity` predicts each
 entity's own optimal constant, falling back to the global one for entities absent
 from train; `relgnn-es` is RelGNN scored at its best-val checkpoint instead
 of a train+val refit; `relgt` is the Relational Graph Transformer, which reports its
 own best-val checkpoint (`refit_on_full_data=False`) per its published protocol;
 `tabpfn-rel-client-2026-08-15` is the hosted-API variant and was launched explicitly because
-routine sweeps should not spend service quota; `rt-plurel` is the Relational
-Transformer, registered as a **system** — see the package README.)
+routine sweeps should not spend service quota; `rt-plurel` and `rt-j` are the
+Relational Transformer warm-started from `stanford-star/rt-plurel` and
+`stanford-star/rt-j`, registered as **systems** — see the package README.)
 
-`rt-plurel` rows use the native system schema. Their `test_score` is the real
-8-seed context ensemble over the whole test split, and `time_total` is the sum
-of the original selection, reporting, and prediction timings.
+`rt-plurel` and `rt-j` rows use the native system schema. Their `test_score` is
+the real 8-seed context ensemble over the whole test split, and `time_total` is
+the wall-clock time of the system run (step selection, context search,
+reporting arm, and prediction), excluding cache warming.
 - `experiment_results.csv` — same schema as `results.csv`, for exploratory runs kept
   for reference but deliberately **excluded from the default leaderboard** (nothing
   loads it automatically; pass it explicitly if you want it). Currently it contains
@@ -81,3 +83,22 @@ tasks against a pre-release deployment of the same API with a higher limit.
 The local runs used TabPFN 9.0.0, tabpfn-extensions 0.6.3, and checkpoint
 `tabpfn-v3.5-20260909.safetensors` (SHA-256
 `ece4d67eadfea42eb0e610df5189bea60cb7f31073d81e9c7a019b76eacf0be3`).
+
+## Nori-Rel
+
+`nori-rel` covers all 21 entity tasks at seed 0 with its single default
+configuration. It reads the depth-2 slice of the shared depth-4 DFS matrices and
+runs the frozen public Nori 30M checkpoint (Hugging Face revision
+`63c9f7facf9fb32c37ce3fc2fba331d524696318`, SHA-256
+`818433f8af12c1137b96d9ff47e109b4eef5818d4e52a9656b2e573dbf13b74d`) with
+synthefy-nori 0.20.1, without quantization or context subsampling. Its DFS
+cache was built with fastdfs 1.2.
+
+## KurveRSC 2026-10-22
+
+`kurversc-2026-10-22` (alias `kurversc-latest`) covers all 21 entity tasks at
+seed 0 in the native system schema. It is the maintainer's reproduction with
+kurversc 0.2.0 and graphreduce 1.10.18 from PyPI, one task per CPU host. See
+[KurveRSC staged](../docs/models/kurversc-staged.md) for the procedure and
+[resource planning](../docs/models/kurversc-staged-resources.md) for the
+measured runtime and memory per task.

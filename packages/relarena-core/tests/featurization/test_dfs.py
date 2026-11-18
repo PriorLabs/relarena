@@ -351,17 +351,35 @@ def test__dfs_cache_key__tracks_inputs_not_downstream_model_choices() -> None:
     assert str(key).endswith("max-depth-4/matrix.parquet")
 
 
-def test__dfs_depth_map_key__is_shared_across_protocol_phases() -> None:
-    db, task = _toy_db(), _toy_task()
-    history = _label_table([1, 2], y=[2.0, 3.0])
-    identity = RunIdentity("rel-test", "dbfp", "task", "taskfp", phase="inner")
-
-    inner = dfs_mod._dfs_depth_map_key(db, task, history, 4, identity)
-    outer = dfs_mod._dfs_depth_map_key(
-        db, task, history, 4, identity.for_phase("outer")
+def _tagged_db(cutoff: str | None = None) -> Database:
+    """`users` with one monthly review per user and month, each with its own tag."""
+    users = Table(
+        df=pd.DataFrame({"uid": [1, 2, 3], "age": [20.0, 30.0, 40.0]}),
+        fkey_col_to_pkey_table={},
+        pkey_col="uid",
+        time_col=None,
     )
-
-    assert inner == outer
+    reviews = pd.DataFrame(
+        {
+            "uid": [1, 2, 3] * 4,
+            "rating": [float(i) for i in range(12)],
+            "tag": [f"t{i}" for i in range(12)],
+            "ts": pd.date_range("2020-01-01", periods=12, freq="MS"),
+        }
+    )
+    if cutoff is not None:
+        reviews = reviews[reviews["ts"] <= pd.Timestamp(cutoff)]
+    return Database(
+        {
+            "users": users,
+            "reviews": Table(
+                df=reviews.reset_index(drop=True),
+                fkey_col_to_pkey_table={"uid": "users"},
+                pkey_col=None,
+                time_col="ts",
+            ),
+        }
+    )
 
 
 @pytest.fixture
@@ -641,6 +659,99 @@ def test__build_dfs_features__cache_persists_across_processes(
     )
     assert calls["n"] == 1  # served from disk, DFS not re-run
     pd.testing.assert_frame_equal(second, first)
+
+
+def test__build_dfs_features__task_copy_in_other_row_order__hits_warm_cache(
+    isolated_cache: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Same rows, another order and timestamp unit. Neither copy is in canonical order.
+    pytest.importorskip("fastdfs")
+    db, task = _toy_db(), _toy_task()
+    warmed = _label_table(
+        [1, 2, 3, 1, 2],
+        ts=["2020-04-15", "2020-01-15", "2020-05-15", "2020-03-15", "2020-02-15"],
+        y=[0.0, 1.0, 0.0, 1.0, 1.0],
+    )
+    permutation = [3, 0, 4, 2, 1]
+    reordered = Table(
+        df=warmed.df.iloc[permutation]
+        .reset_index(drop=True)
+        .astype({"ts": "datetime64[us]"}),
+        fkey_col_to_pkey_table=warmed.fkey_col_to_pkey_table,
+        pkey_col=warmed.pkey_col,
+        time_col=warmed.time_col,
+    )
+    identity = RunIdentity("rel-test", "dbfp", "task", "taskfp", phase="outer")
+
+    def build(
+        anchors: pd.DataFrame, history: Table, cache: CacheConfig
+    ) -> pd.DataFrame:
+        features, _ = dfs_mod.build_dfs_features(
+            task,
+            db,
+            Table(
+                df=anchors,
+                fkey_col_to_pkey_table=history.fkey_col_to_pkey_table,
+                pkey_col=history.pkey_col,
+                time_col=history.time_col,
+            ),
+            depth=2,
+            max_depth=2,
+            history_table=history,
+            cache=cache,
+            run_identity=identity,
+        )
+        return features
+
+    build(warmed.df, warmed, CacheConfig(tmp_path, "fill"))
+    calls = _count_dfs_calls(monkeypatch)
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    served = build(reordered.df, reordered, CacheConfig(tmp_path, "raise"))
+    assert calls["n"] == 0
+
+    # One-row builds have only one possible order, so they are the reference. The
+    # list keeps every frame alive: the in-process cache keys on `id(frame)`.
+    rows = [reordered.df.iloc[[i]] for i in range(len(reordered.df))]
+    expected = pd.concat(
+        [build(row, reordered, CacheConfig(None, "compute")) for row in rows]
+    )
+    pd.testing.assert_frame_equal(served, expected)
+    assert served.nunique().max() > 1  # rows differ, so misalignment would show
+
+
+def test__build_dfs_features__outer_phase_warmed_first__inner_slices_by_own_schema(
+    isolated_cache: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Censored at the inner cutoff, `tag` has 5 values and fastdfs keeps it as a
+    # category. The outer database has 12, so fastdfs drops it as text.
+    pytest.importorskip("fastdfs")
+    task = _toy_task()
+    inner_db, outer_db = _tagged_db("2020-05-15"), _tagged_db()
+    anchors = _label_table([1, 2], ts="2020-04-15", y=[0.0, 1.0])
+    identity = RunIdentity("rel-test", "dbfp", "task", "taskfp")
+
+    def build(db: Database, phase: str, depth: int, cache: CacheConfig) -> pd.DataFrame:
+        features, _ = dfs_mod.build_dfs_features(
+            task,
+            db,
+            anchors,
+            depth=depth,
+            max_depth=2,
+            history_table=anchors,
+            cache=cache,
+            run_identity=identity.for_phase(phase),
+        )
+        return features
+
+    build(outer_db, "outer", 2, CacheConfig(tmp_path, "fill"))
+    build(inner_db, "inner", 2, CacheConfig(tmp_path, "fill"))
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    served = build(inner_db, "inner", 1, CacheConfig(tmp_path, "raise"))
+    monkeypatch.setattr(dfs_mod, "_CACHE", _DepthCache())
+    expected = build(inner_db, "inner", 1, CacheConfig(None, "compute"))
+
+    pd.testing.assert_frame_equal(served, expected)
+    assert not any(column.startswith("d2__") for column in served)
 
 
 def test__build_dfs_features__warm_cache_second_task__slices_to_its_own_depth(

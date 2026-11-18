@@ -70,8 +70,10 @@ default configuration when `n_trials=0`; a positive budget enables temporal tuni
 4. **Choose split timestamps** (`val_timestamp` / `test_timestamp`): rows before
    `val` train, between `val` and `test` validate, after `test` test. A good default
    is to keep val and test each **one `timedelta` wide** (`num_eval_timestamps: 1`)
-   and set `test_timestamp` roughly one `timedelta` after `val_timestamp`, as
-   RelBench does. RelArena freezes the validation and test databases at their
+   and set `test_timestamp` a little more than one `timedelta` after
+   `val_timestamp`, for example one `timedelta` plus a day: the validation window
+   must end by the last row at or before `test_timestamp`, or `PredictiveContext`
+   raises. RelArena freezes the validation and test databases at their
    respective phase boundaries, so if the data has a strong temporal component
    the model's view goes stale fast and predictions far past the cutoff tend to
    decay toward the constant baseline—a one-window-ahead
@@ -169,10 +171,14 @@ the database past the common phase boundary; see
 The anchor times themselves come from the split boundaries and `timedelta`, and the
 query runs once per split against that split's anchors:
 
-- **train**: step backward from `val_timestamp` in `timedelta` steps down to the
-  earliest data, so training reuses all of history (at least 3 anchors required).
+- **train**: step backward from `val_timestamp - timedelta` in `timedelta` steps
+  down to the earliest data, so training reuses all of history (at least 3 anchors
+  required).
 - **val** / **test**: `num_eval_timestamps` steps forward from `val_timestamp` /
   `test_timestamp`. With `num_eval_timestamps: 1` that's a single anchor each.
+  Test anchors after `test_timestamp` keep only entities that exist by
+  `test_timestamp`; see [Prediction queries and test
+  queries](#prediction-queries-and-test-queries).
 
 ### Rules
 
@@ -190,8 +196,8 @@ query runs once per split against that split's anchors:
 - **`{timedelta}` is the only placeholder.** It's substituted literally (a plain
   string replace), so write it bare - `INTERVAL '{timedelta}'` - and leave any other
   braces alone: DuckDB struct / MAP / JSON literals (`{'k': 1}`, `'{"k":1}'`) pass
-  through untouched, no escaping needed. The value is already `30 days`, so `INTERVAL
-  '{timedelta} days'` is wrong.
+  through untouched, no escaping needed. The value already carries its unit
+  (`30 days` becomes `30 days 00:00:00`), so `INTERVAL '{timedelta} days'` is wrong.
 - **Table names must match the database file's table names exactly, case included.**
   A table keyed `AdsInfo` is `AdsInfo`, not `ads_info`.
 - **The join sets the entity universe.** Take `entity_col` from the event table to
@@ -333,12 +339,14 @@ from the Python `PredictiveQuery` object.
 2. Keep only anchors whose full label window is covered by the available data.
 3. Run the label SQL with those anchors in `timestamp_df`, using the full database
    so the SQL can observe outcomes after each anchor.
-4. Filter dangling entity references and return timestamps, original entity IDs,
-   and labels.
+4. Drop rows whose entity is missing from the database frozen at `test_timestamp`
+   (created after it, or without a timestamp), with a warning. Return timestamps,
+   original entity IDs, and labels.
 
-By default, coverage ends at the database's latest timestamp. Pass
+By default, coverage ends at the latest timestamp in any table. Pass
 `data_end_timestamp=...` if the data are known to be complete through a different
-date, for example with a sparse extract. At least the first test window must be
+date, for example with a sparse extract, or when the table the label SQL reads
+ends earlier than the others. At least the first test window must be
 fully covered, or the method raises. A live forecast has no ground-truth labels
 until its outcome window has elapsed.
 
@@ -417,10 +425,12 @@ Use the same key-based join and evaluation above, with `predictions` in place of
 ### Does a model even help? Check a constant baseline
 
 Fit the `constant-global` baseline every time and treat it as the bar to clear: a constant,
-the median for regression or the majority class for classification
+the median of the training labels for regression, and for classification the base
+rate (the share of positive training labels)
 (`PredictiveContext(spec).fit("constant-global")`). Where the entity's own history is
-the obvious signal, also check a per-entity baseline (each entity's own past
-average). Ship a model only if it clearly beats these.
+the obvious signal, also check the `constant-per-entity` baseline: each entity's own
+median or positive rate in the training labels, or the global constant for an entity
+without training rows. Ship a model only if it clearly beats these.
 
 Not every task you can formulate is better solved by a model. Whether relational
 context helps is task-dependent and, honestly, still an open question. Olist churn

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "relarena-core"
-version = "0.0.5"
+version = "0.0.7"
 description = "Shared contracts, temporal validation and predictive queries for relational models."
 readme = "README.md"
 license = "Apache-2.0"
@@ -16,6 +16,9 @@ dependencies = [
     "datasets>=4",
     "numpy>=1.24",
     "pandas>=2.3.3,<3.0",
+    # pandas/dateutil import six.moves. Older six import hooks do not support
+    # Python 3.12; unconstrained plugin dependencies can otherwise select them.
+    "six>=1.16",
     "scikit-learn>=1.3",
     "configspace>=1.0",
     "pyyaml>=6.0",
@@ -24,4 +27,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dfs = ["fastdfs>=1.2", "setuptools<82"]
+# fastdfs leaves boto3 unpinned. Without a floor, python-dateutil 3 (which every
+# current botocore excludes) makes resolvers backtrack to boto3 0.0.x and six 1.7,
+# whose missing `six.moves` breaks importing pandas.
+dfs = ["fastdfs>=1.2", "setuptools<82", "boto3>=1.34"]

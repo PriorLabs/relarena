@@ -104,11 +104,6 @@ BLOCKED_CLAUSE_PATTERNS = (
 #: alone: rows are sorted, so a note deferring to another ("same reasoning as ...")
 #: can be numbered before the one it points at.
 ACCEPTED: dict[str, str] = {
-    "tabpfn": (
-        "Prior Labs License v1.2 — Apache-2.0 plus paragraph 10 (enhanced "
-        "attribution). Not plain Apache-2.0; confined to the rdblearn extra so a "
-        "core install does not acquire its attribution obligation"
-    ),
     "certifi": (
         "MPL-2.0 — file-level weak copyleft; used unmodified, so no source "
         "obligation reaches relarena's own code"
@@ -178,6 +173,17 @@ MANUAL_LICENSES: dict[str, str] = {
     # The KurveRSC 0.1.1 wheel ships an MIT LICENSE and declares
     # `License-Expression: MIT`; PyPI's JSON API does not expose that PEP 639 field.
     "kurversc": "MIT",
+    # The pinned GraphReduce Git source (21aff2e) ships the plain MIT LICENSE;
+    # Git dependencies have no PyPI release metadata for this audit to query.
+    "graphreduce": "MIT",
+    # The kditransform 1.2.0 wheel ships plain Apache-2.0 in
+    # dist-info/licenses/LICENSE while its metadata only says "OSI Approved".
+    "kditransform": "Apache-2.0",
+    # The anytree 2.13.0 wheel declares License-Expression: Apache-2.0 and ships
+    # dist-info/licenses/LICENSE, identical to LICENSE at
+    # c0fec0de/anytree@2e0a1b956172654d75aff93277ce3d883355e0bf.
+    # PyPI JSON omits that PEP 639 declaration.
+    "anytree": "Apache-2.0",
 }
 
 
@@ -292,10 +298,12 @@ def fetch_pypi_license(name: str, version: str) -> tuple[str | None, str]:
         return None, ""
 
     expression = info.get("license_expression") or ""
+    # The bare `License :: OSI Approved` category names no license, so a package
+    # declaring only that has declared nothing usable.
     classifiers = [
         c.split("::")[-1].strip()
         for c in info.get("classifiers", [])
-        if c.startswith("License ::")
+        if c.startswith("License ::") and c.strip() != "License :: OSI Approved"
     ]
     body = info.get("license") or ""
 
@@ -475,9 +483,7 @@ def render(rows: list[dict]) -> str:
         "No core package carries a strong copyleft or a non-commercial clause. The",
         "entries that are not plain-permissive are all ACCEPTED with a reason below:",
         "MPL-2.0 (file-level, used unmodified) and the NVIDIA CUDA wheels that `torch`",
-        "pulls on Linux. `tabpfn` — the one dependency under the Prior Labs License,",
-        "whose paragraph 10 obliges downstream attribution — is deliberately *not*",
-        "here; it sits in the `rdblearn` extra (see `docs/licensing.md`).",
+        "pulls on Linux.",
         "",
         *table(tiers["core"]),
         "",

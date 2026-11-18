@@ -55,7 +55,7 @@ def test__generate__separate_boards_and_preserve_surrounding_text(
         "<summary><b>Models + systems leaderboard table</b></summary>"
     )
     assert "| System |" not in models
-    for system in ("rt-plurel", "kurversc"):
+    for system in ("rt-plurel", "kurversc-2026-09-03"):
         assert system not in models
         assert f"| {system} | System |" in combined
     assert models.count("| Model |") == combined.count("| Model |")

@@ -1,5 +1,10 @@
-"""Relational Transformer system with per-task fine-tuning."""
+"""Relational Transformer systems with per-task fine-tuning."""
 
-from relarena.models.rt.model import RTPluRelSystem, clear_scratch
+from relarena.models.rt.model import (
+    RTJSystem,
+    RTPluRelSystem,
+    RTSystem,
+    clear_scratch,
+)
 
-__all__ = ["RTPluRelSystem", "clear_scratch"]
+__all__ = ["RTJSystem", "RTPluRelSystem", "RTSystem", "clear_scratch"]
