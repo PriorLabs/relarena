@@ -69,18 +69,19 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 2003.3 | 1923.0–2135.0 |
-| 2 | tabpfn-rel-local-latest | Model | 1940.1 | 1867.3–2049.4 |
-| 3 | tabpfn-rel-client-2026-08-15 | Model | 1825.2 | 1767.8–1910.8 |
-| 4 | nori-rel | Model | 1769.6 | 1699.8–1870.9 |
-| 5 | tabpfn-rel-local-2026-08-15 | Model | 1716.4 | 1624.9–1823.8 |
-| 6 | graphsage | Model | 1684.3 | 1576.2–1776.6 |
-| 7 | relgt | Model | 1590.2 | 1487.0–1714.4 |
-| 8 | rdblearn | Model | 1530.2 | 1454.5–1603.7 |
-| 9 | relgnn-es | Model | 1523.8 | 1430.0–1620.0 |
-| 10 | lightgbm | Model | 1362.6 | 1211.2–1481.2 |
-| 11 | constant-per-entity | Model | 1264.3 | 1092.4–1401.4 |
-| 12 | constant-global | Model | 1000.0 | 854.6–1066.1 |
+| 1 | tabpfn-rel-client-latest | Model | 1979.4 | 1905.1–2096.6 |
+| 2 | tabpfn-rel-local-latest | Model | 1932.0 | 1865.0–2028.8 |
+| 3 | relflow-latest | Model | 1897.1 | 1776.1–2041.9 |
+| 4 | tabpfn-rel-client-2026-08-15 | Model | 1816.8 | 1758.0–1896.8 |
+| 5 | nori-rel | Model | 1778.9 | 1705.0–1881.9 |
+| 6 | tabpfn-rel-local-2026-08-15 | Model | 1716.4 | 1621.0–1814.8 |
+| 7 | graphsage | Model | 1676.4 | 1562.4–1768.1 |
+| 8 | relgt | Model | 1585.5 | 1477.0–1699.0 |
+| 9 | rdblearn | Model | 1540.9 | 1454.7–1616.4 |
+| 10 | relgnn-es | Model | 1527.0 | 1434.1–1625.0 |
+| 11 | lightgbm | Model | 1363.9 | 1205.4–1494.6 |
+| 12 | constant-per-entity | Model | 1268.2 | 1093.2–1412.1 |
+| 13 | constant-global | Model | 1000.0 | 851.7–1066.2 |
 
 </details>
 
@@ -89,21 +90,23 @@ they do not measure variation across training seeds. The plots and tables show t
 
 | Rank | Method | Kind | Elo | 95% bootstrap interval |
 |---:|---|---|---:|---:|
-| 1 | tabpfn-rel-client-latest | Model | 1937.1 | 1865.8–2049.0 |
-| 2 | tabpfn-rel-local-latest | Model | 1892.9 | 1832.2–1983.2 |
-| 3 | rt-j | System | 1839.1 | 1718.7–1998.2 |
-| 4 | tabpfn-rel-client-2026-08-15 | Model | 1795.2 | 1739.4–1875.2 |
-| 5 | rt-plurel | System | 1786.0 | 1690.7–1895.1 |
-| 6 | kurversc | System | 1773.9 | 1707.9–1850.5 |
-| 7 | nori-rel | Model | 1732.2 | 1659.0–1842.1 |
-| 8 | tabpfn-rel-local-2026-08-15 | Model | 1702.7 | 1617.3–1779.5 |
-| 9 | graphsage | Model | 1652.6 | 1551.3–1737.4 |
-| 10 | relgt | Model | 1562.2 | 1437.6–1667.5 |
-| 11 | rdblearn | Model | 1528.0 | 1436.1–1607.3 |
-| 12 | relgnn-es | Model | 1516.3 | 1422.6–1622.6 |
-| 13 | lightgbm | Model | 1361.3 | 1171.5–1490.8 |
-| 14 | constant-per-entity | Model | 1267.5 | 1086.9–1411.2 |
-| 15 | constant-global | Model | 1000.0 | 841.1–1076.7 |
+| 1 | tabpfn-rel-client-latest | Model | 1926.2 | 1863.7–2024.9 |
+| 2 | kurversc-latest | System | 1917.1 | 1838.8–2050.1 |
+| 3 | tabpfn-rel-local-latest | Model | 1887.8 | 1826.2–1974.1 |
+| 4 | relflow-latest | Model | 1865.3 | 1781.3–1984.4 |
+| 5 | rt-j | System | 1843.4 | 1724.8–1993.3 |
+| 6 | tabpfn-rel-client-2026-08-15 | Model | 1795.8 | 1734.5–1882.5 |
+| 7 | rt-plurel | System | 1788.0 | 1692.7–1887.5 |
+| 8 | kurversc-2026-09-03 | System | 1775.1 | 1706.3–1847.7 |
+| 9 | nori-rel | Model | 1741.8 | 1665.9–1858.7 |
+| 10 | tabpfn-rel-local-2026-08-15 | Model | 1703.2 | 1605.8–1775.3 |
+| 11 | graphsage | Model | 1656.3 | 1547.4–1743.4 |
+| 12 | relgt | Model | 1560.7 | 1426.6–1662.1 |
+| 13 | rdblearn | Model | 1538.3 | 1436.0–1619.8 |
+| 14 | relgnn-es | Model | 1527.6 | 1431.5–1637.6 |
+| 15 | lightgbm | Model | 1365.1 | 1166.3–1509.6 |
+| 16 | constant-per-entity | Model | 1270.0 | 1079.3–1417.1 |
+| 17 | constant-global | Model | 1000.0 | 836.8–1076.4 |
 
 </details>
 
@@ -510,11 +513,12 @@ registering a method works without its extra installed.
 |---|---|---|
 | `lightgbm` | LightGBM | CPU only |
 | `kurversc` | [KurveRSC](docs/models/kurversc.md) | GraphReduce configuration search + CatBoost; CPU only |
+| `relflow` | [RelFlow](docs/models/relflow.md) | neural model over raw relational records; Python 3.12, GPU recommended |
 | `rdblearn` | RDBLearn | DFS (`fastdfs`) plus a local TabPFN; GPU recommended |
 | `tabpfn-rel-local` | TabPFN-Rel (OSS) | installs `tabpfn-rel[local]`, text-free |
 | `tabpfn-rel-api` | TabPFN-Rel (API) | DFS locally, fit and predict server-side; no GPU needed |
 | `graphsage`, `relgnn`, `relgt` | GraphSAGE, RelGNN, RelGT | need PyG sampling wheels, see below |
-| `rt` | RT-PluRel, RT-J | Linux x86-64 wheel, see below |
+| `rt` | [RT-PluRel, RT-J](docs/models/rt.md) | Linux x86-64 wheel, see below |
 | `leaderboard`, `plots` | (reporting only) | source checkout only, `bencheval` comes from git |
 
 **GNN baselines: the PyG sampling wheels are not in the extras.** `graphsage`, `relgnn`, and
@@ -626,29 +630,34 @@ as an experimental final-fit variant.
 | `constant-global` | Constant (global) | global constant | model | report | train + val | core |
 | `constant-per-entity` | Constant (per-entity) | entity-wise constant | model | report | train + val | core |
 | `lightgbm` | LightGBM | entity-only tabular | model | report | train + val | `lightgbm` |
-| `kurversc` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
+| `kurversc-2026-09-03` | [KurveRSC](docs/models/kurversc.md) | learned GraphReduce feature plan + CatBoost | **system** | experimental | train + val | `kurversc` |
+| `kurversc-2026-10-22` | [KurveRSC staged](docs/models/kurversc-staged.md) | generic staged GraphReduce search + CatBoost | **system** | 21 tasks | train + val | `kurversc` |
 | `rdblearn` | RDBLearn | DFS + tabular foundation model | model | report | train; val retained | `rdblearn` |
 | `tabpfn-rel-local-2026-08-15` | TabPFN-Rel (OSS) | DFS + TabPFN-3 | model | report | train + val | `tabpfn-rel-local` |
 | `tabpfn-rel-client-2026-08-15` | TabPFN-Rel (API) | DFS + hosted TabPFN-3 with text | model | report | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-18` | TabPFN-Rel (API) | depth-4 DFS + hosted TabPFN-3.5 with text, 200k context | model | pending evaluation | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-28` | TabPFN-Rel (API) | TabPFN-3.5 API, hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-local-2026-09-28` | TabPFN-Rel (local) | TabPFN-3.5 OSS (TF-IDF), hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-local` |
+| `relflow-2026-11-04` | [RelFlow](docs/models/relflow.md) | neural model over raw relational records | model | 21 tasks | train + val | `relflow` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |
 | `relgt` | RelGT | relational transformer | model | report | best-validation checkpoint | `relgt` |
-| `rt-plurel` | RT-PluRel | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
-| `rt-j` | RT-J | pretrained relational transformer, fine-tuned per task | **system** | 21 tasks | train + val | `rt` |
+| `rt-plurel` | [RT-PluRel](docs/models/rt.md) | pretrained relational transformer, fine-tuned per task | **system** | report | train + val | `rt` |
+| `rt-j` | [RT-J](docs/models/rt.md) | pretrained relational transformer, fine-tuned per task | **system** | 21 tasks | train + val | `rt` |
 
 The report presents `relgnn-es` simply as **RelGNN**, because that published-style
 best-validation-checkpoint regime performed better in our runs. The regular `relgnn` identifier
 remains available for experiments but is excluded from the default release leaderboard.
 
-RT-PluRel, RT-J, and KurveRSC are registered **systems**. RT-PluRel and RT-J are the relational
-transformer fine-tuned on the given task with a sequential tuning regime; they differ only in the
-published checkpoint they warm-start from (`stanford-star/rt-plurel`, pretrained on
-PluRel-generated synthetic data, and `stanford-star/rt-j`, pretrained at scale on the Join
-corpus). KurveRSC jointly selects a GraphReduce feature program and downstream
+RT-PluRel, RT-J, and KurveRSC are registered **systems**. RT-PluRel and RT-J are the
+[Relational Transformer](https://github.com/stanford-star/relational-transformer) fine-tuned on
+the given task with the published
+[`examples/finetune`](https://github.com/stanford-star/relational-transformer/tree/main/examples/finetune)
+recipe; they differ only in the published checkpoint they warm-start from
+(`stanford-star/rt-plurel`, pretrained on PluRel-generated synthetic data, and
+`stanford-star/rt-j`, pretrained at scale on the Join corpus). See
+[RT-PluRel and RT-J](docs/models/rt.md) for the recipe's source and the papers to cite. KurveRSC jointly selects a GraphReduce feature program and downstream
 learner on the inner split, then freezes and replays that exact operation plan in its reporting
 arm. Their protocols and configured values are documented in
 [`models/rt/model.py`](packages/relarena/src/relarena/models/rt/model.py) and
@@ -693,8 +702,9 @@ relarena/
 Apache-2.0 ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Two things the license on this code does
 not settle, both worth reading before you rely on relarena:
 
-- `tabpfn` and its model weights carry their own licenses. The code is Apache-2.0 from 9.0.0;
-  earlier releases, which the `rdblearn` extra still allows, ship the Prior Labs License. The
+- `tabpfn` and its model weights carry their own licenses. The code is Apache-2.0 from 9.0.0.
+  The `tabpfn-rel-api` extra still allows 8.4 and later through `tabpfn-extensions`, and 8.x
+  ships the Prior Labs License. The
   weights it downloads are licensed separately: TabPFN-2 weights under the Prior Labs License,
   which requires anyone distributing a product built on them to display "Built with
   PriorLabs-TabPFN", and TabPFN-2.5 weights under a non-commercial license. `tabpfn` is

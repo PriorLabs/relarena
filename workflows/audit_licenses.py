@@ -173,9 +173,17 @@ MANUAL_LICENSES: dict[str, str] = {
     # The KurveRSC 0.1.1 wheel ships an MIT LICENSE and declares
     # `License-Expression: MIT`; PyPI's JSON API does not expose that PEP 639 field.
     "kurversc": "MIT",
+    # The pinned GraphReduce Git source (21aff2e) ships the plain MIT LICENSE;
+    # Git dependencies have no PyPI release metadata for this audit to query.
+    "graphreduce": "MIT",
     # The kditransform 1.2.0 wheel ships plain Apache-2.0 in
     # dist-info/licenses/LICENSE while its metadata only says "OSI Approved".
     "kditransform": "Apache-2.0",
+    # The anytree 2.13.0 wheel declares License-Expression: Apache-2.0 and ships
+    # dist-info/licenses/LICENSE, identical to LICENSE at
+    # c0fec0de/anytree@2e0a1b956172654d75aff93277ce3d883355e0bf.
+    # PyPI JSON omits that PEP 639 declaration.
+    "anytree": "Apache-2.0",
 }
 
 

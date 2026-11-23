@@ -1,5 +1,9 @@
 # KurveRSC
 
+For the versioned complete staged candidate, see
+[KurveRSC staged](kurversc-staged.md). This page describes the original
+native graph-only `kurversc-2026-09-03` registration.
+
 KurveRSC is a CPU-only native RelArena system that jointly selects a GraphReduce relational
 feature program and a CatBoost learner. It does not require or use a GPU.
 
@@ -17,7 +21,7 @@ Run one task through the ordinary RelArena CLI:
 
 ```bash
 OMP_NUM_THREADS=1 uv run --all-packages --group cpu --extra kurversc relarena \
-    --model kurversc \
+    --model kurversc-2026-09-03 \
     --datasets rel-stack \
     --tasks user-badge \
     --output kurversc_user_badge.csv
@@ -28,7 +32,7 @@ Run all 21 RelBench v1 entity classification and regression tasks by omitting `-
 
 ```bash
 OMP_NUM_THREADS=1 uv run --all-packages --group cpu --extra kurversc relarena \
-    --model kurversc \
+    --model kurversc-2026-09-03 \
     --output kurversc_all_tasks.csv
 ```
 
