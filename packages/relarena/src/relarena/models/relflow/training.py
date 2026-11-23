@@ -333,7 +333,7 @@ def predict(fitted: Fitted, task: EntityTask, db: Database, table: Table) -> np.
         precision=fitted.precision,
         logger=False,
         enable_progress_bar=False,
-    )
+    ).to_arrow()
     positions = pc.struct_field(output["inputs"], "__row_position").to_numpy()
     content = pc.struct_field(
         pc.struct_field(output["predictions"], "target"), "content"

@@ -66,18 +66,20 @@ Paper = "https://arxiv.org/abs/2608.16319"
 relarena = "relarena.cli:main"
 
 [project.optional-dependencies]
-relflow = ["relflow[text]==0.4.4; python_version >= '3.12'", "duckdb>=1.5.0"]
+relflow = ["relflow[text]==0.5.1; python_version >= '3.12'", "duckdb>=1.5.0"]
 # Per-method extras (lazy-import + optional-dependency pattern; imported when run).
 lightgbm = ["lightgbm>=4.0,<4.7"]
 # KurveRSC owns GraphReduce configuration search and CatBoost fitting. It is a
 # native system entry because selection happens inside its end-to-end run.
 kurversc = ["kurversc[staged]==0.2.0", "graphreduce==1.10.18"]
 # rdblearn: DFS features + a tabular foundation model. Carries the local TFM
-# (tabpfn>=8 for the create_default_for_version API, lazily imported in relarena.models.rdblearn.tfm)
-# plus the DFS featurization deps.
+# (tabpfn, lazily imported in relarena.models.rdblearn.tfm) plus the DFS
+# featurization deps.
+# tabpfn>=9.1 because earlier releases crash when a column that is entirely
+# missing at fit holds strings at predict.
 # setuptools<82 because featuretools -> woodwork imports pkg_resources at import
 # time, and setuptools 82 removed it (81 still ships it).
-rdblearn = ["tabpfn>=8", "relarena-core[dfs]==0.0.7"]
+rdblearn = ["tabpfn>=9.1", "relarena-core[dfs]==0.0.7"]
 # rdl: the shared Relational Deep Learning stack for the GNN baselines — PyG + PyTorch
 # Frame + a text embedder, which relbench.modeling.* needs (all lazy-imported inside
 # fit()). GPU recommended. NOTE: PyG neighbor sampling needs `pyg-lib` or `torch-sparse`
