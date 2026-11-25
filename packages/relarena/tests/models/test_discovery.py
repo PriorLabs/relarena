@@ -21,6 +21,7 @@ _BASELINES = {
     "relgnn-es",
     "relgt",
     "relflow-2026-11-04",
+    "relflow-2026-11-25",
     "rt-j",
     "rt-plurel",
 }

@@ -638,7 +638,8 @@ as an experimental final-fit variant.
 | `tabpfn-rel-client-2026-09-18` | TabPFN-Rel (API) | depth-4 DFS + hosted TabPFN-3.5 with text, 200k context | model | pending evaluation | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-client-2026-09-28` | TabPFN-Rel (API) | TabPFN-3.5 API, hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-api` |
 | `tabpfn-rel-local-2026-09-28` | TabPFN-Rel (local) | TabPFN-3.5 OSS (TF-IDF), hurdle regression | model | 21 tasks | train + val | `tabpfn-rel-local` |
-| `relflow-2026-11-04` | [RelFlow](docs/models/relflow.md) | neural model over raw relational records | model | 21 tasks | train + val | `relflow` |
+| `relflow-2026-11-04` | [relflow 0.5.1](docs/models/relflow.md#relflow-051) | neural model over raw relational records | model | 21 tasks | train + val | `relflow-2026-11-04` |
+| `relflow-2026-11-25` | [relflow 0.5.3](docs/models/relflow.md) | neural model over relational records and mature outcome histories | model | pending evaluation | train + val | `relflow` |
 | `graphsage` | GraphSAGE | relational GNN | model | report | train + val | `graphsage` |
 | `relgnn-es` | RelGNN | relational GNN | model | report | best-validation checkpoint | `relgnn` |
 | `relgnn` | RelGNN full-data refit | relational GNN | model | experimental variant | train + val | `relgnn` |

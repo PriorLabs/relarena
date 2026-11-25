@@ -51,6 +51,10 @@ conflicts = [
         { package = "relarena", extra = "relflow" },
     ],
     [{ group = "kurversc" }, { package = "relarena", extra = "relflow" }],
+    # Install the 0.5.1 and 0.5.3 comparison environments separately.
+    [{ package = "relarena", extra = "relflow" }, { package = "relarena", extra = "relflow-2026-11-04" }],
+    [{ package = "relarena", extra = "kurversc" }, { package = "relarena", extra = "relflow-2026-11-04" }],
+    [{ group = "kurversc" }, { package = "relarena", extra = "relflow-2026-11-04" }],
 ]
 
 [tool.uv.sources]

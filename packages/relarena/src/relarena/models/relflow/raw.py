@@ -28,6 +28,7 @@ class Col:
     kind: str
     options: dict = field(default_factory=dict)
     source: tuple[str, ...] = ()
+    recency: str | None = None
 
     def spec(self) -> dict:
         """Return the relflow field specification for this column."""
@@ -100,6 +101,7 @@ def when(column: str, name: str) -> list[Col]:
             ),
             "number",
             source=(column,),
+            recency=name,
         ),
     ]
 
@@ -174,6 +176,7 @@ class Branch:
                     f"""{{anchor}}."__as_of") / {DAY}"""
                 ),
                 "number",
+                recency="occurred_at",
             ),
         )
 
@@ -212,6 +215,7 @@ class Task:
     d_model: int = 64
     n_layers: int = 2
     n_heads: int = 4
+    target_kind: str | None = None
 
 
 def selections(
@@ -479,7 +483,8 @@ def model(task: Task) -> dict:
     for branch in task.branches:
         fields[branch.name] = branch.spec()
     fields["target"] = {
-        "type": "boolean" if task.task_type == "binary_classification" else "number",
+        "type": task.target_kind
+        or ("boolean" if task.task_type == "binary_classification" else "number"),
         "mask": True,
     }
     return {

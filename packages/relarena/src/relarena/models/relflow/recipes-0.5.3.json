@@ -1,0 +1,181 @@
+{
+  "small-a": {
+    "tier": "small",
+    "caps": {
+      "inner": 32,
+      "outer": 128
+    },
+    "pools": {
+      "inner": 64,
+      "outer": 512
+    },
+    "execution": {
+      "batch_size": 32,
+      "workers": 0,
+      "persistent_workers": false,
+      "prefetch_factor": 1,
+      "shuffle_rows": 16384,
+      "text_token_cache": 4096,
+      "duckdb_threads": 8,
+      "duckdb_memory_limit": "16GB",
+      "duckdb_spill_limit": "64GB",
+      "text_resident_mib": 256
+    },
+    "text_token_cap": 128,
+    "schema_version": 6,
+    "recipe": {
+      "batch_size": 32,
+      "branch_dropout": 0.18369,
+      "branch_ffnx": 2,
+      "branch_heads": 4,
+      "branch_layers": 1,
+      "branch_mask": 0.0,
+      "branch_outputs": 6,
+      "d_model": 96,
+      "decoder_dropout": 0.0,
+      "decoder_ffnx": 2,
+      "decoder_heads": 4,
+      "decoder_layers": 1,
+      "dropout": 0.0,
+      "ema_decay": 0.9953777,
+      "ffnx": 2,
+      "jitter": 0.0,
+      "learning_rate": 0.00040859,
+      "mask": 0.0,
+      "n_heads": 4,
+      "n_layers": 1,
+      "objective": "mae",
+      "overflow": "random",
+      "passes": 7,
+      "weight_decay": 0.016956,
+      "branch_cross": false,
+      "ensemble": null,
+      "gradient_clip_val": 0.19265,
+      "lr_floor_ratio": 0.55055,
+      "number_hurdle": false,
+      "ordinal_hurdle": true,
+      "root_cross": false
+    }
+  },
+  "small-b": {
+    "tier": "small",
+    "recipe": {
+      "batch_size": 32,
+      "branch_dropout": 0.15056,
+      "branch_ffnx": 3,
+      "branch_heads": 4,
+      "branch_layers": 1,
+      "branch_mask": 0.33519,
+      "branch_outputs": 5,
+      "d_model": 112,
+      "decoder_dropout": 0.0,
+      "decoder_ffnx": 3,
+      "decoder_heads": 4,
+      "decoder_layers": 1,
+      "dropout": 0.34005,
+      "ema_decay": 0.9942989,
+      "ffnx": 3,
+      "jitter": 0.0,
+      "learning_rate": 0.00032068,
+      "mask": 0.0,
+      "n_heads": 4,
+      "n_layers": 3,
+      "objective": "mae",
+      "overflow": "random",
+      "passes": 8,
+      "weight_decay": 0.058989,
+      "branch_cross": true,
+      "ensemble": null,
+      "gradient_clip_val": 0.722,
+      "lr_floor_ratio": 1.0,
+      "number_hurdle": false,
+      "ordinal_hurdle": true,
+      "root_cross": true
+    },
+    "caps": {
+      "inner": 32,
+      "outer": 128
+    },
+    "pools": {
+      "inner": 64,
+      "outer": 512
+    },
+    "execution": {
+      "batch_size": 32,
+      "workers": 0,
+      "persistent_workers": false,
+      "prefetch_factor": 1,
+      "shuffle_rows": 16384,
+      "text_token_cache": 4096,
+      "duckdb_threads": 8,
+      "duckdb_memory_limit": "16GB",
+      "duckdb_spill_limit": "64GB",
+      "text_resident_mib": 256
+    },
+    "text_token_cap": 128,
+    "schema_version": 6
+  },
+  "medium-large": {
+    "tier": "medium",
+    "recipe": {
+      "batch_size": 256,
+      "branch_cross": false,
+      "branch_dropout": 0.14409,
+      "branch_ffnx": 6,
+      "branch_heads": 4,
+      "branch_layers": 1,
+      "branch_mask": 0.027964,
+      "branch_outputs": 2,
+      "d_model": 112,
+      "decoder_dropout": 0.0,
+      "decoder_ffnx": 6,
+      "decoder_heads": 8,
+      "decoder_layers": 1,
+      "dropout": 0.0,
+      "ema_decay": 0.9989316,
+      "ffnx": 3,
+      "gradient_clip_val": 0.26609,
+      "jitter": 0.0,
+      "learning_rate": 0.00037707,
+      "lr_floor_ratio": 0.81031,
+      "mask": 0.26339,
+      "n_heads": 8,
+      "n_layers": 1,
+      "number_hurdle": true,
+      "objective": "mae",
+      "ordinal_hurdle": true,
+      "overflow": "random",
+      "passes": 2,
+      "root_cross": false,
+      "weight_decay": 0.0
+    },
+    "caps": {
+      "outer": 40,
+      "inner": 8
+    },
+    "pools": {
+      "inner": 64,
+      "outer": 256
+    },
+    "execution": {
+      "batch_size": 256,
+      "workers": 0,
+      "persistent_workers": false,
+      "prefetch_factor": 1,
+      "shuffle_rows": 16384,
+      "text_token_cache": 4096,
+      "duckdb_threads": 8,
+      "duckdb_memory_limit": "16GB",
+      "duckdb_spill_limit": "128GB",
+      "text_resident_mib": 256
+    },
+    "schema_version": 6,
+    "text_token_cap": 128,
+    "outer_budget": {
+      "target_s": 60480,
+      "hard_s": 86400,
+      "warm_fraction": 0.7398,
+      "prediction_reserve_s": 2999
+    }
+  }
+}

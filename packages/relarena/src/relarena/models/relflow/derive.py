@@ -686,6 +686,7 @@ def derive(
     meta: Meta,
     *,
     nested: bool = True,
+    budget_tier: str | None = None,
 ) -> Task:
     """Build the raw-structure task for one entity table from measured tables.
 
@@ -695,7 +696,7 @@ def derive(
     entity = tables[meta.entity_table]
     if entity.pkey is None:
         raise ValueError(f"entity table {meta.entity_table!r} has no primary key")
-    budgets = BUDGETS[tier(meta.training_rows)]
+    budgets = BUDGETS[budget_tier or tier(meta.training_rows)]
     root_names = Names()
     root_columns = typed(
         entity, tables, meta.dataset, root_names, exclude={entity.pkey}, root=True

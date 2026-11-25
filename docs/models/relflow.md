@@ -1,36 +1,76 @@
-# RelFlow
+# relflow
 
-[RelFlow](https://github.com/relflow/relflow) builds a neural model over typed,
-nested records. This adapter derives fields and joins from the supplied
-relational database and trains one fixed recipe per training-set size tier.
+The relflow 0.5.3 adapter, `relflow-2026-11-25` (`relflow-latest`), derives its
+schema from the supplied temporal split. A single frozen recipe covers each range of
+original training-anchor counts. The same configuration carries through the
+train-plus-validation refit.
 
-## Installation
+## Running relflow 0.5.3
 
-The optional backend requires Python 3.12 and DuckDB 1.5 or newer:
-
-```bash
-uv sync --python 3.12 --all-packages --extra relflow
-```
-
-For CPU execution, add `--group cpu`. The `relflow` extra cannot be combined
-with KurveRSC, which requires NumPy 1; RelFlow requires NumPy 2.
-
-## Running RelFlow
-
-Run one task through the RelArena CLI:
+Install the `relflow` extra with Python 3.12. To run the standard benchmark at
+seed zero on one GPU:
 
 ```bash
-OMP_NUM_THREADS=1 uv run --all-packages --extra relflow relarena \
-    --model relflow-2026-11-04 \
-    --datasets rel-f1 --tasks driver-dnf \
-    --output relflow_driver_dnf.csv
+uv sync --locked --python 3.12.10 --all-packages --extra relflow
+PYTHONHASHSEED=0 CUBLAS_WORKSPACE_CONFIG=:4096:8 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  POLARS_MAX_THREADS=1 TOKENIZERS_PARALLELISM=false \
+  uv run --no-sync relarena --model relflow-2026-11-25 --seed 0 --n-trials 0 \
+    --datasets rel-f1 --tasks driver-dnf --output relflow_driver_dnf.csv
 ```
 
-Omit `--datasets` and `--tasks` to run all 21 RelBench v1 entity tasks.
-The registered search space contains one configuration per tier, so
-`--n-trials` does not add candidate configurations.
+Omit the dataset and task filters to evaluate all 21 tasks. The standard runner
+fits its single default on the inner split and refits on the full outer training
+table for test predictions. Use a fresh process for each seed and set `PYTHONHASHSEED` to the same
+value as `--seed`. The adapter uses deterministic kernels and one PyTorch
+inter-op thread per process. GPU architecture and the PyTorch/CUDA build can affect numerical results. Development
+runs used Python 3.12.10, PyTorch 2.13.0 with CUDA 13.0 and relflow 0.5.3.
 
-## Model and training
+## Schema and training in relflow 0.5.3
+
+Each anchor can see its entity’s earlier outcomes once the forecast horizon has
+elapsed. The network receives each outcome and its age, plus the arithmetic
+mean of all visible outcomes. Generic foreign-key paths supply peer counts and
+means that exclude the current entity. Direct timed relations provide event
+counts and means. Fitting uses only labels supplied to the model. Predictions
+freeze outcome availability at the phase boundary.
+
+Integral regression labels select an Ordinal target, and other numeric labels
+select Number. The nullable target policy applies to nonnegative labels with
+at least one positive and at least 5% zeros. It encodes zero as null during
+training and returns zero at a corrected null probability of 0.5 or above.
+The two smaller presets enable this policy for Ordinal. The largest preset
+enables it for both Ordinal and Number. Text uses at most 128 tokens from the
+same pinned MiniLM encoder as the earlier entry.
+
+| Original training anchors | Batch size | Pass equivalents | Root / branch crossing |
+| --- | ---: | ---: | --- |
+| Below 10,000 | 32 | 7 | Off / off |
+| 10,000 to 19,999 | 32 | 8 | On / on |
+| 20,000 and above | 256 | 2 | Off / off |
+
+The final range shares one architecture and one schema budget, including on the
+largest tasks. All three use fixed batch sizes, zero loader workers, AdamW,
+a cosine learning-rate schedule and EMA. For the largest range the outer-fit
+guard checks the projected total during the first pass, targeting 16.8 hours
+and enforcing a 24-hour fit-plus-prediction budget. Full training must finish
+to return a score. The complete settings are in
+[the relflow 0.5.3 recipes](../../packages/relarena/src/relarena/models/relflow/recipes-0.5.3.json).
+
+## relflow 0.5.1
+
+To run the November 4 adapter and its original recipes with relflow 0.5.1,
+select the dated extra and model.
+
+```bash
+uv sync --locked --python 3.12.10 --all-packages --extra relflow-2026-11-04
+uv run --no-sync relarena --model relflow-2026-11-04 --seed 0 --n-trials 0 \
+  --datasets rel-f1 --tasks driver-dnf --output relflow_0_5_1_driver_dnf.csv
+```
+
+Both adapters require Python 3.12 and DuckDB 1.5 or newer. The KurveRSC extra
+requires a separate environment because of its NumPy constraint.
+
+### Model and training
 
 The original inner training-anchor count selects the tier and remains fixed
 during the train+validation refit. Fields, datatypes and bounded join paths are
@@ -64,7 +104,7 @@ retains this recency bias, so the final EMA weights emphasize validation-period
 rows. Those anchors retain histories frozen at the validation boundary;
 prediction uses the harness-supplied evaluation database.
 
-## Runtime and resources
+### Runtime and resources
 
 Preparation, text encoding and training run inside `fit`; no separate cache
 warmer is required. Default-only benchmark timing includes the final refit and

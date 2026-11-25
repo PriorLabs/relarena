@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 from relbench.base import Database, Table, TaskType
 
-from relarena.models.relflow import RelFlowModel, search_space
+from relarena.models.relflow import RelFlow053Model, RelFlowModel, search_space
 from relarena_core.registry import registry
 from relarena_core.search_space import TaskStats
 
@@ -80,7 +80,7 @@ def fixture(
 
 def test__registry__without_optional_backend__registers() -> None:
     assert registry.get(RelFlowModel.name) is RelFlowModel
-    assert registry.get("relflow-latest") is RelFlowModel
+    assert registry.get("relflow-latest") is RelFlow053Model
     code = """
 import builtins
 original = builtins.__import__

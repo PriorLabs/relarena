@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import duckdb
 import numpy as np
@@ -20,6 +20,10 @@ import pyarrow.parquet as pq
 from relbench.base import Database, EntityTask, Table, TaskType
 
 from . import derive, raw
+from .targets import encode
+
+if TYPE_CHECKING:
+    from .history import History
 
 
 @dataclass
@@ -148,7 +152,12 @@ def infer(
         training_rows=config["training_rows"],
     )
     tables = derive.profile(context.connection, context.sources, context.schema)
-    return derive.derive(context.connection, tables, meta)
+    return derive.derive(
+        context.connection,
+        tables,
+        meta,
+        budget_tier=config["tier"] if config.get("schema_version") == 6 else None,
+    )
 
 
 def materialize(
@@ -160,6 +169,7 @@ def materialize(
     *,
     labelled: bool,
     deadline: float | None = None,
+    history: History | None = None,
 ) -> Path:
     """Write bounded chunks in the supplied task-table order, preserving nulls."""
     frame = table.df
@@ -170,6 +180,12 @@ def materialize(
         raise ValueError(f"Task table requires columns {required!r}.")
     if frame[required].isna().any().any():
         raise ValueError("Anchor entity, timestamp and training labels cannot be null.")
+    targets = pa.Array.from_pandas(frame[task.target_col]) if labelled else None
+    if targets is not None:
+        kind = structure.target_kind or (
+            "boolean" if task.task_type == TaskType.BINARY_CLASSIFICATION else "number"
+        )
+        targets = encode(targets, kind)
     anchors = pa.table(
         {
             "__row_position": np.arange(len(frame), dtype=np.int64),
@@ -181,23 +197,20 @@ def materialize(
     query = raw.query(structure, history_overscan=4, decimals=context.decimals).replace(
         "read_parquet($anchors)", "__relflow_anchors"
     )
-    targets = pa.Array.from_pandas(frame[task.target_col]) if labelled else None
-    if targets is not None:
-        if task.task_type == TaskType.BINARY_CLASSIFICATION:
-            if not pa.types.is_boolean(targets.type):
-                invalid = pc.and_(pc.not_equal(targets, 0), pc.not_equal(targets, 1))
-                if pc.any(invalid).as_py():
-                    raise ValueError("Binary training labels must be 0 or 1.")
-            targets = pc.cast(targets, pa.bool_())
-        else:
-            targets = pc.cast(targets, pa.float64())
+    params = {}
+    if history is not None:
+        query = history.query(query)
+        params = {
+            "boundary": history.validation if labelled else history.boundary,
+            "horizon": history.horizon.to_pytimedelta(),
+        }
     writer = None
     try:
         for start in range(0, max(len(frame), 1), 8192):
             if deadline is not None and time.monotonic() >= deadline:
                 raise TimeoutError("relflow exhausted its fit budget in preparation.")
             result = context.connection.execute(
-                query, {"start": start, "stop": min(start + 8192, len(frame))}
+                query, {**params, "start": start, "stop": min(start + 8192, len(frame))}
             ).fetch_arrow_table()
             if targets is not None:
                 result = result.append_column(
