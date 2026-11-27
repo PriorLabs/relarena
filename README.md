@@ -12,7 +12,7 @@
 
 ---
 
-| 📂 [Examples](examples) | 📊 [Leaderboards](#-leaderboards) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 [Model Report](https://arxiv.org/abs/2608.16319) |
+| 📂 [Examples](examples) | 📊 [Leaderboard](https://huggingface.co/spaces/RelArena/leaderboard) | 🧩 [Add a Model](docs/adding-a-model.md) | 🗄️ [Your Own Database](docs/predictive-task.md) | 📄 [Model Report](https://arxiv.org/abs/2608.16319) |
 |:---:|:---:|:---:|:---:|:---:|
 
 ---
@@ -50,7 +50,9 @@ For predictions on your own database, see [TabPFN-Rel and RPI](#tabpfn-rel).
 
 ## 📊 Leaderboards
 
-This live leaderboard is updated with every merged model submission.
+The tables below and the
+[interactive leaderboard on Hugging Face](https://huggingface.co/spaces/RelArena/leaderboard)
+update with every merged model submission.
 Results cover **21 RelBench v1 tasks, 7 databases, seed 0**; see the
 [checked-in results](baseline_results/results.csv).
 
