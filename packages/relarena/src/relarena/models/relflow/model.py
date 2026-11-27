@@ -86,9 +86,7 @@ class RelFlowModel(RelArenaModel):
 def search_space_053(stats: TaskStats) -> SearchSpace:
     """Freeze one recipe using the original inner training-anchor count."""
     rows = stats.num_train_nodes
-    tier = (
-        "small-a" if rows < 10_000 else "small-b" if rows < 20_000 else "medium-large"
-    )
+    tier = "small" if rows < 20_000 else "medium-large"
     recipes = json.loads(Path(__file__).with_name("recipes-0.5.3.json").read_text())
     return SearchSpace(default_overrides={**recipes[tier], "training_rows": rows})
 

@@ -23,7 +23,8 @@ Fixture = tuple[SimpleNamespace, Database, Table, Table, Table]
 @pytest.mark.parametrize(
     "rows,batch,passes,cross",
     [
-        (9_999, 32, 7, False),
+        (1_353, 32, 8, True),
+        (9_999, 32, 8, True),
         (10_000, 32, 8, True),
         (19_999, 32, 8, True),
         (20_000, 256, 2, False),
@@ -45,9 +46,9 @@ def test__preset__inner_row_count__one_fixed_config(
     assert config["recipe"]["passes"] == passes
     assert config["recipe"]["root_cross"] is config["recipe"]["branch_cross"] is cross
     assert config["text_token_cap"] == 128
-    if rows >= 20_000:
-        expected = search_space_053(TaskStats(20_000)).default_overrides
-        assert config == {**expected, "training_rows": rows}
+    reference_rows = 19_999 if rows < 20_000 else 20_000
+    expected = search_space_053(TaskStats(reference_rows)).default_overrides
+    assert config == {**expected, "training_rows": rows}
 
 
 def anchors(ids: list[int], days: list[int], labels: list[int] | None = None) -> Table:
@@ -150,7 +151,7 @@ def test__outcomes__anchor_horizon_and_split__exact_mean_without_self_leakage(
         ctx.close()
 
 
-@pytest.mark.parametrize("row_count", [9_999, 10_000, 20_000])
+@pytest.mark.parametrize("row_count", [9_999, 20_000])
 def test__registered_full_refit__same_seed__replays_on_cpu(
     temporal_task: Fixture, monkeypatch: pytest.MonkeyPatch, row_count: int
 ) -> None:

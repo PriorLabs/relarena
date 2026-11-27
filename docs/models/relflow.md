@@ -3,7 +3,7 @@
 The relflow 0.5.3 adapter, `relflow-2026-11-25` (`relflow-latest`), derives its
 schema from the supplied temporal split. A single frozen recipe covers each range of
 original training-anchor counts. The same configuration carries through the
-train-plus-validation refit.
+train-plus-validation refit. [relflow 0.5.3 source](https://github.com/relflow/relflow/tree/v0.5.3)
 
 ## Running relflow 0.5.3
 
@@ -38,18 +38,17 @@ Integral regression labels select an Ordinal target, and other numeric labels
 select Number. The nullable target policy applies to nonnegative labels with
 at least one positive and at least 5% zeros. It encodes zero as null during
 training and returns zero at a corrected null probability of 0.5 or above.
-The two smaller presets enable this policy for Ordinal. The largest preset
-enables it for both Ordinal and Number. Text uses at most 128 tokens from the
+The SMALL preset enables this policy for Ordinal. The shared MEDIUM/LARGE
+preset enables it for both Ordinal and Number. Text uses at most 128 tokens from the
 same pinned MiniLM encoder as the earlier entry.
 
-| Original training anchors | Batch size | Pass equivalents | Root / branch crossing |
-| --- | ---: | ---: | --- |
-| Below 10,000 | 32 | 7 | Off / off |
-| 10,000 to 19,999 | 32 | 8 | On / on |
-| 20,000 and above | 256 | 2 | Off / off |
+| Original training anchors | Preset | Batch size | Pass equivalents | Root / branch crossing |
+| --- | --- | ---: | ---: | --- |
+| Below 20,000 | B26 | 32 | 8 | On / on |
+| 20,000 and above | M74 | 256 | 2 | Off / off |
 
 The final range shares one architecture and one schema budget, including on the
-largest tasks. All three use fixed batch sizes, zero loader workers, AdamW,
+largest tasks. Both presets use fixed batch sizes, zero loader workers, AdamW,
 a cosine learning-rate schedule and EMA. For the largest range the outer-fit
 guard checks the projected total during the first pass, targeting 16.8 hours
 and enforcing a 24-hour fit-plus-prediction budget. Full training must finish
