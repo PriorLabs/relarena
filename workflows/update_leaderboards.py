@@ -1,4 +1,7 @@
-"""Generate the README leaderboard tables and joint plot from checked-in results.
+"""Generate the README leaderboard tables, joint plot and JSON from checked-in results.
+
+The leaderboard web page fetches docs/leaderboards.json from main, so keep its path
+and fields stable.
 
 Every method in the results must be registered, since labels come from registry
 aliases; run it in the dev environment, which installs the TabPFN-Rel plugin.
@@ -7,6 +10,7 @@ aliases; run it in the dev environment, which installs the TabPFN-Rel plugin.
 from __future__ import annotations
 
 import argparse
+import json
 from io import BytesIO
 from pathlib import Path
 from textwrap import fill
@@ -159,7 +163,22 @@ def plot_boards(boards: list[tuple[str, pd.DataFrame]]) -> bytes:
         return buffer.getvalue()
 
 
-def render_board(board: pd.DataFrame, title: str) -> str:
+def board_rows(board: pd.DataFrame) -> list[dict[str, object]]:
+    """List a board's rows as shown in the tables, rounded to one decimal."""
+    return [
+        {
+            "rank": position,
+            "method": method,
+            "kind": method_kind(method),
+            "elo": round(row["elo"], 1),
+            "lower": round(row["elo"] - row["elo-"], 1),
+            "upper": round(row["elo"] + row["elo+"], 1),
+        }
+        for position, (method, row) in enumerate(board.iterrows(), start=1)
+    ]
+
+
+def render_board(rows: list[dict[str, object]], title: str) -> str:
     """Render a collapsible Markdown leaderboard table."""
     lines = [
         "<details>",
@@ -168,11 +187,10 @@ def render_board(board: pd.DataFrame, title: str) -> str:
         "| Rank | Method | Kind | Elo | 95% bootstrap interval |",
         "|---:|---|---|---:|---:|",
     ]
-    for position, (method, row) in enumerate(board.iterrows(), start=1):
-        lower, upper = row["elo"] - row["elo-"], row["elo"] + row["elo+"]
+    for row in rows:
         lines.append(
-            f"| {position} | {method} | {method_kind(method).capitalize()} "
-            f"| {row['elo']:.1f} | {lower:.1f}–{upper:.1f} |"
+            f"| {row['rank']} | {row['method']} | {str(row['kind']).capitalize()} "
+            f"| {row['elo']:.1f} | {row['lower']:.1f}–{row['upper']:.1f} |"
         )
     lines.extend(["", "</details>"])
     return "\n".join(lines)
@@ -207,8 +225,17 @@ def main() -> int:
             .rename(index=display_name)
         )
         boards.append((title, board))
-        sections.append(render_board(board, title))
+        sections.append(render_board(board_rows(board), title))
     outputs[ROOT / "docs/leaderboards.png"] = plot_boards(boards)
+    data = {
+        "databases": results["dataset"].nunique(),
+        "tasks": len(results[["dataset", "task"]].drop_duplicates()),
+        "seeds": sorted(results["seed"].unique().tolist()),
+        "boards": [{"title": t, "rows": board_rows(b)} for t, b in boards],
+    }
+    outputs[ROOT / "docs/leaderboards.json"] = (
+        json.dumps(data, indent=2) + "\n"
+    ).encode()
     readme = ROOT / "README.md"
     before, rest = readme.read_text().split(START)
     _, after = rest.split(END)

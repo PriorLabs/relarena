@@ -19,13 +19,18 @@ pytest.importorskip("bencheval.evaluator")
 ROOT = Path(__file__).resolve().parents[4]
 
 
-def _generate(root: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+def _load() -> ModuleType:
     spec = importlib.util.spec_from_file_location(
         "update_leaderboards", ROOT / "workflows/update_leaderboards.py"
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    return module
+
+
+def _generate(root: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    module = _load()
     (root / "baseline_results").mkdir(parents=True)
     (root / "docs").mkdir()
     shutil.copyfile(
@@ -63,6 +68,14 @@ def test__generate__separate_boards_and_preserve_surrounding_text(
     assert "| lightgbm | Model |" in combined
 
 
+def test__committed_leaderboards__match_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load()
+    monkeypatch.setattr(sys, "argv", ["update_leaderboards.py", "--check"])
+    assert module.main() == 0
+
+
 def test__plot__hides_lightgbm_without_changing_ratings(generated: ModuleType) -> None:
     results = generated.pd.read_csv(generated.ROOT / "baseline_results/results.csv")
     board = generated.compute_leaderboard(results)
@@ -80,7 +93,10 @@ def test__plot__hides_lightgbm_without_changing_ratings(generated: ModuleType) -
         generated.plt.close(fig)
 
 
-@pytest.mark.parametrize("stale_path", [None, "README.md", "docs/leaderboards.png"])
+@pytest.mark.parametrize(
+    "stale_path",
+    [None, "README.md", "docs/leaderboards.png", "docs/leaderboards.json"],
+)
 def test__check__detects_stale_content_without_writing(
     generated: ModuleType,
     monkeypatch: pytest.MonkeyPatch,
@@ -93,7 +109,7 @@ def test__check__detects_stale_content_without_writing(
         )
     paths = [
         generated.ROOT / "README.md",
-        *sorted((generated.ROOT / "docs").glob("*.png")),
+        *sorted((generated.ROOT / "docs").glob("leaderboards.*")),
     ]
     before = {path: path.read_bytes() for path in paths}
     monkeypatch.setattr(sys, "argv", ["update_leaderboards.py", "--check"])
