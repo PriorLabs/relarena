@@ -127,7 +127,8 @@ OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py
 OMP_NUM_THREADS=1 uv run --no-sync python workflows/update_leaderboards.py --check
 ```
 
-The script regenerates both tables and the joint plot from `baseline_results/results.csv`.
+The script regenerates both tables, the joint plot and `docs/leaderboards.json` (read by the
+leaderboard page) from `baseline_results/results.csv`.
 `--check` reports stale generated content without changing files.
 
 </details>

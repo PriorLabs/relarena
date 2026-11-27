@@ -1,0 +1,259 @@
+{
+  "databases": 7,
+  "tasks": 21,
+  "seeds": [
+    0
+  ],
+  "boards": [
+    {
+      "title": "Models",
+      "rows": [
+        {
+          "rank": 1,
+          "method": "tabpfn-rel-client-latest",
+          "kind": "model",
+          "elo": 1979.4,
+          "lower": 1905.1,
+          "upper": 2096.6
+        },
+        {
+          "rank": 2,
+          "method": "tabpfn-rel-local-latest",
+          "kind": "model",
+          "elo": 1932.0,
+          "lower": 1865.0,
+          "upper": 2028.8
+        },
+        {
+          "rank": 3,
+          "method": "relflow-latest",
+          "kind": "model",
+          "elo": 1897.1,
+          "lower": 1776.1,
+          "upper": 2041.9
+        },
+        {
+          "rank": 4,
+          "method": "tabpfn-rel-client-2026-08-15",
+          "kind": "model",
+          "elo": 1816.8,
+          "lower": 1758.0,
+          "upper": 1896.8
+        },
+        {
+          "rank": 5,
+          "method": "nori-rel",
+          "kind": "model",
+          "elo": 1778.9,
+          "lower": 1705.0,
+          "upper": 1881.9
+        },
+        {
+          "rank": 6,
+          "method": "tabpfn-rel-local-2026-08-15",
+          "kind": "model",
+          "elo": 1716.4,
+          "lower": 1621.0,
+          "upper": 1814.8
+        },
+        {
+          "rank": 7,
+          "method": "graphsage",
+          "kind": "model",
+          "elo": 1676.4,
+          "lower": 1562.4,
+          "upper": 1768.1
+        },
+        {
+          "rank": 8,
+          "method": "relgt",
+          "kind": "model",
+          "elo": 1585.5,
+          "lower": 1477.0,
+          "upper": 1699.0
+        },
+        {
+          "rank": 9,
+          "method": "rdblearn",
+          "kind": "model",
+          "elo": 1540.9,
+          "lower": 1454.7,
+          "upper": 1616.4
+        },
+        {
+          "rank": 10,
+          "method": "relgnn-es",
+          "kind": "model",
+          "elo": 1527.0,
+          "lower": 1434.1,
+          "upper": 1625.0
+        },
+        {
+          "rank": 11,
+          "method": "lightgbm",
+          "kind": "model",
+          "elo": 1363.9,
+          "lower": 1205.4,
+          "upper": 1494.6
+        },
+        {
+          "rank": 12,
+          "method": "constant-per-entity",
+          "kind": "model",
+          "elo": 1268.2,
+          "lower": 1093.2,
+          "upper": 1412.1
+        },
+        {
+          "rank": 13,
+          "method": "constant-global",
+          "kind": "model",
+          "elo": 1000.0,
+          "lower": 851.7,
+          "upper": 1066.2
+        }
+      ]
+    },
+    {
+      "title": "Models + systems",
+      "rows": [
+        {
+          "rank": 1,
+          "method": "tabpfn-rel-client-latest",
+          "kind": "model",
+          "elo": 1926.2,
+          "lower": 1863.7,
+          "upper": 2024.9
+        },
+        {
+          "rank": 2,
+          "method": "kurversc-latest",
+          "kind": "system",
+          "elo": 1917.1,
+          "lower": 1838.8,
+          "upper": 2050.1
+        },
+        {
+          "rank": 3,
+          "method": "tabpfn-rel-local-latest",
+          "kind": "model",
+          "elo": 1887.8,
+          "lower": 1826.2,
+          "upper": 1974.1
+        },
+        {
+          "rank": 4,
+          "method": "relflow-latest",
+          "kind": "model",
+          "elo": 1865.3,
+          "lower": 1781.3,
+          "upper": 1984.4
+        },
+        {
+          "rank": 5,
+          "method": "rt-j",
+          "kind": "system",
+          "elo": 1843.4,
+          "lower": 1724.8,
+          "upper": 1993.3
+        },
+        {
+          "rank": 6,
+          "method": "tabpfn-rel-client-2026-08-15",
+          "kind": "model",
+          "elo": 1795.8,
+          "lower": 1734.5,
+          "upper": 1882.5
+        },
+        {
+          "rank": 7,
+          "method": "rt-plurel",
+          "kind": "system",
+          "elo": 1788.0,
+          "lower": 1692.7,
+          "upper": 1887.5
+        },
+        {
+          "rank": 8,
+          "method": "kurversc-2026-09-03",
+          "kind": "system",
+          "elo": 1775.1,
+          "lower": 1706.3,
+          "upper": 1847.7
+        },
+        {
+          "rank": 9,
+          "method": "nori-rel",
+          "kind": "model",
+          "elo": 1741.8,
+          "lower": 1665.9,
+          "upper": 1858.7
+        },
+        {
+          "rank": 10,
+          "method": "tabpfn-rel-local-2026-08-15",
+          "kind": "model",
+          "elo": 1703.2,
+          "lower": 1605.8,
+          "upper": 1775.3
+        },
+        {
+          "rank": 11,
+          "method": "graphsage",
+          "kind": "model",
+          "elo": 1656.3,
+          "lower": 1547.4,
+          "upper": 1743.4
+        },
+        {
+          "rank": 12,
+          "method": "relgt",
+          "kind": "model",
+          "elo": 1560.7,
+          "lower": 1426.6,
+          "upper": 1662.1
+        },
+        {
+          "rank": 13,
+          "method": "rdblearn",
+          "kind": "model",
+          "elo": 1538.3,
+          "lower": 1436.0,
+          "upper": 1619.8
+        },
+        {
+          "rank": 14,
+          "method": "relgnn-es",
+          "kind": "model",
+          "elo": 1527.6,
+          "lower": 1431.5,
+          "upper": 1637.6
+        },
+        {
+          "rank": 15,
+          "method": "lightgbm",
+          "kind": "model",
+          "elo": 1365.1,
+          "lower": 1166.3,
+          "upper": 1509.6
+        },
+        {
+          "rank": 16,
+          "method": "constant-per-entity",
+          "kind": "model",
+          "elo": 1270.0,
+          "lower": 1079.3,
+          "upper": 1417.1
+        },
+        {
+          "rank": 17,
+          "method": "constant-global",
+          "kind": "model",
+          "elo": 1000.0,
+          "lower": 836.8,
+          "upper": 1076.4
+        }
+      ]
+    }
+  ]
+}

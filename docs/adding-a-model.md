@@ -547,7 +547,8 @@ Complete these steps on the submission branch before merging:
 - [ ] Add the verified rows to `baseline_results/results.csv`, using the
       registered method name and preserving other methods' results. Check
       that each `(model, dataset, task, seed)` has one selected test result.
-- [ ] Regenerate the joint plot and both README tables from the repository root:
+- [ ] Regenerate the joint plot, both README tables and `docs/leaderboards.json`
+      from the repository root:
 
   ```bash
   uv sync --locked --all-packages --group dev --group cpu --extra leaderboard --extra plots
@@ -559,7 +560,8 @@ Complete these steps on the submission branch before merging:
       appears in the correct panels and tables, with readable labels and intervals.
       `lightgbm` stays in the Elo computation and tables but is hidden in the plot.
 - [ ] Run the tests and pre-commit checks from [Tests](#8-tests).
-- [ ] Include the results CSV, README, and joint plot in the submission PR.
+- [ ] Include the results CSV, README, joint plot and `docs/leaderboards.json`
+      in the submission PR.
       Get the submitter's confirmation of the numbers before merging them together.
 
 ## Appendix — what every existing model chose
